@@ -1,71 +1,199 @@
 {% extends "base.html" %}
 
-{% block title %}Preços - ProInvestAI{% endblock %}
+{% block title %}Planos - ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="glass-panel" style="max-width: 1200px; margin: 3rem auto; padding: 3rem 1rem; text-align: center;">
-    <h2 style="margin-bottom: 1rem; font-size: 2.5rem;">Escolha seu Plano</h2>
-    <p style="color: var(--text-muted); margin-bottom: 4rem; font-size: 1.2rem;">Invista no seu futuro com tecnologia de ponta e matemática financeira de nível institucional.</p>
+<style>
+    .pricing-header {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 5rem;
+        padding-top: 4rem;
+    }
+    
+    .pricing-header h2 {
+        font-size: clamp(2.5rem, 5vw, 4rem);
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.1;
+    }
+    
+    .pricing-header p {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+    }
+    
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto 4rem;
+        padding: 0 5%;
+        align-items: center;
+    }
+    
+    .pricing-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        position: relative;
+        transition: transform var(--transition-smooth), border-color var(--transition-fast);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .pricing-card.popular {
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid var(--accent-primary);
+        transform: scale(1.05);
+        z-index: 2;
+        box-shadow: 0 20px 40px rgba(0, 242, 254, 0.1);
+    }
+    
+    .pricing-badge {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--accent-gradient);
+        color: white;
+        padding: 0.5rem 1.25rem;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+    }
+    
+    .plan-name {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    
+    .plan-desc {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 2rem;
+        min-height: 48px;
+    }
+    
+    .plan-price {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 2.5rem;
+        display: flex;
+        align-items: baseline;
+        gap: 0.25rem;
+    }
+    
+    .plan-price span {
+        font-size: 1rem;
+        font-weight: 400;
+        color: var(--text-secondary);
+    }
+    
+    .plan-features {
+        list-style: none;
+        margin-bottom: 3rem;
+        flex-grow: 1;
+    }
+    
+    .plan-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+    
+    .feature-icon {
+        color: var(--success);
+        font-weight: bold;
+        flex-shrink: 0;
+    }
+    
+    .feature-icon.missing {
+        color: rgba(255, 255, 255, 0.15);
+    }
+    
+    .feature-text.missing {
+        color: var(--text-secondary);
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 900px) {
+        .pricing-card.popular {
+            transform: scale(1);
+        }
+    }
+</style>
 
-    <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+<div class="pricing-header animate-fade-in">
+    <h2>Acesso ao <span class="gradient-text">Comitê Privado</span></h2>
+    <p>A tecnologia dos grandes gestores globais, agora focada na proteção e no crescimento do seu patrimônio.</p>
+</div>
+
+<div class="pricing-grid animate-fade-in" style="animation-delay: 0.1s;">
+    <!-- Starter Tier -->
+    <div class="pricing-card">
+        <div class="plan-name">Diagnóstico</div>
+        <div class="plan-desc">Descubra seu perfil e simule carteiras blindadas de forma gratuita.</div>
+        <div class="plan-price">R$ 0<span>/mês</span></div>
         
-        <!-- Free Tier -->
-        <div class="glass-panel" style="padding: 2.5rem; width: 320px; text-align: left; background: rgba(0,0,0,0.2);">
-            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Free</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; min-height: 40px;">Descubra seu perfil e simule carteiras básicas.</p>
-            <div style="font-size: 3rem; margin: 1.5rem 0; font-weight: bold;">R$ 0<span style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">/mês</span></div>
-            
-            <ul style="list-style: none; padding: 0; margin-bottom: 2.5rem; color: var(--text-muted);">
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Teste Suitability (28 questões)</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Resultado do Perfil</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Simulação Básica</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: rgba(255,255,255,0.2);">✗</span> IA Gap Analysis</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: rgba(255,255,255,0.2);">✗</span> Monte Carlo (5000 cenários)</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: rgba(255,255,255,0.2);">✗</span> Relatórios PDF</li>
-            </ul>
-            
-            <a href="/register" class="btn btn-outline" style="width: 100%;">Começar Grátis</a>
-        </div>
+        <ul class="plan-features">
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Mapeamento de Perfil (28 pontos)</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Diretrizes de Risco</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Simulação Patrimonial Básica</span></li>
+            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Revisão Institucional da Carteira</span></li>
+            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Proteção contra Cenários Extremos</span></li>
+            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Relatórios de Bordo (PDF)</span></li>
+        </ul>
+        
+        <a href="/register" class="btn btn-secondary" style="width: 100%;">Começar Grátis</a>
+    </div>
 
-        <!-- Premium Tier -->
-        <div class="glass-panel" style="padding: 2.5rem; width: 340px; text-align: left; border: 2px solid var(--primary-color); position: relative; transform: scale(1.05); z-index: 10;">
-            <div style="position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: var(--primary-color); color: #000; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; font-size: 0.8rem;">
-                MAIS POPULAR
-            </div>
-            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--primary-color);">Premium</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; min-height: 40px;">Otimização avançada com IA para o investidor focado.</p>
-            <div style="font-size: 3rem; margin: 1.5rem 0; font-weight: bold;">R$ 9,90<span style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">/mês</span></div>
-            
-            <ul style="list-style: none; padding: 0; margin-bottom: 2.5rem; color: white;">
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Teste Suitability Completo</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Otimização Markowitz</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> IA Gap Analysis</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Backtest Histórico</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);"><span style="color: rgba(255,255,255,0.2);">✗</span> Monte Carlo Avançado</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted);"><span style="color: rgba(255,255,255,0.2);">✗</span> Relatórios em PDF</li>
-            </ul>
-            
-            <button class="btn btn-primary" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Assinar Premium</button>
-        </div>
+    <!-- Premium Tier -->
+    <div class="pricing-card popular">
+        <div class="pricing-badge">Mais Escolhido</div>
+        <div class="plan-name" style="color: var(--accent-primary);">Gestão Blindada</div>
+        <div class="plan-desc">Otimização completa de carteira para investidores que buscam segurança.</div>
+        <div class="plan-price">R$ 9,90<span>/mês</span></div>
+        
+        <ul class="plan-features">
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Mapeamento Profundo</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Alocação Estrutural (Wall Street)</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Revisão Institucional da Carteira</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Auditoria Histórica de Retorno</span></li>
+            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Proteção contra Cenários Extremos</span></li>
+            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Relatórios de Bordo (PDF)</span></li>
+        </ul>
+        
+        <button class="btn btn-primary" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Acessar Comitê</button>
+    </div>
 
-        <!-- Pro Tier -->
-        <div class="glass-panel" style="padding: 2.5rem; width: 320px; text-align: left; background: rgba(0,0,0,0.2);">
-            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Pro</h3>
-            <p style="color: var(--text-muted); font-size: 0.9rem; min-height: 40px;">Controle absoluto e relatórios profissionais de nível institucional.</p>
-            <div style="font-size: 3rem; margin: 1.5rem 0; font-weight: bold;">R$ 29,90<span style="font-size: 1rem; color: var(--text-muted); font-weight: normal;">/mês</span></div>
-            
-            <ul style="list-style: none; padding: 0; margin-bottom: 2.5rem; color: var(--text-muted);">
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Tudo do Premium</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Monte Carlo 5000 Cenários</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Stress Test com Crises Reais</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Rebalanceamento Automático</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Relatórios em PDF Exportáveis</li>
-                <li style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;"><span style="color: #4CAF50;">✓</span> Suporte Prioritário</li>
-            </ul>
-            
-            <button class="btn btn-outline" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Assinar Pro</button>
-        </div>
-
+    <!-- Pro Tier -->
+    <div class="pricing-card">
+        <div class="plan-name">Family Office</div>
+        <div class="plan-desc">Controle absoluto, proteção blindada e relatórios de nível executivo.</div>
+        <div class="plan-price">R$ 29,90<span>/mês</span></div>
+        
+        <ul class="plan-features">
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Todas as Estratégias do Gestão Blindada</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Proteção contra Cenários Extremos</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Simulação de Renda Previsível</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Rebalanceamento Estratégico</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Relatórios Executivos Exportáveis</span></li>
+            <li><span class="feature-icon">✓</span> <span class="feature-text">Suporte Premium e Orientação</span></li>
+        </ul>
+        
+        <button class="btn btn-secondary" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Assinar Family Office</button>
     </div>
 </div>
 {% endblock %}
