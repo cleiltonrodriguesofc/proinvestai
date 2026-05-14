@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 import numpy as np
 from ...domain.entities.portfolio import Portfolio
-from ...infrastructure.external.bcb_service import BCBService
+from ...domain.interfaces.services import IMarketDataService
 from .tax_calculator import TaxCalculator
 
 logger = logging.getLogger(__name__)
@@ -13,7 +13,7 @@ class StressTestEngine:
     Performs stress testing and backtesting using historical data.
     """
 
-    def __init__(self, bcb_service: BCBService, tax_calculator: TaxCalculator):
+    def __init__(self, bcb_service: IMarketDataService, tax_calculator: TaxCalculator):
         self.bcb_service = bcb_service
         self.tax_calculator = tax_calculator
 

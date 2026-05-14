@@ -101,15 +101,32 @@ h2 { font-size: 2.25rem; margin-bottom: 1.25rem; }
 /* Dashboard Layout */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    padding: 2rem;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1rem;
+}
+
+@media (min-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        padding: 2rem;
+    }
+    
+    h1 { font-size: 3.5rem; }
+    h2 { font-size: 2.5rem; }
 }
 
 /* Quiz Styles */
 .quiz-container {
     max-width: 800px;
-    margin: 4rem auto;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+}
+
+@media (min-width: 768px) {
+    .quiz-container {
+        margin: 4rem auto;
+    }
 }
 
 .quiz-option {

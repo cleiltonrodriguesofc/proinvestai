@@ -18,3 +18,10 @@ mercadopago==2.2.0
 reportlab==4.0.9
 weasyprint==61.2
 python-dotenv==1.0.1
+requests==2.31.0
+
+# test dependencies
+pytest==8.0.0
+pytest-asyncio==0.23.0
+anyio[trio]==4.2.0
+aiosqlite==0.20.0
