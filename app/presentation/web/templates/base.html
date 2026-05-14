@@ -1,65 +1,28 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProInvestAI - Inteligência Financeira Profissional</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>{% block title %}ProInvestAI{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/main.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Sidebar/Navbar base styles */
-        .nav-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            position: fixed;
-            width: 100%;
-            top: 0;
-            z-index: 100;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .logo {
-            font-size: 1.25rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        main {
-            margin-top: 4.5rem;
-            padding: 1rem;
-        }
-
-        @media (min-width: 768px) {
-            .nav-header { padding: 1.5rem 2rem; }
-            .logo { font-size: 1.5rem; }
-            main { padding: 2rem; margin-top: 5rem; }
-        }
-    </style>
 </head>
 <body>
-    <header class="nav-header">
-        <div class="logo">ProInvestAI</div>
-        <nav>
-            <a href="/dashboard" class="btn" style="color: var(--text-dim)">Dashboard</a>
-            <a href="/quiz" class="btn btn-primary">Novo Quiz</a>
-        </nav>
-    </header>
-
+    <nav class="navbar glass-panel" style="border-radius: 0; border-top: none; border-left: none; border-right: none;">
+        <div class="nav-brand">ProInvest<span style="color: var(--accent-primary)">AI</span></div>
+        <div class="nav-links">
+            <a href="/">Início</a>
+            <a href="/pricing">Planos</a>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/login" class="btn btn-primary" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Entrar</a>
+        </div>
+    </nav>
+    
     <main>
         {% block content %}{% endblock %}
     </main>
-
-    <footer style="padding: 4rem 2rem; text-align: center; color: var(--text-dim); font-size: 0.875rem;">
-        &copy; 2026 ProInvestAI. Desenvolvido com Clean Architecture & IA.
-    </footer>
+    
+    <script src="/static/js/main.js"></script>
 </body>
 </html>

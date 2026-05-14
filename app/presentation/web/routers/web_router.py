@@ -1,5 +1,6 @@
 import json
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from ....application.services.quiz_service import QuizService
@@ -7,11 +8,13 @@ from ....application.services.markowitz_optimizer import MarkowitzOptimizer
 from ....application.services.monte_carlo_engine import MonteCarloEngine
 from ....application.services.stress_test_engine import StressTestEngine
 from ....infrastructure.external.bcb_service import BCBService
-from ....application.services.ai_service import AIService
+from ....infrastructure.external.openai_service import AIService
 from ....application.services.tax_calculator import TaxCalculator
 from ....application.use_cases.analyze_portfolio import AnalyzePortfolioUseCase
 from ....domain.entities.portfolio import Portfolio, PortfolioAllocation
 from ....domain.entities.asset import Asset, AssetClass
+from ....domain.entities.user import User as DomainUser
+from .auth import get_current_user
 from decimal import Decimal
 
 router = APIRouter()
@@ -47,7 +50,9 @@ async def pricing(request: Request):
     return templates.TemplateResponse("pricing.html", {"request": request})
 
 @router.get("/dashboard")
-async def dashboard(request: Request):
+async def dashboard(request: Request, user: DomainUser | None = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url="/login")
     # Mock current portfolio for demonstration
     asset1 = Asset(name="Tesouro Selic", asset_class=AssetClass.FIXED_INCOME, subclass="post", benchmark="CDI", spread=Decimal("0.0"), tax_exempt=False, min_investment=Decimal("100"), liquidity_days=1)
     asset2 = Asset(name="Ações", asset_class=AssetClass.EQUITY, subclass="growth", benchmark="IBOV", spread=Decimal("0.0"), tax_exempt=False, min_investment=Decimal("1"), liquidity_days=2)
@@ -66,7 +71,7 @@ async def dashboard(request: Request):
     
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
-        "user_name": "Investidor",
+        "user_name": user.name,
         "profile_type": "Moderado",
         "total_value": "100.000,00",
         "vol": analysis["backtest"].get("volatility", 0) * 100 if "backtest" in analysis else 5.0,
