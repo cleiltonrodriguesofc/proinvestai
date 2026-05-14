@@ -1,104 +1,180 @@
 {% extends "base.html" %}
 
-{% block title %}ProInvestAI - Inteligência Artificial para seus Investimentos{% endblock %}
+{% block title %}ProInvestAI - Inteligência Artificial para Investimentos{% endblock %}
 
 {% block content %}
-<div class="landing-container">
-    <!-- Hero Section -->
-    <section class="hero" style="text-align: center; padding: 5rem 1rem;">
-        <h1 style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(90deg, var(--primary-color), #00d2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            Otimize sua Carteira com IA e Matemática Avançada
-        </h1>
-        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 800px; margin: 0 auto 2.5rem;">
-            A ProInvestAI une o rigor do teste de adequação (Suitability) nível CEA, a teoria de portfólio de Markowitz e a inteligência artificial para criar a melhor estratégia de investimentos para você.
-        </p>
-        <div style="display: flex; gap: 1rem; justify-content: center;">
-            <a href="/quiz" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">Começar Quiz Gratuito</a>
-            <a href="/login" class="btn btn-outline" style="font-size: 1.2rem; padding: 1rem 2rem;">Já sou membro</a>
-        </div>
-    </section>
+<style>
+    .premium-hero {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 6rem 5%;
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.08) 0%, transparent 60%);
+        z-index: 0;
+    }
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 900px;
+    }
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+    }
+    .hero-title {
+        font-size: 5rem;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        margin-bottom: 1.5rem;
+    }
+    .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-secondary);
+        max-width: 650px;
+        margin: 0 auto 3rem;
+        line-height: 1.7;
+    }
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2rem;
+        padding: 5rem 5%;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+    }
+    .feature-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        padding: 3rem 2rem;
+        text-align: left;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .feature-card:hover {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: var(--border-bright);
+        transform: translateY(-5px);
+    }
+    .feature-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin-bottom: 2rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .floating-mockup {
+        margin-top: 4rem;
+        width: 100%;
+        max-width: 1000px;
+        height: 500px;
+        background: linear-gradient(180deg, rgba(20, 24, 35, 0.8) 0%, rgba(10, 12, 20, 0.9) 100%);
+        border: 1px solid var(--border);
+        border-radius: 24px 24px 0 0;
+        box-shadow: 0 -20px 60px rgba(99, 102, 241, 0.15);
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+        overflow: hidden;
+    }
+    @media (max-width: 768px) {
+        .hero-title { font-size: 3rem; }
+        .features-grid { grid-template-columns: 1fr; padding: 2rem 5%; }
+        .floating-mockup { height: 300px; }
+    }
+</style>
 
-    <!-- Features Section -->
-    <section class="features glass-panel" style="margin: 3rem auto; padding: 3rem; max-width: 1200px;">
-        <h2 class="text-center" style="margin-bottom: 3rem;">Como Funciona</h2>
+<div class="premium-hero animate-fade-in">
+    <div class="hero-content">
+        <div class="hero-badge">
+            <span style="color: var(--success)">●</span> O seu mentor financeiro particular
+        </div>
+        <h1 class="hero-title">Aprenda a investir com a <span class="gradient-text">segurança</span> da Inteligência Artificial.</h1>
+        <p class="hero-subtitle">Não sabe por onde começar? Nós pegamos na sua mão. Descubra o seu perfil, entenda onde colocar seu dinheiro e aprenda a investir sozinho, sem gerentes de banco ou taxas abusivas.</p>
         
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
-                <h3>1. Análise de Perfil</h3>
-                <p style="color: var(--text-muted);">Questionário aprofundado com 28 perguntas nos padrões de certificação CEA.</p>
-            </div>
-            
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
-                <h3>2. Gap Analysis</h3>
-                <p style="color: var(--text-muted);">Nossa IA compara seus investimentos atuais com o portfólio ideal otimizado.</p>
-            </div>
-            
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
-                <h3>3. Otimização Contínua</h3>
-                <p style="color: var(--text-muted);">Ajustes baseados na fronteira eficiente de Markowitz e simulações de Monte Carlo.</p>
-            </div>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
+            <a href="/quiz" class="btn btn-primary" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 100px;">Descubra seu Perfil</a>
+            <a href="/pricing" class="btn btn-ghost" style="padding: 1rem 2.5rem; font-size: 1.1rem; border-radius: 100px;">Ver Planos</a>
         </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section class="pricing text-center" style="padding: 5rem 1rem;">
-        <h2 style="margin-bottom: 3rem;">Planos e Preços</h2>
-        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-            
-            <div class="glass-panel" style="padding: 2rem; width: 300px;">
-                <h3>Free</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 0<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
-                    <li style="margin-bottom: 0.5rem;">✗ IA Gap Analysis</li>
-                    <li style="margin-bottom: 0.5rem;">✗ Monte Carlo</li>
-                </ul>
-                <a href="/register" class="btn btn-outline" style="width: 100%;">Criar Conta</a>
-            </div>
-
-            <div class="glass-panel" style="padding: 2rem; width: 300px; border: 1px solid var(--primary-color);">
-                <h3>Premium</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 9,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
-                    <li style="margin-bottom: 0.5rem;">✓ IA Gap Analysis</li>
-                    <li style="margin-bottom: 0.5rem;">✗ Relatórios PDF</li>
-                </ul>
-                <a href="/register" class="btn btn-primary" style="width: 100%;">Assinar Premium</a>
-            </div>
-
-            <div class="glass-panel" style="padding: 2rem; width: 300px;">
-                <h3>Pro</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 29,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Todas as features</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Monte Carlo 5000 sims</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Stress Test Histórico</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Relatórios em PDF</li>
-                </ul>
-                <a href="/register" class="btn btn-outline" style="width: 100%;">Assinar Pro</a>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- FAQ & Disclaimer -->
-    <section class="footer" style="padding: 3rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-        <div style="margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Dúvidas Frequentes</h3>
-            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
-                A plataforma substitui um assessor de investimentos? <br>
-                R: Não. A ProInvestAI é uma ferramenta de apoio analítico (Micro-SaaS) desenhada para empoderar o investidor autônomo com dados quantitativos.
-            </p>
-        </div>
-        <div style="font-size: 0.8rem; color: #666;">
-            <p><strong>Disclaimer:</strong> Rentabilidade passada não é garantia de rentabilidade futura. Simulações são baseadas em modelos estatísticos (Monte Carlo, Markowitz) e não configuram recomendação de compra e venda de ativos segundo as regras da CVM.</p>
-        </div>
-    </section>
+    </div>
 </div>
+
+<div class="animate-fade-in" style="animation-delay: 0.2s;">
+    <div class="floating-mockup">
+        <!-- Mockup Header -->
+        <div style="height: 40px; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 1.5rem; gap: 8px;">
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: #ef4444;"></div>
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: #f59e0b;"></div>
+            <div style="width: 12px; height: 12px; border-radius: 50%; background: #10b981;"></div>
+        </div>
+        <div style="padding: 3rem; text-align: left;">
+            <h3 style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">Visão Geral da Carteira</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Patrimônio Total</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: white;">R$ 1.250.000<span style="font-size: 1rem; color: var(--success); margin-left: 0.5rem;">+2.4%</span></div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Crescimento Esperado</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: white;">12.8%<span style="font-size: 1rem; color: var(--success); margin-left: 0.5rem;">ao ano</span></div>
+                </div>
+                <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border);">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Nível de Risco</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: white;">Baixo<span style="font-size: 1rem; color: var(--text-secondary); margin-left: 0.5rem;">Muito Seguro</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section style="background: rgba(0,0,0,0.2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon">🧠</div>
+            <h3 style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">Carteira Ideal para Você</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6;">Nossa IA analisa o seu perfil e cria uma recomendação de investimentos sob medida. Você entende exatamente o que está comprando e por quê.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🔮</div>
+            <h3 style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">Visão do Futuro</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6;">Simulamos como seu dinheiro vai crescer ao longo dos anos. Descubra quanto você precisa investir hoje para realizar seus sonhos amanhã.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🗣️</div>
+            <h3 style="font-size: 1.5rem; color: white; margin-bottom: 1rem;">Explicação Simples</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6;">Chega de "economês" e termos difíceis. Seu assistente explica tudo usando palavras simples do dia a dia, para você aprender enquanto enriquece.</p>
+        </div>
+    </div>
+</section>
 {% endblock %}
