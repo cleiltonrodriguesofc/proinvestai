@@ -21,9 +21,11 @@ templates = Jinja2Templates(directory="app/presentation/web/templates")
 
 from app.presentation.web.routers.web_router import router as web_router
 from app.presentation.api.routers.quiz_router import router as quiz_api_router
+from app.presentation.web.routers.auth import router as auth_router
 
 app.include_router(web_router)
 app.include_router(quiz_api_router)
+app.include_router(auth_router)
 
 @app.get("/health")
 async def health_check():

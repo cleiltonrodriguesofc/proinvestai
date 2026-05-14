@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Simulação de Carteira - ProInvestAI{% end block %}
+
+{% block content %}
+<div class="glass-panel" style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
+    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
+        Simulação & Otimização (Markowitz + Monte Carlo)
+    </h2>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+        
+        <!-- Metrics Card -->
+        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-muted);">Métricas Otimizadas</h3>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="color: var(--text-muted);">Retorno Esperado (a.a.)</span>
+                <strong style="color: #4CAF50;">{{ (expected_return * 100) | round(2) }}%</strong>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="color: var(--text-muted);">Volatilidade (a.a.)</span>
+                <strong style="color: #ff9800;">{{ (volatility * 100) | round(2) }}%</strong>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <span style="color: var(--text-muted);">Índice Sharpe</span>
+                <strong>{{ sharpe_ratio | round(2) }}</strong>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Max Drawdown (Stress Test)</span>
+                <strong style="color: #f44336;">{{ (max_drawdown * 100) | round(2) }}%</strong>
+            </div>
+        </div>
+
+        <!-- AI Narration -->
+        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-left: 4px solid var(--primary-color);">
+            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🧠</span> Parecer da Inteligência Artificial
+            </h3>
+            <p style="color: #e0e0e0; line-height: 1.6; font-style: italic;">
+                "{{ ai_narration }}"
+            </p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem;">
+        
+        <!-- Allocation -->
+        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; text-align: center;">Pesos Ideais (Markowitz)</h3>
+            <canvas id="allocationChart"></canvas>
+        </div>
+
+        <!-- Monte Carlo -->
+        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; text-align: center;">Projeção Monte Carlo (5000 cenários)</h3>
+            <canvas id="monteCarloChart"></canvas>
+        </div>
+
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Allocation Chart
+    const allocCtx = document.getElementById('allocationChart').getContext('2d');
+    new Chart(allocCtx, {
+        type: 'pie',
+        data: {
+            labels: {{ asset_labels | safe }},
+            datasets: [{
+                data: {{ asset_weights | safe }},
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)'
+                ],
+                borderColor: 'rgba(0,0,0,0.5)',
+                borderWidth: 1
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: {color: 'white'} } } }
+    });
+
+    // Monte Carlo Fan Chart (simplified)
+    const mcCtx = document.getElementById('monteCarloChart').getContext('2d');
+    new Chart(mcCtx, {
+        type: 'line',
+        data: {
+            labels: {{ mc_months | safe }},
+            datasets: [
+                {
+                    label: 'Cenário Otimista (P95)',
+                    data: {{ mc_p95 | safe }},
+                    borderColor: 'rgba(76, 175, 80, 0.8)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Cenário Médio (P50)',
+                    data: {{ mc_p50 | safe }},
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    fill: false,
+                    tension: 0.4
+                },
+                {
+                    label: 'Cenário Pessimista (P5)',
+                    data: {{ mc_p5 | safe }},
+                    borderColor: 'rgba(244, 67, 54, 0.8)',
+                    borderDash: [5, 5],
+                    fill: false,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } },
+                x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } }
+            },
+            plugins: { legend: { labels: { color: 'white' } } }
+        }
+    });
+});
+</script>
+{% end block %}

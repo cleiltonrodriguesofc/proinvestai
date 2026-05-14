@@ -39,6 +39,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 @router.get("/")
+async def landing(request: Request):
+    return templates.TemplateResponse("landing.html", {"request": request})
+
+@router.get("/pricing")
+async def pricing(request: Request):
+    return templates.TemplateResponse("pricing.html", {"request": request})
+
 @router.get("/dashboard")
 async def dashboard(request: Request):
     # Mock current portfolio for demonstration
