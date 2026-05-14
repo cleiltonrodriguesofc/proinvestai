@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}ProInvestAI - Inteligência Artificial para seus Investimentos{% end block %}
+
+{% block content %}
+<div class="landing-container">
+    <!-- Hero Section -->
+    <section class="hero" style="text-align: center; padding: 5rem 1rem;">
+        <h1 style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(90deg, var(--primary-color), #00d2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            Otimize sua Carteira com IA e Matemática Avançada
+        </h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 800px; margin: 0 auto 2.5rem;">
+            A ProInvestAI une o rigor do teste de adequação (Suitability) nível CEA, a teoria de portfólio de Markowitz e a inteligência artificial para criar a melhor estratégia de investimentos para você.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="/quiz" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">Começar Quiz Gratuito</a>
+            <a href="/login" class="btn btn-outline" style="font-size: 1.2rem; padding: 1rem 2rem;">Já sou membro</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features glass-panel" style="margin: 3rem auto; padding: 3rem; max-width: 1200px;">
+        <h2 class="text-center" style="margin-bottom: 3rem;">Como Funciona</h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div class="feature-card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+                <h3>1. Análise de Perfil</h3>
+                <p style="color: var(--text-muted);">Questionário aprofundado com 28 perguntas nos padrões de certificação CEA.</p>
+            </div>
+            
+            <div class="feature-card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
+                <h3>2. Gap Analysis</h3>
+                <p style="color: var(--text-muted);">Nossa IA compara seus investimentos atuais com o portfólio ideal otimizado.</p>
+            </div>
+            
+            <div class="feature-card text-center">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
+                <h3>3. Otimização Contínua</h3>
+                <p style="color: var(--text-muted);">Ajustes baseados na fronteira eficiente de Markowitz e simulações de Monte Carlo.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing text-center" style="padding: 5rem 1rem;">
+        <h2 style="margin-bottom: 3rem;">Planos e Preços</h2>
+        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
+            
+            <div class="glass-panel" style="padding: 2rem; width: 300px;">
+                <h3>Free</h3>
+                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 0<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
+                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
+                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
+                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
+                    <li style="margin-bottom: 0.5rem;">✗ IA Gap Analysis</li>
+                    <li style="margin-bottom: 0.5rem;">✗ Monte Carlo</li>
+                </ul>
+                <a href="/register" class="btn btn-outline" style="width: 100%;">Criar Conta</a>
+            </div>
+
+            <div class="glass-panel" style="padding: 2rem; width: 300px; border: 1px solid var(--primary-color);">
+                <h3>Premium</h3>
+                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 9,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
+                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
+                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
+                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
+                    <li style="margin-bottom: 0.5rem;">✓ IA Gap Analysis</li>
+                    <li style="margin-bottom: 0.5rem;">✗ Relatórios PDF</li>
+                </ul>
+                <a href="/register" class="btn btn-primary" style="width: 100%;">Assinar Premium</a>
+            </div>
+
+            <div class="glass-panel" style="padding: 2rem; width: 300px;">
+                <h3>Pro</h3>
+                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 29,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
+                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
+                    <li style="margin-bottom: 0.5rem;">✓ Todas as features</li>
+                    <li style="margin-bottom: 0.5rem;">✓ Monte Carlo 5000 sims</li>
+                    <li style="margin-bottom: 0.5rem;">✓ Stress Test Histórico</li>
+                    <li style="margin-bottom: 0.5rem;">✓ Relatórios em PDF</li>
+                </ul>
+                <a href="/register" class="btn btn-outline" style="width: 100%;">Assinar Pro</a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- FAQ & Disclaimer -->
+    <section class="footer" style="padding: 3rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
+        <div style="margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Dúvidas Frequentes</h3>
+            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+                A plataforma substitui um assessor de investimentos? <br>
+                R: Não. A ProInvestAI é uma ferramenta de apoio analítico (Micro-SaaS) desenhada para empoderar o investidor autônomo com dados quantitativos.
+            </p>
+        </div>
+        <div style="font-size: 0.8rem; color: #666;">
+            <p><strong>Disclaimer:</strong> Rentabilidade passada não é garantia de rentabilidade futura. Simulações são baseadas em modelos estatísticos (Monte Carlo, Markowitz) e não configuram recomendação de compra e venda de ativos segundo as regras da CVM.</p>
+        </div>
+    </section>
+</div>
+{% end block %}

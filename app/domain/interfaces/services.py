@@ -45,7 +45,7 @@ class IAIService(ABC):
         ...
 
     @abstractmethod
-    async def explain_gap(self, current_portfolio: dict, ideal_portfolio: Portfolio, profile: InvestorProfile) -> str:
+    async def explain_gap(self, current_portfolio: dict, ideal_portfolio: dict, profile: InvestorProfile | None = None) -> str:
         ...
 
     @abstractmethod

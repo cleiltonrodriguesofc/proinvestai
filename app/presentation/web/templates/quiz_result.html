@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Seu Perfil de Investidor - ProInvestAI{% end block %}
+
+{% block content %}
+<div class="glass-panel text-center" style="max-width: 800px; margin: 3rem auto; padding: 3rem 2rem;">
+    <h2 style="margin-bottom: 1rem;">Análise Concluída</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">Baseado nas suas respostas, aqui está o seu perfil de investidor (Nível CEA).</p>
+
+    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; border: 1px solid rgba(255,255,255,0.1);">
+        <h3 style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 0.5rem;">Seu Perfil</h3>
+        <div style="font-size: 3rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem;">
+            {{ profile_type | default("Moderado") }}
+        </div>
+        <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto;">
+            {% if profile_type == 'Conservador' %}
+            Você prioriza a preservação de capital e a liquidez. A alocação ideal foca fortemente em Renda Fixa pós-fixada.
+            {% elif profile_type == 'Moderado' %}
+            Você busca um equilíbrio entre segurança e rentabilidade, tolerando alguma volatilidade em troca de ganhos reais acima da inflação.
+            {% else %}
+            Você busca a maximização de retorno a longo prazo e compreende bem a volatilidade, suportando drawdowns significativos.
+            {% endif %}
+        </p>
+    </div>
+
+    <div style="margin-bottom: 3rem;">
+        <h3 style="margin-bottom: 1.5rem;">Alocação Ideal Sugerida</h3>
+        <div style="max-width: 300px; margin: 0 auto;">
+            <!-- Placeholder for Chart.js -->
+            <canvas id="idealAllocationChart"></canvas>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/register" class="btn btn-primary" style="padding: 1rem 2rem;">Ver Análise Completa</a>
+        <button class="btn btn-outline" style="padding: 1rem 2rem;" onclick="alert('Funcionalidade em desenvolvimento!')">Compartilhar Perfil</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById('idealAllocationChart').getContext('2d');
+    
+    // Mock data based on profile
+    const profile = "{{ profile_type | default('Moderado') }}";
+    let data = [];
+    if (profile === 'Conservador') {
+        data = [90, 5, 5];
+    } else if (profile === 'Moderado') {
+        data = [60, 25, 15];
+    } else {
+        data = [30, 50, 20];
+    }
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Renda Fixa', 'Ações', 'Fundos Imobiliários'],
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(255, 206, 86, 0.8)'
+                ],
+                borderWidth: 1,
+                borderColor: 'rgba(0,0,0,0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: 'white' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% end block %}
