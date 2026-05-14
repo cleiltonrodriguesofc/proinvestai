@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from ....application.services.quiz_service import QuizService
-from ....infrastructure.database.connection import get_db
+from ....infrastructure.database.connection import get_session as get_db
 from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
 from ....domain.entities.quiz import QuizResponse
 from ....domain.entities.investor_profile import InvestorProfile, RiskProfile, Decimal

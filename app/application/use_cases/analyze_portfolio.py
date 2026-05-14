@@ -3,7 +3,7 @@ from ...domain.entities.portfolio import Portfolio
 from ..services.markowitz_optimizer import MarkowitzOptimizer
 from ..services.monte_carlo_engine import MonteCarloEngine
 from ..services.stress_test_engine import StressTestEngine
-from ..services.ai_service import AIService
+from ...infrastructure.external.openai_service import AIService
 
 class AnalyzePortfolioUseCase:
     """
@@ -51,10 +51,10 @@ class AnalyzePortfolioUseCase:
         potential_gain_lost = misallocated_capital * 0.05 # 5% per year
         
         # 5. AI Narration
-        narration = await self.ai_service.generate_gap_analysis_narration(
+        narration = await self.ai_service.explain_gap(
             current_weights,
             ideal_weights,
-            potential_gain_lost
+            None # Optional profile
         )
 
         return {

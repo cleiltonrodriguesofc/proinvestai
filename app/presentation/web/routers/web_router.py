@@ -5,11 +5,14 @@ from pathlib import Path
 from ....application.services.quiz_service import QuizService
 from ....application.services.markowitz_optimizer import MarkowitzOptimizer
 from ....application.services.monte_carlo_engine import MonteCarloEngine
-from ....application.services.stress_test_engine import StressTestEngine, BCBService
+from ....application.services.stress_test_engine import StressTestEngine
+from ....infrastructure.external.bcb_service import BCBService
 from ....application.services.ai_service import AIService
 from ....application.services.tax_calculator import TaxCalculator
 from ....application.use_cases.analyze_portfolio import AnalyzePortfolioUseCase
-from ....domain.entities.portfolio import Portfolio, PortfolioAllocation, Asset, AssetClass, Decimal
+from ....domain.entities.portfolio import Portfolio, PortfolioAllocation
+from ....domain.entities.asset import Asset, AssetClass
+from decimal import Decimal
 
 router = APIRouter()
 quiz_service = QuizService()
