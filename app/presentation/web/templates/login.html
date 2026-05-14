@@ -1,129 +1,214 @@
 {% extends "base.html" %}
-
-{% block title %}Entrar - ProInvestAI{% endblock %}
+{% block title %}Entrar — ProInvestAI{% endblock %}
 
 {% block content %}
 <style>
-    .auth-layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        min-height: calc(100vh - 80px);
-    }
-    
-    .auth-banner {
-        background: radial-gradient(circle at 30% 70%, rgba(99, 102, 241, 0.15) 0%, transparent 60%),
-                    radial-gradient(circle at 70% 30%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4rem;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .auth-banner::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==');
-        opacity: 0.3;
-    }
+nav.navbar { display: none; }
+main { padding-top: 0 !important; }
 
-    .auth-banner-content {
-        position: relative;
-        z-index: 1;
-        max-width: 480px;
-    }
+.auth-page {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    min-height: 100vh;
+    background: #000;
+}
 
-    .auth-banner h2 {
-        font-size: 3rem;
-        font-weight: 800;
-        line-height: 1.1;
-        margin-bottom: 1.5rem;
-    }
+.auth-form-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 6% 12%;
+    background: #000;
+}
 
-    .auth-banner p {
-        font-size: 1.15rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-    }
+.auth-brand {
+    font-size: 1.3rem;
+    font-weight: 900;
+    margin-bottom: 3.5rem;
+    letter-spacing: -0.05em;
+    color: #fff;
+}
 
-    .auth-form-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-    }
+.auth-header { margin-bottom: 2.5rem; }
 
-    .auth-form-box {
-        width: 100%;
-        max-width: 420px;
-        padding: 3rem;
-        border-radius: 24px;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border);
-        box-shadow: var(--glass-shadow);
-        backdrop-filter: var(--glass-blur);
-    }
+.auth-title {
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
+}
 
-    .auth-form-box h3 {
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-    }
+.auth-subtitle {
+    color: #555;
+    font-size: 1rem;
+}
 
-    .auth-form-box p.subtitle {
-        color: var(--text-secondary);
-        margin-bottom: 2.5rem;
-        font-size: 0.95rem;
-    }
+.login-form { max-width: 380px; }
 
-    @media (max-width: 900px) {
-        .auth-layout { grid-template-columns: 1fr; }
-        .auth-banner { display: none; }
-    }
+.form-field { margin-bottom: 1.25rem; }
+
+.form-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #222;
+    padding: 0.85rem 0;
+    color: #fff;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-bottom-color: var(--cyan);
+}
+
+.form-control::placeholder { color: #222; }
+
+.btn-submit {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 1.1rem;
+    background: #fff;
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-submit:hover {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.auth-footer-links {
+    margin-top: 2.5rem;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.auth-footer-links a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+/* Right side banner */
+.auth-visual {
+    position: relative;
+    background: #0a0a0a;
+    overflow: hidden;
+}
+
+.auth-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+}
+
+.visual-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, #000, transparent 30%);
+}
+
+.visual-content {
+    position: absolute;
+    bottom: 8%;
+    left: 10%;
+    right: 10%;
+    z-index: 2;
+}
+
+.visual-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.25rem;
+}
+
+.visual-text {
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: #eee;
+    max-width: 400px;
+}
+
+.visual-text strong { color: var(--cyan); }
+
+@media (max-width: 1024px) {
+    .auth-page { grid-template-columns: 1fr; }
+    .auth-visual { display: none; }
+    .auth-form-container { padding: 4rem 2rem; }
+}
 </style>
 
-<div class="auth-layout">
-    <div class="auth-banner animate-fade-in">
-        <div class="auth-banner-content">
-            <div style="width: 64px; height: 64px; border-radius: 16px; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 2rem; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);">
-                👋
+<div class="auth-page">
+    <div class="auth-form-container">
+        <div class="auth-brand">ProInvestAI</div>
+        
+        <div class="auth-header">
+            <h1 class="auth-title">Acesse seu<br>Comitê Digital.</h1>
+            <p class="auth-subtitle">A inteligência aplicada à sua governança patrimonial.</p>
+        </div>
+
+        {% if error %}
+        <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1.5rem; font-size: 0.9rem;">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <form class="login-form" method="POST" action="/login">
+            <div class="form-field">
+                <label class="form-label">Endereço de E-mail</label>
+                <input type="email" name="email" class="form-control" placeholder="exemplo@dominio.com" required>
             </div>
-            <h2>Sua jornada para a <span class="gradient-text">tranquilidade</span> financeira.</h2>
-            <p>Acesse seu painel inteligente para ver o crescimento do seu dinheiro. Sem complicação, sem planilhas chatas. Nós cuidamos da matemática, você aproveita a vida.</p>
+            
+            <div class="form-field">
+                <label class="form-label">Senha de Acesso</label>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn-submit">Entrar na Plataforma</button>
+        </form>
+        
+        <div class="auth-footer-links">
+            Não possui acesso? <a href="/register">Solicitar credenciais</a>
         </div>
     </div>
     
-    <div class="auth-form-container animate-fade-in" style="animation-delay: 0.1s;">
-        <div class="auth-form-box">
-            <h3>Bem-vindo de volta!</h3>
-            <p class="subtitle">Faça login para acessar sua carteira.</p>
-            
-            {% if error %}
-            <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>⚠️</span> {{ error }}
-            </div>
-            {% endif %}
-            
-            <form action="/login" method="POST">
-                <div class="form-group">
-                    <label class="form-label" for="email">Seu E-mail</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="exemplo@email.com" required autocomplete="email">
-                </div>
-                
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                        <label class="form-label" for="password">Senha</label>
-                        <a href="#" style="font-size: 0.8rem; color: var(--text-secondary);">Esqueceu a senha?</a>
-                    </div>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; font-size: 1.05rem; padding: 1rem;">Acessar minha conta</button>
-            </form>
-            
-            <p style="text-align: center; margin-top: 2rem; font-size: 0.95rem; color: var(--text-secondary);">
-                Ainda não começou a investir? <a href="/register" style="font-weight: 600; text-decoration: underline;">Crie sua conta</a>
+    <div class="auth-visual">
+        <img src="/static/images/login-banner.png" alt="Institutional Wealth">
+        <div class="visual-overlay"></div>
+        <div class="visual-content">
+            <div class="visual-badge">Rigor Institucional</div>
+            <p class="visual-text">
+                "A excelência na gestão de grandes fortunas não é uma questão de volume, mas de <strong>método e disciplina</strong>."
             </p>
         </div>
     </div>

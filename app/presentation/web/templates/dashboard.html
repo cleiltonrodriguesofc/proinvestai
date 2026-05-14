@@ -1,94 +1,255 @@
 {% extends "base.html" %}
+{% block title %}Dashboard — ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="animate-fade-in">
-    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem; margin-bottom: 2rem;">
-        <div style="flex: 1; min-width: 280px;">
-            <h1 style="margin-bottom: 0.5rem; font-size: 2rem;">Olá, {{ user_name }}</h1>
-            <p style="color: var(--text-dim); font-size: 1rem;">Aqui está a análise da sua saúde financeira.</p>
+<style>
+/* ──── Dashboard Style (Executive Terminal) ──── */
+.dash-page {
+    background: #000;
+    min-height: 100vh;
+    padding: 1.5rem 2rem;
+}
+
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #111;
+    padding-bottom: 1.5rem;
+}
+
+.user-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.dash-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.total-value-box { text-align: right; }
+.total-label { font-size: 0.7rem; color: #444; text-transform: uppercase; font-weight: 700; }
+.total-value { font-size: 2rem; font-weight: 800; color: #fff; }
+
+/* ──── Risk Metrics Table (Institutional Standard) ──── */
+.risk-table-container {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #111;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-title { font-size: 0.8rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.risk-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.risk-table th {
+    text-align: left;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.65rem;
+    color: #444;
+    text-transform: uppercase;
+    border-bottom: 1px solid #111;
+}
+
+.risk-table td {
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+    border-bottom: 1px solid #0a0a0a;
+}
+
+.val-up { color: var(--emerald); }
+.val-down { color: var(--rose); }
+.col-label { font-weight: 600; color: #888; width: 250px; }
+.col-month, .col-12m { text-align: right; width: 150px; font-weight: 700; }
+
+/* ──── Charts Grid ──── */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.chart-card {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 4px;
+    padding: 1.5rem;
+}
+
+.chart-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* ──── Narration ──── */
+.narration-box {
+    background: linear-gradient(135deg, #0a0a0c, #000);
+    border: 1px solid #111;
+    padding: 2rem;
+    border-left: 3px solid var(--cyan);
+}
+
+.narration-title { font-size: 0.8rem; font-weight: 700; color: var(--cyan); margin-bottom: 1rem; text-transform: uppercase; }
+.narration-text { font-size: 1.1rem; line-height: 1.6; color: #ccc; }
+
+@media (max-width: 1024px) {
+    .charts-grid { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="dash-page">
+    <header class="dash-header">
+        <div>
+            <span class="user-badge">Comitê Digital — {{ user_name }}</span>
+            <h1 class="dash-title">Visão Geral do Patrimônio</h1>
         </div>
-        <div class="glass-card" style="padding: 1rem 1.5rem; border-radius: 1rem;">
-            <span style="color: var(--text-dim); font-size: 0.875rem;">Perfil Atual</span>
-            <div style="font-weight: 700; color: var(--secondary);">{{ profile_type }}</div>
+        <div class="total-value-box">
+            <span class="total-label">Saldo sob Governança</span>
+            <div class="total-value">R$ {{ total_value }}</div>
+            <div style="font-size: 0.75rem; color: var(--emerald); font-weight: 700;">
+                Perfil {{ profile_type }} • Grau Institucional
+            </div>
+        </div>
+    </header>
+
+    <!-- ──── Risk Metrics ──── -->
+    <div class="risk-table-container">
+        <div class="table-header">
+            <span class="table-title">Indicadores de Risco e Performance</span>
+            <span style="font-size: 0.7rem; color: #333;">Bench: {{ risk.benchmark }}</span>
+        </div>
+        <table class="risk-table">
+            <thead>
+                <tr>
+                    <th>Indicador</th>
+                    <th style="text-align: right;">Mês Atual</th>
+                    <th style="text-align: right;">Últimos 12 Meses</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="col-label">Rentabilidade Absoluta</td>
+                    <td class="col-month {{ 'val-up' if risk.return_month > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_month * 100) }}%</td>
+                    <td class="col-12m {{ 'val-up' if risk.return_12m > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_12m * 100) }}%</td>
+                </tr>
+                <tr>
+                    <td class="col-label">VaR (Value at Risk — 95%)</td>
+                    <td class="col-month">{{ "%.2f"|format(risk.var_month * 100) }}%</td>
+                    <td class="col-12m">{{ "%.2f"|format(risk.var_12m * 100) }}%</td>
+                </tr>
+                <tr>
+                    <td class="col-label">Volatilidade (Anualizada)</td>
+                    <td class="col-month">{{ "%.2f"|format(risk.volatility_month * 100) }}%</td>
+                    <td class="col-12m">{{ "%.2f"|format(risk.volatility_12m * 100) }}%</td>
+                </tr>
+                <tr>
+                    <td class="col-label">Índice de Sharpe</td>
+                    <td class="col-month">{{ "%.2f"|format(risk.sharpe_month) }}</td>
+                    <td class="col-12m">{{ "%.2f"|format(risk.sharpe_12m) }}</td>
+                </tr>
+                <tr>
+                    <td class="col-label">Drawdown Máximo</td>
+                    <td class="col-month val-down">{{ "%.2f"|format(risk.drawdown_month * 100) }}%</td>
+                    <td class="col-12m val-down">{{ "%.2f"|format(risk.drawdown_12m * 100) }}%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ──── Charts ──── -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">Alocação Estratégica Recomendada</div>
+            <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="allocationChart"></canvas>
+            </div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Projeção Monte Carlo (60 Meses)</div>
+            <div style="height: 250px;">
+                <canvas id="monteCarloChart"></canvas>
+            </div>
         </div>
     </div>
 
-    <div class="dashboard-grid">
-        <!-- Main Chart -->
-        <div class="glass-card" style="grid-column: span 2;">
-            <h3>Gap Analysis: Real vs Ideal</h3>
-            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">O quanto você está deixando de ganhar por estar fora da alocação ideal.</p>
-            <div style="height: 300px; position: relative;">
-                <canvas id="gapChart"></canvas>
-            </div>
-        </div>
-
-        <!-- AI Insights -->
-        <div class="glass-card">
-            <h3>Insights da IA</h3>
-            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
-                <div style="padding: 1rem; background: rgba(99, 102, 241, 0.1); border-left: 4px solid var(--primary); border-radius: 0.5rem;">
-                    <p style="font-size: 0.95rem; color: var(--text); line-height: 1.6;">"{{ narration }}"</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Metrics Cards -->
-        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-            <div style="font-size: 0.875rem; color: var(--text-dim);">Patrimônio Total</div>
-            <div style="font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0;">R$ {{ total_value }}</div>
-            <div style="color: var(--success); font-size: 0.875rem;">+12.4% vs CDI</div>
-        </div>
-
-        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
-            <div style="font-size: 0.875rem; color: var(--text-dim);">Risco da Carteira</div>
-            <div style="font-size: 2.5rem; font-weight: 800; margin: 0.5rem 0;">{{ vol }}%</div>
-            <div style="color: var(--warning); font-size: 0.875rem;">Moderado</div>
+    <!-- ──── AI Parecer ──── -->
+    <div class="narration-box animate-fade-in delay-2">
+        <div class="narration-title">Parecer Técnico do Comitê</div>
+        <div class="narration-text">
+            {{ narration | safe }}
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const ctx = document.getElementById('gapChart').getContext('2d');
-    const currentWeights = {{ analysis.current_weights | tojson }};
-    const idealWeights = {{ analysis.ideal_weights | tojson }};
-    const labels = Object.keys(idealWeights);
-    
-    new Chart(ctx, {
-        type: 'bar',
+    // 1. Allocation Chart
+    const weights = {{ weights | tojson }};
+    new Chart(document.getElementById('allocationChart'), {
+        type: 'doughnut',
         data: {
-            labels: labels,
+            labels: Object.keys(weights),
             datasets: [{
-                label: 'Atual (%)',
-                data: labels.map(l => (currentWeights[l] || 0) * 100),
-                backgroundColor: 'rgba(99, 102, 241, 0.5)',
-                borderColor: '#6366f1',
-                borderWidth: 1
-            }, {
-                label: 'Ideal (%)',
-                data: labels.map(l => (idealWeights[l] || 0) * 100),
-                backgroundColor: 'rgba(236, 72, 153, 0.5)',
-                borderColor: '#ec4899',
-                borderWidth: 1
+                data: Object.values(weights),
+                backgroundColor: ['#00d4ff', '#7c3aed', '#10b981', '#f59e0b'],
+                borderWidth: 0,
+                hoverOffset: 10
             }]
+        },
+        options: {
+            plugins: { legend: { position: 'right', labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 } } } },
+            cutout: '70%'
+        }
+    });
+
+    // 2. Monte Carlo Chart (Simplified visualization)
+    const mc = {{ analysis.monte_carlo | tojson }};
+    const p = mc.percentiles;
+    new Chart(document.getElementById('monteCarloChart'), {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 61}, (_, i) => i),
+            datasets: [
+                { label: 'P90 (Otimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p90], borderColor: '#10b981', borderWidth: 1, fill: false, pointRadius: 0 },
+                { label: 'P50 (Médio)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p50], borderColor: '#00d4ff', borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'P10 (Pessimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p10], borderColor: '#f43f5e', borderWidth: 1, fill: false, pointRadius: 0 }
+            ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: 'rgba(255,255,255,0.05)' },
-                    ticks: { color: '#94a3b8' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#94a3b8' }
-                }
+                y: { grid: { color: '#111' }, ticks: { color: '#444' } },
+                x: { grid: { display: false }, ticks: { color: '#444' } }
             },
-            plugins: {
-                legend: { labels: { color: '#f8fafc' } }
-            }
+            plugins: { legend: { display: false } }
         }
     });
 </script>

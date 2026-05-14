@@ -7,20 +7,23 @@ from ....infrastructure.repositories.profile_repository import SQLAlchemyProfile
 from ....domain.entities.quiz import QuizResponse
 from ....domain.entities.investor_profile import InvestorProfile, RiskProfile, Decimal
 
+from ....domain.entities.user import User as DomainUser
+from ...web.routers.auth import get_current_user
+
 router = APIRouter(prefix="/api/quiz", tags=["quiz"])
 quiz_service = QuizService()
 
 @router.post("/submit")
 async def submit_quiz(
     responses: List[QuizResponse],
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user: DomainUser | None = Depends(get_current_user)
 ):
     # 1. Calculate result
     result = quiz_service.calculate_result(responses)
     
     # 2. Map to InvestorProfile entity
-    # In a real app, we'd get user_id from auth
-    user_id = "00000000-0000-0000-0000-000000000000" # Placeholder
+    user_id = user.id if user else "00000000-0000-0000-0000-000000000000"
     
     # Convert profile type string to enum
     profile_map = {

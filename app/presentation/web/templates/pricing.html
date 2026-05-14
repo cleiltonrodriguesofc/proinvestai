@@ -1,199 +1,164 @@
 {% extends "base.html" %}
-
-{% block title %}Planos - ProInvestAI{% endblock %}
+{% block title %}Planos — ProInvestAI{% endblock %}
 
 {% block content %}
 <style>
-    .pricing-header {
-        text-align: center;
-        max-width: 800px;
-        margin: 0 auto 5rem;
-        padding-top: 4rem;
-    }
-    
-    .pricing-header h2 {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        font-weight: 800;
-        margin-bottom: 1.5rem;
-        line-height: 1.1;
-    }
-    
-    .pricing-header p {
-        font-size: 1.25rem;
-        color: var(--text-secondary);
-    }
-    
-    .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 2rem;
-        max-width: 1200px;
-        margin: 0 auto 4rem;
-        padding: 0 5%;
-        align-items: center;
-    }
-    
-    .pricing-card {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid var(--border);
-        border-radius: 24px;
-        padding: 3rem 2rem;
-        position: relative;
-        transition: transform var(--transition-smooth), border-color var(--transition-fast);
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    
-    .pricing-card.popular {
-        background: rgba(255, 255, 255, 0.04);
-        border: 2px solid var(--accent-primary);
-        transform: scale(1.05);
-        z-index: 2;
-        box-shadow: 0 20px 40px rgba(0, 242, 254, 0.1);
-    }
-    
-    .pricing-badge {
-        position: absolute;
-        top: -14px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--accent-gradient);
-        color: white;
-        padding: 0.5rem 1.25rem;
-        border-radius: 100px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
-    }
-    
-    .plan-name {
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-    
-    .plan-desc {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-        margin-bottom: 2rem;
-        min-height: 48px;
-    }
-    
-    .plan-price {
-        font-size: 3.5rem;
-        font-weight: 800;
-        margin-bottom: 2.5rem;
-        display: flex;
-        align-items: baseline;
-        gap: 0.25rem;
-    }
-    
-    .plan-price span {
-        font-size: 1rem;
-        font-weight: 400;
-        color: var(--text-secondary);
-    }
-    
-    .plan-features {
-        list-style: none;
-        margin-bottom: 3rem;
-        flex-grow: 1;
-    }
-    
-    .plan-features li {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-    }
-    
-    .feature-icon {
-        color: var(--success);
-        font-weight: bold;
-        flex-shrink: 0;
-    }
-    
-    .feature-icon.missing {
-        color: rgba(255, 255, 255, 0.15);
-    }
-    
-    .feature-text.missing {
-        color: var(--text-secondary);
-        text-decoration: line-through;
-        opacity: 0.5;
-    }
-    
-    @media (max-width: 900px) {
-        .pricing-card.popular {
-            transform: scale(1);
-        }
-    }
+/* ──── Pricing Style (Compact & Premium) ──── */
+.pricing-page {
+    background: #000;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+}
+
+.pricing-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.pricing-title {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 1rem;
+}
+
+.pricing-sub {
+    color: #666;
+    font-size: 1.1rem;
+    max-width: 500px;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    max-width: 1100px;
+    width: 100%;
+}
+
+.pricing-card {
+    background: #060608;
+    border: 1px solid #111;
+    padding: 3rem 2rem;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s, border-color 0.3s;
+    position: relative;
+}
+
+.pricing-card:hover {
+    border-color: #333;
+    transform: translateY(-5px);
+}
+
+.pricing-card.featured {
+    border-color: var(--cyan);
+    background: radial-gradient(circle at top right, #0a0a0c, #060608);
+}
+
+.plan-name {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: #444;
+    margin-bottom: 1.5rem;
+}
+
+.pricing-card.featured .plan-name { color: var(--cyan); }
+
+.plan-price {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 2rem;
+    color: #fff;
+}
+
+.plan-price span {
+    font-size: 0.9rem;
+    color: #444;
+    font-weight: 400;
+}
+
+.plan-features {
+    list-style: none;
+    margin-bottom: 3rem;
+    flex: 1;
+}
+
+.plan-features li {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.plan-features li::before {
+    content: '→';
+    color: #333;
+}
+
+.pricing-card.featured li::before { color: var(--cyan); }
+
+@media (max-width: 1024px) {
+    .pricing-grid { grid-template-columns: 1fr; }
+}
 </style>
 
-<div class="pricing-header animate-fade-in">
-    <h2>Acesso ao <span class="gradient-text">Comitê Privado</span></h2>
-    <p>A tecnologia dos grandes gestores globais, agora focada na proteção e no crescimento do seu patrimônio.</p>
-</div>
-
-<div class="pricing-grid animate-fade-in" style="animation-delay: 0.1s;">
-    <!-- Starter Tier -->
-    <div class="pricing-card">
-        <div class="plan-name">Diagnóstico</div>
-        <div class="plan-desc">Descubra seu perfil e simule carteiras blindadas de forma gratuita.</div>
-        <div class="plan-price">R$ 0<span>/mês</span></div>
-        
-        <ul class="plan-features">
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Mapeamento de Perfil (28 pontos)</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Diretrizes de Risco</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Simulação Patrimonial Básica</span></li>
-            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Revisão Institucional da Carteira</span></li>
-            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Proteção contra Cenários Extremos</span></li>
-            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Relatórios de Bordo (PDF)</span></li>
-        </ul>
-        
-        <a href="/register" class="btn btn-secondary" style="width: 100%;">Começar Grátis</a>
+<div class="pricing-page animate-fade-in">
+    <div class="pricing-header">
+        <h1 class="pricing-title">Escolha seu nível de<br><span class="gradient-text">Governança.</span></h1>
+        <p class="pricing-sub">Transparência total. Sem taxas ocultas. Rigor institucional.</p>
     </div>
 
-    <!-- Premium Tier -->
-    <div class="pricing-card popular">
-        <div class="pricing-badge">Mais Escolhido</div>
-        <div class="plan-name" style="color: var(--accent-primary);">Gestão Blindada</div>
-        <div class="plan-desc">Otimização completa de carteira para investidores que buscam segurança.</div>
-        <div class="plan-price">R$ 9,90<span>/mês</span></div>
-        
-        <ul class="plan-features">
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Mapeamento Profundo</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Alocação Estrutural (Wall Street)</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Revisão Institucional da Carteira</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Auditoria Histórica de Retorno</span></li>
-            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Proteção contra Cenários Extremos</span></li>
-            <li><span class="feature-icon missing">✗</span> <span class="feature-text missing">Relatórios de Bordo (PDF)</span></li>
-        </ul>
-        
-        <button class="btn btn-primary" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Acessar Comitê</button>
-    </div>
+    <div class="pricing-grid">
+        <!-- Free -->
+        <div class="pricing-card">
+            <span class="plan-name">Individual</span>
+            <div class="plan-price">Grátis</div>
+            <ul class="plan-features">
+                <li>Auditoria de 28 pontos</li>
+                <li>Mapeamento de Perfil</li>
+                <li>Visão Geral de Alocação</li>
+                <li>Acesso ao Dashboard Básico</li>
+            </ul>
+            <a href="/register" class="btn btn-secondary" style="border-radius: 4px;">Começar agora</a>
+        </div>
 
-    <!-- Pro Tier -->
-    <div class="pricing-card">
-        <div class="plan-name">Family Office</div>
-        <div class="plan-desc">Controle absoluto, proteção blindada e relatórios de nível executivo.</div>
-        <div class="plan-price">R$ 29,90<span>/mês</span></div>
-        
-        <ul class="plan-features">
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Todas as Estratégias do Gestão Blindada</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Proteção contra Cenários Extremos</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Simulação de Renda Previsível</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Rebalanceamento Estratégico</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Relatórios Executivos Exportáveis</span></li>
-            <li><span class="feature-icon">✓</span> <span class="feature-text">Suporte Premium e Orientação</span></li>
-        </ul>
-        
-        <button class="btn btn-secondary" style="width: 100%;" onclick="alert('Integração com MercadoPago em breve!')">Assinar Family Office</button>
+        <!-- Pro -->
+        <div class="pricing-card featured">
+            <span class="plan-name">Investidor Pro</span>
+            <div class="plan-price">R$ 49<span>/mês</span></div>
+            <ul class="plan-features">
+                <li><strong>Tudo do Individual</strong></li>
+                <li>Indicadores de Risco (VaR, Sharpe)</li>
+                <li>Simulação Monte Carlo</li>
+                <li>Parecer IA Semanal</li>
+                <li>Histórico de 17 Benchmarks</li>
+            </ul>
+            <a href="/register" class="btn btn-primary" style="border-radius: 4px;">Assinar Pro</a>
+        </div>
+
+        <!-- Institutional -->
+        <div class="pricing-card">
+            <span class="plan-name">Private / Family Office</span>
+            <div class="plan-price">Consultar</div>
+            <ul class="plan-features">
+                <li><strong>Tudo do Pro</strong></li>
+                <li>Análise de Stress Personalizada</li>
+                <li>Suporte de Comitê Humano</li>
+                <li>Relatórios em PDF para Reunião</li>
+                <li>Integração de Ativos Exóticos</li>
+            </ul>
+            <a href="/register" class="btn btn-secondary" style="border-radius: 4px;">Falar com Especialista</a>
+        </div>
     </div>
 </div>
 {% endblock %}
