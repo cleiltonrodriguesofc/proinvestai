@@ -1,5 +1,5 @@
 from typing import List, Dict
-from ..domain.entities.quiz import QuizQuestion, QuizOption, QuizResult, QuizResponse
+from ...domain.entities.quiz import QuizQuestion, QuizOption, QuizResult, QuizResponse
 from .quiz_questions import QUIZ_QUESTIONS
 
 class QuizService:
