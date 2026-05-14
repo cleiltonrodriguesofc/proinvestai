@@ -91,11 +91,6 @@
         transform: translateY(-2px);
     }
     
-    .option-card input[type="radio"] {
-        position: absolute;
-        opacity: 0;
-    }
-    
     .option-indicator {
         width: 20px;
         height: 20px;
@@ -119,17 +114,17 @@
         transition: transform var(--transition-fast);
     }
     
-    .option-card input[type="radio"]:checked + .option-indicator {
-        border-color: var(--accent-primary);
-    }
-    
-    .option-card input[type="radio"]:checked + .option-indicator::after {
-        transform: scale(1);
-    }
-    
-    .option-card:has(input[type="radio"]:checked) {
+    .option-card.active {
         background: rgba(0, 242, 254, 0.05);
         border-color: var(--accent-primary);
+    }
+    
+    .option-card.active .option-indicator {
+        border-color: var(--accent-primary);
+    }
+    
+    .option-card.active .option-indicator::after {
+        transform: scale(1);
     }
     
     .option-label {
@@ -141,8 +136,13 @@
     
     .quiz-footer {
         display: flex;
-        justify-content: flex-end;
-        margin-top: 2rem;
+        justify-content: space-between;
+        margin-top: 2.5rem;
+    }
+
+    #result-card {
+        text-align: center;
+        padding: 4rem 2rem;
     }
     
     @media (max-width: 768px) {
@@ -152,34 +152,146 @@
 </style>
 
 <div class="quiz-layout animate-fade-in">
-    <div class="quiz-header">
+    <div id="quiz-header" class="quiz-header">
         <div class="quiz-section-title">
-            <span>●</span> {{ section_name }}
+            <span>●</span> <span id="section-title">Análise de Perfil</span>
         </div>
         <div class="progress-track">
-            <div class="progress-bar" style="width: {{ (current_question / total_questions) * 100 }}%;"></div>
+            <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
         </div>
-        <div class="progress-text">Mapeamento {{ current_question }} de {{ total_questions }}</div>
+        <div id="progress-text" class="progress-text">Mapeamento 1 de 28</div>
     </div>
     
-    <form action="/quiz" method="POST">
-        <div class="question-box">
-            <h2 class="question-text">{{ question_text }}</h2>
-            
-            <div class="options-grid">
-                {% for option in options %}
-                <label class="option-card">
-                    <input type="radio" name="answer_id" value="{{ loop.index0 }}" required>
-                    <div class="option-indicator"></div>
-                    <span class="option-label">{{ option.text }}</span>
-                </label>
-                {% endfor %}
-            </div>
-            
-            <div class="quiz-footer">
-                <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">Avançar Diretriz</button>
-            </div>
+    <div id="question-card" class="question-box">
+        <h2 id="question-text" class="question-text">Carregando diretriz...</h2>
+        
+        <div id="options-container" class="options-grid">
+            <!-- Options will be injected here via JS -->
         </div>
-    </form>
+        
+        <div class="quiz-footer">
+            <button id="prev-btn" class="btn btn-secondary" style="display: none; padding: 1rem 2rem;">Voltar</button>
+            <button id="next-btn" class="btn btn-primary" style="margin-left: auto; padding: 1rem 3rem; font-size: 1.1rem;">Avançar Diretriz</button>
+        </div>
+    </div>
+
+    <!-- Result Card -->
+    <div id="result-card" class="question-box" style="display: none;">
+        <h2 style="font-size: 2.5rem; margin-bottom: 1rem;">Seu Perfil Institucional: <br><span id="profile-result" class="gradient-text">...</span></h2>
+        <p style="color: var(--text-secondary); margin-bottom: 3rem; font-size: 1.2rem;">Sua arquitetura recomendada é baseada em estratégias de <strong id="strategy-suggestion" style="color: white;">...</strong>.</p>
+        
+        <div style="margin: 3rem 0;">
+            <div style="width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,0.03); border: 2px solid var(--accent-primary); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 0 30px rgba(0, 242, 254, 0.2);">
+                <span id="total-score" style="font-size: 3rem; font-weight: 800;">0</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 1rem; text-transform: uppercase; letter-spacing: 1px;">Score CVM/ANBIMA</p>
+        </div>
+
+        <button onclick="window.location.href='/dashboard'" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem; width: 100%; max-width: 400px;">Acessar Comitê Digital</button>
+    </div>
 </div>
+
+<script>
+    const questions = {{ questions_json | safe }};
+    let currentStep = 0;
+    const answers = {};
+
+    function updateUI() {
+        const q = questions[currentStep];
+        const progress = ((currentStep + 1) / questions.length) * 100;
+        
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+        document.getElementById('progress-text').innerText = `Mapeamento ${currentStep + 1} de ${questions.length}`;
+        document.getElementById('section-title').innerText = q.section.toUpperCase().replace('_', ' ');
+        document.getElementById('question-text').innerText = q.text;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach(opt => {
+            const label = document.createElement('label');
+            label.className = `option-card ${answers[q.id] === opt.id ? 'active' : ''}`;
+            
+            label.onclick = () => selectOption(q.id, opt.id);
+            
+            const indicator = document.createElement('div');
+            indicator.className = 'option-indicator';
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'option-label';
+            textSpan.innerText = opt.text;
+            
+            label.appendChild(indicator);
+            label.appendChild(textSpan);
+            container.appendChild(label);
+        });
+
+        document.getElementById('prev-btn').style.display = currentStep > 0 ? 'block' : 'none';
+        document.getElementById('next-btn').innerText = currentStep === questions.length - 1 ? 'Finalizar Auditoria' : 'Avançar Diretriz';
+    }
+
+    function selectOption(qId, optId) {
+        answers[qId] = optId;
+        updateUI();
+    }
+
+    document.getElementById('next-btn').onclick = async () => {
+        if (!answers[questions[currentStep].id]) {
+            alert('Por favor, selecione uma opção para prosseguir com a auditoria.');
+            return;
+        }
+
+        if (currentStep < questions.length - 1) {
+            currentStep++;
+            updateUI();
+        } else {
+            submitQuiz();
+        }
+    };
+
+    document.getElementById('prev-btn').onclick = () => {
+        if (currentStep > 0) {
+            currentStep--;
+            updateUI();
+        }
+    };
+
+    async function submitQuiz() {
+        const payload = Object.entries(answers).map(([qId, optId]) => ({
+            question_id: qId,
+            option_id: optId
+        }));
+
+        try {
+            const response = await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                document.getElementById('question-card').style.display = 'none';
+                document.getElementById('quiz-header').style.display = 'none';
+                document.getElementById('result-card').style.display = 'block';
+                
+                document.getElementById('total-score').innerText = result.score;
+                document.getElementById('profile-result').innerText = result.profile;
+                
+                const profile = result.profile;
+                document.getElementById('strategy-suggestion').innerText = 
+                    profile === "Conservador" ? "Preservação de Capital" : 
+                    profile === "Moderado" ? "Crescimento Equilibrado" : "Maximização de Retorno e Exposição Avançada";
+            } else {
+                alert('Erro ao salvar perfil. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Erro de conexão com o servidor.');
+        }
+    }
+
+    updateUI();
+</script>
 {% endblock %}
