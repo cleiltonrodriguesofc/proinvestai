@@ -93,22 +93,39 @@
     };
 
     async function submitQuiz() {
-        document.getElementById('question-card').style.display = 'none';
-        document.getElementById('quiz-header').style.display = 'none';
-        document.getElementById('result-card').style.display = 'block';
-        
-        // Mocking the result for now, in a real app we'd POST to /api/quiz
-        const score = Object.values(answers).length * 3; // Mock logic
-        document.getElementById('total-score').innerText = score;
-        
-        let profile = "Moderado";
-        if (score < 45) profile = "Conservador";
-        if (score > 85) profile = "Arrojado";
-        
-        document.getElementById('profile-result').innerText = profile;
-        document.getElementById('strategy-suggestion').innerText = 
-            profile === "Conservador" ? "Preservação de Capital" : 
-            profile === "Moderado" ? "Crescimento Equilibrado" : "Maximização de Retorno";
+        const payload = Object.entries(answers).map(([qId, optId]) => ({
+            question_id: qId,
+            option_id: optId
+        }));
+
+        try {
+            const response = await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.status === 'success') {
+                document.getElementById('question-card').style.display = 'none';
+                document.getElementById('quiz-header').style.display = 'none';
+                document.getElementById('result-card').style.display = 'block';
+                
+                document.getElementById('total-score').innerText = result.score;
+                document.getElementById('profile-result').innerText = result.profile;
+                
+                const profile = result.profile;
+                document.getElementById('strategy-suggestion').innerText = 
+                    profile === "Conservador" ? "Preservação de Capital" : 
+                    profile === "Moderado" ? "Crescimento Equilibrado" : "Maximização de Retorno";
+            } else {
+                alert('Erro ao salvar perfil. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('Erro de conexão com o servidor.');
+        }
     }
 
     updateUI();
