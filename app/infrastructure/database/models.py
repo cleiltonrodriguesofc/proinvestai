@@ -35,6 +35,7 @@ class InvestorProfile(Base):
     has_emergency_reserve = Column(Boolean, default=False)
     investment_goal = Column(String, nullable=True)
     score = Column(Numeric, nullable=False)
+    raw_responses = Column(JSON, nullable=True) # stores the 28 answers
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="profiles")

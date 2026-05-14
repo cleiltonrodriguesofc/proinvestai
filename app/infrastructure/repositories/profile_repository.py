@@ -20,6 +20,7 @@ class SQLAlchemyProfileRepository(IProfileRepository):
             has_emergency_reserve=profile.has_emergency_reserve,
             investment_goal=profile.investment_goal,
             score=profile.score,
+            raw_responses=profile.raw_responses,
             created_at=profile.created_at
         )
         self.session.add(model)
@@ -55,5 +56,6 @@ class SQLAlchemyProfileRepository(IProfileRepository):
             has_emergency_reserve=model.has_emergency_reserve,
             investment_goal=model.investment_goal,
             score=int(model.score),
+            raw_responses=model.raw_responses,
             created_at=model.created_at
         )

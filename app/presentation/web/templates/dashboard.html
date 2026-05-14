@@ -2,10 +2,10 @@
 
 {% block content %}
 <div class="animate-fade-in">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem;">
-        <div>
-            <h1 style="margin-bottom: 0.5rem;">Olá, {{ user_name }}</h1>
-            <p style="color: var(--text-dim); font-size: 1.125rem;">Aqui está a análise da sua saúde financeira.</p>
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="flex: 1; min-width: 280px;">
+            <h1 style="margin-bottom: 0.5rem; font-size: 2rem;">Olá, {{ user_name }}</h1>
+            <p style="color: var(--text-dim); font-size: 1rem;">Aqui está a análise da sua saúde financeira.</p>
         </div>
         <div class="glass-card" style="padding: 1rem 1.5rem; border-radius: 1rem;">
             <span style="color: var(--text-dim); font-size: 0.875rem;">Perfil Atual</span>

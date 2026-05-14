@@ -20,5 +20,6 @@ class InvestorProfile:
     has_emergency_reserve: bool
     investment_goal: str
     score: int
+    raw_responses: dict | None = None
     user_id: str | None = None
     created_at: datetime | None = None

@@ -15,18 +15,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 2rem;
+            padding: 1rem 1.5rem;
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 100;
             background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--glass-border);
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.25rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
@@ -34,8 +34,14 @@
         }
 
         main {
-            margin-top: 5rem;
-            padding: 2rem;
+            margin-top: 4.5rem;
+            padding: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .nav-header { padding: 1.5rem 2rem; }
+            .logo { font-size: 1.5rem; }
+            main { padding: 2rem; margin-top: 5rem; }
         }
     </style>
 </head>
