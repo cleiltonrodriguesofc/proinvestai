@@ -1,8 +1,11 @@
+import json
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
+from ....application.services.quiz_service import QuizService
 
 router = APIRouter()
+quiz_service = QuizService()
 
 # Get the path to templates
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,5 +24,18 @@ async def dashboard(request: Request):
 
 @router.get("/quiz")
 async def quiz(request: Request):
-    # This will be implemented in the next step
-    return templates.TemplateResponse("dashboard.html", {"request": request, "user_name": "Quiz Em Breve"})
+    questions = quiz_service.get_questions()
+    # Convert to serializable dict for JSON
+    questions_data = []
+    for q in questions:
+        questions_data.append({
+            "id": q.id,
+            "text": q.text,
+            "section": q.section,
+            "options": [{"id": o.id, "text": o.text, "score": o.score} for o in q.options]
+        })
+        
+    return templates.TemplateResponse("quiz.html", {
+        "request": request,
+        "questions_json": json.dumps(questions_data)
+    })
