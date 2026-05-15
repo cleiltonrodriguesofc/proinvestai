@@ -1,7 +1,13 @@
+"""
+web router — main application routes.
+
+connects the suitability quiz, portfolio builder, and simulation engine
+to the jinja2 frontend templates.
+"""
+
 import json
 import logging
 import numpy as np
-from decimal import Decimal
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -10,14 +16,13 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....application.services.quiz_service import QuizService
-from ....application.services.markowitz_optimizer import MarkowitzOptimizer
 from ....application.services.monte_carlo_engine import MonteCarloEngine
-from ....application.services.stress_test_engine import StressTestEngine
-from ....application.services.tax_calculator import TaxCalculator
 from ....application.services.risk_metrics_engine import RiskMetricsEngine
-from ....application.use_cases.analyze_portfolio import AnalyzePortfolioUseCase
-from ....domain.entities.portfolio import Portfolio, PortfolioAllocation
-from ....domain.entities.asset import Asset, AssetClass
+from ....application.services.portfolio_builder import (
+    build_asset_catalog,
+    build_optimized_portfolio,
+    compute_forward_projections,
+)
 from ....domain.entities.user import User as DomainUser
 from ....infrastructure.external.bcb_service import BCBService
 from ....infrastructure.external.openai_service import AIService
@@ -36,8 +41,20 @@ PROFILE_LABELS = {
     "conservative": "Conservador",
     "moderate": "Moderado",
     "aggressive": "Arrojado",
-    "ultraconservative": "Ultraconservador",
-    "ultra_aggressive": "Ultra Arrojado",
+    "ultraconservative": "Conservador",
+    "ultra_aggressive": "Arrojado",
+}
+
+# map quiz result names to engine profile keys
+PROFILE_MAP = {
+    "conservative": "conservative",
+    "moderate": "moderate",
+    "aggressive": "aggressive",
+    "ultraconservative": "conservative",
+    "ultra_aggressive": "aggressive",
+    "Conservador": "conservative",
+    "Moderado": "moderate",
+    "Arrojado": "aggressive",
 }
 
 # ── service singletons ──
@@ -47,120 +64,63 @@ quiz_service = QuizService()
 market_data = MarketDataService()
 risk_engine = RiskMetricsEngine()
 bcb_service = BCBService()
-tax_calc = TaxCalculator()
 ai_service = AIService()
 monte_carlo = MonteCarloEngine()
-stress_test = StressTestEngine(bcb_service, tax_calc)
 macro_service = MacroScenarioService(market_data.bcb)
-
-analyze_use_case = AnalyzePortfolioUseCase(
-    optimizer=None,
-    monte_carlo=monte_carlo,
-    stress_test=stress_test,
-    ai_service=ai_service
-)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
-# ── helper: build ideal portfolio from markowitz + macro ──
+# ── helper: normalize profile to engine key ──
 
-async def _get_ideal_portfolio(profile_type: str, mds: MarketDataService):
+def _normalize_profile(profile_type) -> str:
+    """normalize profile type string to engine key (conservative/moderate/aggressive)."""
+    raw = profile_type.value if hasattr(profile_type, "value") else str(profile_type)
+    return PROFILE_MAP.get(raw, "moderate")
+
+
+def _format_brl(value: float) -> str:
+    """format value as brazilian real."""
+    return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+# ── helper: build portfolio for any route ──
+
+def _build_portfolio_for_profile(profile, macro=None):
     """
-    centralized portfolio construction helper.
-    uses forward-looking macro data (focus) for expected returns
-    and historical data for the covariance matrix.
-    returns (weights_dict, optimization_result, historical_data_dict).
+    centralized portfolio construction using the real asset catalog.
+    returns (portfolio, projections, macro) or (None, None, macro) on failure.
     """
-    candidate_benchmarks = ["CDI", "IMA-B", "IBOVESPA", "IFIX", "IVVB11", "SMLL", "IRF-M 1"]
-    all_hist_data = mds.get_all_benchmarks(candidate_benchmarks, start_year=2023)
+    if macro is None:
+        macro = macro_service.build_current_scenario()
 
-    # filter to only benchmarks that returned data
-    names = [n for n in candidate_benchmarks if n in all_hist_data and len(all_hist_data[n]) > 0]
-    if len(names) < 2:
-        logger.warning("_get_ideal_portfolio: insufficient benchmark data, returning empty")
-        return {}, None, {}
+    profile_key = _normalize_profile(profile.risk_profile)
+    initial_amount = float(profile.initial_amount)
+    monthly_expenses = float(getattr(profile, "monthly_income", 0)) * 0.7  # estimate 70% of income
 
-    # macro projections (cached, fallback-safe)
-    macro = macro_service.build_current_scenario()
+    # build catalog and portfolio
+    catalog = build_asset_catalog(macro, profile_key)
+    if not catalog:
+        logger.error("empty asset catalog — cannot build portfolio")
+        return None, None, macro
 
-    # expected returns from focus projections (forward-looking)
-    expected_returns = np.array([macro.get_expected_return(b) for b in names])
+    # get historical returns from bcb for markowitz
+    hist_data = bcb_service.build_asset_return_series(start_year=2015)
 
-    # covariance from historical data
-    min_len = min(len(all_hist_data[n]) for n in names)
-    returns_matrix = np.column_stack([all_hist_data[n][:min_len] for n in names])
-    monthly_cov = np.cov(returns_matrix, rowvar=False)
-    annual_cov = monthly_cov * 12
-
-    asset_categories = {
-        n: "fixed_income" if "CDI" in n or "IMA" in n or "IRF" in n else "equity"
-        for n in names
-    }
-
-    optimizer = MarkowitzOptimizer(
-        asset_names=names,
-        expected_returns=expected_returns,
-        covariance_matrix=annual_cov,
-        asset_categories=asset_categories,
-        risk_free_rate=macro.cdi_annual / 100,
+    portfolio = build_optimized_portfolio(
+        catalog=catalog,
+        total_value=initial_amount,
+        monthly_expenses=monthly_expenses,
+        profile=profile_key,
+        macro=macro,
+        historical_returns=hist_data if hist_data else None,
     )
 
-    # profile-specific weight constraints
-    max_w = {n: 0.80 for n in names}
+    # forward projections (5 years with selic trajectory)
+    projections = compute_forward_projections(macro, portfolio, years=5)
 
-    if profile_type == "conservative":
-        max_w["IBOVESPA"] = 0.03
-        max_w["SMLL"] = 0.02
-        max_w["IVVB11"] = 0.00
-        max_w["IFIX"] = 0.05
-        max_w["IMA-B"] = 0.20
-    elif profile_type == "aggressive":
-        max_w["IBOVESPA"] = 0.50
-        max_w["SMLL"] = 0.20
-        max_w["IVVB11"] = 0.20
-    else:  # moderate (default)
-        max_w["IBOVESPA"] = 0.20
-        max_w["SMLL"] = 0.10
-        max_w["IVVB11"] = 0.10
-
-    # filter max_w to only keys that exist in names
-    max_w = {k: v for k, v in max_w.items() if k in names}
-
-    opt_result = optimizer.optimize_max_sharpe(max_weights=max_w)
-
-    weights = {k: float(v) for k, v in opt_result.weights.items() if v > 0.01}
-    return weights, opt_result, all_hist_data
-
-
-# ── helper: build Portfolio entity from weights ──
-
-def _build_portfolio_entity(weights: dict, hist_data: dict, opt_result) -> Portfolio:
-    """build a domain Portfolio entity from optimization results."""
-    allocations = []
-    for bench, weight in weights.items():
-        returns = hist_data.get(bench, np.array([]))
-        asset = Asset(
-            name=bench,
-            asset_class=AssetClass.FIXED_INCOME if "CDI" in bench or "IMA" in bench or "IRF" in bench else AssetClass.EQUITY,
-            subclass="index",
-            benchmark=bench,
-            spread=Decimal("0.0"),
-            tax_exempt=False,
-            min_investment=Decimal("0"),
-            liquidity_days=0,
-            ticker=bench,
-            historical_returns=returns.tolist() if len(returns) > 0 else [],
-        )
-        allocations.append(PortfolioAllocation(asset=asset, weight=Decimal(str(weight))))
-
-    return Portfolio(
-        allocations=allocations,
-        expected_return=Decimal(str(opt_result.expected_return)),
-        volatility=Decimal(str(opt_result.expected_volatility)),
-        sharpe_ratio=Decimal(str(opt_result.sharpe_ratio)),
-    )
+    return portfolio, projections, macro
 
 
 # ══════════════════════════════════════════════
@@ -199,51 +159,53 @@ async def dashboard(
             "has_profile": False,
         })
 
-    profile_type = profile.risk_profile.value if hasattr(profile.risk_profile, "value") else str(profile.risk_profile)
-    profile_label = PROFILE_LABELS.get(profile_type, profile_type.capitalize())
+    profile_key = _normalize_profile(profile.risk_profile)
+    profile_label = PROFILE_LABELS.get(profile_key, profile_key.capitalize())
     initial_amount = float(profile.initial_amount)
     needs_patrimony = initial_amount <= 0
 
-    # 1. get ideal allocation
-    weights, opt_result, all_hist_data = await _get_ideal_portfolio(profile_type, market_data)
-
-    if not weights:
+    if needs_patrimony:
         return templates.TemplateResponse("dashboard.html", {
             "request": request,
             "user_name": user.name,
             "user_plan": plan_display,
             "active_page": "dashboard",
             "has_profile": True,
-            "needs_patrimony": needs_patrimony,
+            "needs_patrimony": True,
             "profile_type": profile_label,
-            "total_value": f"{initial_amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
-            "initial_amount": initial_amount,
-            "risk": risk_engine._empty_report("CDI"),
-            "analysis": {"backtest": {}, "monte_carlo": {}, "target_weights": {}, "narration": "Dados de mercado indisponíveis no momento."},
-            "weights": {},
-            "narration": "Dados de mercado indisponíveis no momento.",
         })
 
-    # 2. compute risk metrics
-    benchmarks = list(weights.keys())
-    hist_data = {b: all_hist_data[b] for b in benchmarks if b in all_hist_data}
+    # build the real portfolio
+    portfolio, projections, macro = _build_portfolio_for_profile(profile)
 
-    risk_report = risk_engine.compute_portfolio(
-        asset_returns=hist_data,
-        weights=weights,
-        benchmark_name="CDI",
-    )
+    if portfolio is None:
+        return templates.TemplateResponse("dashboard.html", {
+            "request": request,
+            "user_name": user.name,
+            "user_plan": plan_display,
+            "active_page": "dashboard",
+            "has_profile": True,
+            "needs_patrimony": False,
+            "profile_type": profile_label,
+            "total_value": _format_brl(initial_amount),
+            "error_message": "Dados de mercado indisponiveis no momento. Tente novamente em alguns minutos.",
+        })
 
-    # 3. build portfolio entity
-    portfolio = _build_portfolio_entity(weights, hist_data, opt_result)
+    # allocation data for frontend
+    allocation_summary = portfolio.get_allocation_summary()
+    class_breakdown = portfolio.get_class_breakdown()
+    validation_issues = portfolio.validate()
 
-    # 4. run full analysis (backtest + monte carlo + ai narration)
-    analysis = await analyze_use_case.execute(
-        portfolio,
-        initial_amount=initial_amount,
-        target_weights=weights,
-        risk_metrics=risk_report,
-        profile_type=profile_label,
+    # generate ai narration
+    narration = await ai_service.explain_portfolio_recommendation(
+        allocation_summary=allocation_summary,
+        profile_label=profile_label,
+        total_value=initial_amount,
+        net_monthly_income=portfolio.expected_net_monthly_income(24),
+        gross_annual_return=portfolio.weighted_expected_annual_return,
+        net_annual_return=portfolio.expected_net_annual_return(24),
+        reserve_months=portfolio.reserve_coverage_months,
+        risk_category=portfolio.risk_category,
     )
 
     return templates.TemplateResponse("dashboard.html", {
@@ -252,14 +214,34 @@ async def dashboard(
         "user_plan": plan_display,
         "active_page": "dashboard",
         "has_profile": True,
-        "needs_patrimony": needs_patrimony,
+        "needs_patrimony": False,
         "profile_type": profile_label,
-        "total_value": f"{initial_amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+        "total_value": _format_brl(initial_amount),
         "initial_amount": initial_amount,
-        "risk": risk_report,
-        "analysis": analysis,
-        "weights": weights,
-        "narration": analysis["narration"],
+        # portfolio data
+        "portfolio": portfolio,
+        "allocations": allocation_summary,
+        "allocations_json": json.dumps(allocation_summary, default=str),
+        "class_breakdown": class_breakdown,
+        "class_breakdown_json": json.dumps(class_breakdown),
+        "projections": projections,
+        "projections_json": json.dumps(projections),
+        # headline metrics
+        "gross_annual_return": portfolio.weighted_expected_annual_return,
+        "net_annual_return": portfolio.expected_net_annual_return(24),
+        "net_monthly_income": portfolio.expected_net_monthly_income(24),
+        "net_monthly_income_display": _format_brl(portfolio.expected_net_monthly_income(24)),
+        "liquid_pct": portfolio.liquid_percentage,
+        "liquid_value": portfolio.liquid_value,
+        "reserve_months_actual": portfolio.reserve_coverage_months,
+        "variable_income_pct": portfolio.variable_income_percentage,
+        "fgc_protected": portfolio.fgc_protected_value,
+        "tax_exempt_pct": portfolio.tax_exempt_percentage,
+        "risk_category": portfolio.risk_category,
+        "volatility": portfolio.weighted_volatility,
+        "validation_issues": validation_issues,
+        # ai
+        "narration": narration,
     })
 
 
@@ -330,12 +312,11 @@ async def simulation(
         return RedirectResponse(url="/dashboard")
 
     initial_amount = float(profile.initial_amount)
-    profile_type = profile.risk_profile.value if hasattr(profile.risk_profile, "value") else str(profile.risk_profile)
 
-    # 1. get ideal allocation
-    weights_map, opt_result, all_hist_data = await _get_ideal_portfolio(profile_type, market_data)
+    # build portfolio
+    portfolio, projections, macro = _build_portfolio_for_profile(profile)
 
-    if not weights_map or opt_result is None:
+    if portfolio is None:
         return templates.TemplateResponse("simulation.html", {
             "request": request,
             "user_name": user.name,
@@ -347,14 +328,10 @@ async def simulation(
         })
 
     logger.info(f"--- SIMULATION START ---")
-    logger.info(f"Amount: R$ {initial_amount:,.2f} | Profile: {profile_type}")
+    logger.info(f"Amount: R$ {initial_amount:,.2f} | Profile: {_normalize_profile(profile.risk_profile)}")
 
-    # 2. build portfolio entity
-    hist_data = {b: all_hist_data[b] for b in weights_map if b in all_hist_data}
-    portfolio = _build_portfolio_entity(weights_map, hist_data, opt_result)
-
-    # 3. run monte carlo
-    logger.info(f"Running 5,000 stochastic scenarios for {len(portfolio.allocations)} assets...")
+    # run monte carlo using the real portfolio
+    logger.info(f"Running 5,000 stochastic scenarios for {len(portfolio.allocations)} products...")
     sim_result = monte_carlo.simulate(
         portfolio,
         initial_amount=initial_amount,
@@ -405,42 +382,37 @@ async def gap_analysis(
     if not profile:
         return RedirectResponse(url="/dashboard")
 
-    profile_type = profile.risk_profile.value if hasattr(profile.risk_profile, "value") else str(profile.risk_profile)
-    profile_label = PROFILE_LABELS.get(profile_type, profile_type.capitalize())
+    profile_key = _normalize_profile(profile.risk_profile)
+    profile_label = PROFILE_LABELS.get(profile_key, profile_key.capitalize())
 
-    # 1. get ideal allocation
-    ideal_weights, opt_result, all_hist_data = await _get_ideal_portfolio(profile_type, market_data)
+    # build ideal portfolio
+    portfolio, projections, macro = _build_portfolio_for_profile(profile)
 
-    # 2. placeholder current portfolio (until user imports real holdings)
-    current_weights = {"Poupança/CDI": 0.85, "Ações (Varejo)": 0.15}
-    current_monthly_return = 0.007  # ~CDI
+    # placeholder current portfolio (until user imports real holdings)
+    current_weights = {"Poupanca": 0.85, "Acoes (Varejo)": 0.15}
+    current_monthly_return = 0.007  # ~cdi
 
-    # 3. compute gap metrics
-    if opt_result is not None:
-        ideal_annual = opt_result.expected_return
+    # compute gap
+    if portfolio is not None:
+        ideal_annual = portfolio.weighted_expected_annual_return
+        ideal_net_annual = portfolio.expected_net_annual_return(24)
+        ideal_allocations = portfolio.get_allocation_summary()
     else:
-        ideal_annual = 0.10  # fallback
+        ideal_annual = 0.10
+        ideal_net_annual = 0.085
+        ideal_allocations = []
 
     current_annual = (1 + current_monthly_return) ** 12 - 1
-    annual_gap = ideal_annual - current_annual
+    annual_gap = ideal_net_annual - current_annual
     gain_lost = float(profile.initial_amount) * abs(annual_gap) * 5  # 5-year opportunity cost
 
-    # 4. compute risk report for ai narration (needed by the prompt)
-    if ideal_weights and all_hist_data:
-        hist_data = {b: all_hist_data[b] for b in ideal_weights if b in all_hist_data}
-        risk_report = risk_engine.compute_portfolio(
-            asset_returns=hist_data,
-            weights=ideal_weights,
-            benchmark_name="CDI",
-        )
-    else:
-        risk_report = risk_engine._empty_report("CDI")
-
-    # 5. ai narration
-    narration = await ai_service.explain_committee_review(
-        ideal_weights,
-        risk_report,
-        profile_label,
+    # ai narration for gap
+    narration = await ai_service.explain_gap_analysis(
+        current_weights=current_weights,
+        ideal_allocations=ideal_allocations,
+        annual_gap=annual_gap,
+        gain_lost=gain_lost,
+        profile_label=profile_label,
     )
 
     return templates.TemplateResponse("gap_analysis.html", {
@@ -449,10 +421,11 @@ async def gap_analysis(
         "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].capitalize(),
         "active_page": "gap_analysis",
         "profile_type": profile_label,
-        "ideal_weights": ideal_weights,
+        "ideal_allocations": ideal_allocations,
         "current_weights": current_weights,
         "current_score": 42.0,
         "ideal_score": profile.score,
         "gain_lost": abs(gain_lost),
+        "annual_gap": annual_gap,
         "narration": narration,
     })
