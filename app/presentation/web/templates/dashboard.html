@@ -109,7 +109,11 @@
     </div>
     <div class="kpi-card">
         <div class="kpi-label">Reserva de Emergência</div>
-        <div class="kpi-value" style="color: var(--cyan);">{{ "%.0f"|format(reserve_months_actual) }} meses</div>
+        {% if reserve_months_actual > 999 %}
+            <div class="kpi-value" style="color: var(--cyan); font-size: 1.2rem;">Sobra Coberta</div>
+        {% else %}
+            <div class="kpi-value" style="color: var(--cyan);">{{ "%.0f"|format(reserve_months_actual) }} meses</div>
+        {% endif %}
         <div class="kpi-sub">{{ "%.1f"|format(liquid_pct * 100) }}% em ativos líquidos</div>
     </div>
     <div class="kpi-card">

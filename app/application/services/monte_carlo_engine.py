@@ -54,17 +54,9 @@ class MonteCarloEngine:
         weights = []
         
         for alloc in portfolio.allocations:
-            # Simple estimation if historical_returns exist
-            if alloc.asset.historical_returns and len(alloc.asset.historical_returns) > 0:
-                rets = [float(r) for r in alloc.asset.historical_returns]
-                mu_list.append(np.mean(rets))
-                sigma_list.append(np.std(rets))
-            else:
-                # Fallbacks (should be replaced by real data service later)
-                mu_list.append(0.008) # 0.8% month
-                sigma_list.append(0.02) # 2% month
-            
-            weights.append(float(alloc.weight))
+            mu_list.append(float(alloc.asset.expected_monthly_return))
+            sigma_list.append(float(alloc.asset.monthly_volatility))
+            weights.append(float(alloc.percentage))
 
         mu = np.array(mu_list)
         sigma = np.array(sigma_list)
