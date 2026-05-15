@@ -1,132 +1,137 @@
-{% extends "base.html" %}
-
-{% block title %}Simulação de Carteira - ProInvestAI{% endblock %}
+{% extends "base_app.html" %}
+{% block title %}Simulação Estocástica — ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="glass-panel" style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
-    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-        Simulação & Otimização (Markowitz + Monte Carlo)
-    </h2>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-        
-        <!-- Metrics Card -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem; color: var(--text-muted);">Métricas Otimizadas</h3>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                <span style="color: var(--text-muted);">Retorno Esperado (a.a.)</span>
-                <strong style="color: #4CAF50;">{{ (expected_return * 100) | round(2) }}%</strong>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                <span style="color: var(--text-muted);">Volatilidade (a.a.)</span>
-                <strong style="color: #ff9800;">{{ (volatility * 100) | round(2) }}%</strong>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                <span style="color: var(--text-muted);">Índice Sharpe</span>
-                <strong>{{ sharpe_ratio | round(2) }}</strong>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between;">
-                <span style="color: var(--text-muted);">Max Drawdown (Stress Test)</span>
-                <strong style="color: #f44336;">{{ (max_drawdown * 100) | round(2) }}%</strong>
-            </div>
-        </div>
-
-        <!-- AI Narration -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-left: 4px solid var(--primary-color);">
-            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🧠</span> Parecer da Inteligência Artificial
-            </h3>
-            <p style="color: #e0e0e0; line-height: 1.6; font-style: italic;">
-                "{{ ai_narration }}"
-            </p>
-        </div>
+<header class="dash-header">
+    <div>
+        <span class="user-badge">{{ user_name }} — Simulação de Patrimônio</span>
+        <h1 class="dash-title">Simulador Monte Carlo</h1>
+        <p style="color: #888; font-size: 0.95rem; margin-top: 0.5rem;">
+            A simulação gerou 5.000 trajetórias possíveis para a sua carteira recomendada ao longo de 5 anos (60 meses), considerando a volatilidade e o retorno histórico dos produtos.
+        </p>
     </div>
+</header>
 
-    <!-- Charts Section -->
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; margin-bottom: 2rem;">
-        
-        <!-- Allocation -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; text-align: center;">Pesos Ideais (Markowitz)</h3>
-            <canvas id="allocationChart"></canvas>
-        </div>
-
-        <!-- Monte Carlo -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; text-align: center;">Projeção Monte Carlo (5000 cenários)</h3>
-            <canvas id="monteCarloChart"></canvas>
-        </div>
-
+<div class="kpi-grid" style="margin-bottom: 2rem;">
+    <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.3);">
+        <div class="kpi-label">Pior Cenário (P5)</div>
+        <div class="kpi-value" style="color: #f43f5e;">R$ {{ "{:,.2f}".format(results.p5).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+        <div class="kpi-sub">Apenas 5% de chance de ser menor que isso</div>
+    </div>
+    
+    <div class="kpi-card kpi-highlight" style="border-color: rgba(0, 212, 255, 0.5);">
+        <div class="kpi-label">Cenário Base (Mediana)</div>
+        <div class="kpi-value" style="color: #00d4ff;">R$ {{ "{:,.2f}".format(results.p50).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+        <div class="kpi-sub">O cenário mais provável para sua carteira</div>
+    </div>
+    
+    <div class="kpi-card" style="border-color: rgba(16, 185, 129, 0.3);">
+        <div class="kpi-label">Cenário Otimista (P95)</div>
+        <div class="kpi-value" style="color: #10b981;">R$ {{ "{:,.2f}".format(results.p95).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
+        <div class="kpi-sub">Apenas 5% de chance de superar isso</div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    // Allocation Chart
-    const allocCtx = document.getElementById('allocationChart').getContext('2d');
-    new Chart(allocCtx, {
-        type: 'pie',
-        data: {
-            labels: {{ asset_labels | safe }},
-            datasets: [{
-                data: {{ asset_weights | safe }},
-                backgroundColor: [
-                    'rgba(54, 162, 235, 0.8)',
-                    'rgba(255, 99, 132, 0.8)',
-                    'rgba(255, 206, 86, 0.8)',
-                    'rgba(75, 192, 192, 0.8)'
-                ],
-                borderColor: 'rgba(0,0,0,0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: {color: 'white'} } } }
-    });
+<div class="chart-card animate-fade-in delay-1" style="height: 500px; padding: 1.5rem;">
+    <div class="chart-title">Evolução Patrimonial (5.000 Cenários)</div>
+    <div style="height: 420px; width: 100%; position: relative;">
+        <canvas id="simulationChart"></canvas>
+    </div>
+</div>
+{% endblock %}
 
-    // Monte Carlo Fan Chart (simplified)
-    const mcCtx = document.getElementById('monteCarloChart').getContext('2d');
-    new Chart(mcCtx, {
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('simulationChart').getContext('2d');
+    const data = {{ chart_data_json | safe }};
+    
+    new Chart(ctx, {
         type: 'line',
         data: {
-            labels: {{ mc_months | safe }},
+            labels: data.labels.map(m => m === 0 ? 'Início' : `Mês ${m}`),
             datasets: [
                 {
                     label: 'Cenário Otimista (P95)',
-                    data: {{ mc_p95 | safe }},
-                    borderColor: 'rgba(76, 175, 80, 0.8)',
-                    borderDash: [5, 5],
+                    data: data.p95,
+                    borderColor: '#10b981', // green
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 2,
+                    pointRadius: 0,
                     fill: false,
-                    tension: 0.4
+                    tension: 0.1
                 },
                 {
-                    label: 'Cenário Médio (P50)',
-                    data: {{ mc_p50 | safe }},
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    label: 'Cenário Base (Mediana)',
+                    data: data.p50,
+                    borderColor: '#00d4ff', // cyan
+                    borderWidth: 3,
+                    pointRadius: 0,
                     fill: false,
-                    tension: 0.4
+                    tension: 0.1
                 },
                 {
-                    label: 'Cenário Pessimista (P5)',
-                    data: {{ mc_p5 | safe }},
-                    borderColor: 'rgba(244, 67, 54, 0.8)',
-                    borderDash: [5, 5],
+                    label: 'Pior Cenário (P5)',
+                    data: data.p5,
+                    borderColor: '#f43f5e', // rose
+                    backgroundColor: 'rgba(244, 63, 94, 0.05)',
+                    borderWidth: 2,
+                    pointRadius: 0,
                     fill: false,
-                    tension: 0.4
+                    tension: 0.1
                 }
             ]
         },
         options: {
             responsive: true,
-            scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } },
-                x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: 'white' } }
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index',
             },
-            plugins: { legend: { labels: { color: 'white' } } }
+            scales: {
+                y: {
+                    grid: { color: '#1a1a1a', drawBorder: false },
+                    ticks: {
+                        color: '#666',
+                        font: { family: 'Plus Jakarta Sans', size: 11 },
+                        callback: function(value) {
+                            return 'R$ ' + (value/1000).toFixed(0) + 'k';
+                        }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { 
+                        color: '#666', 
+                        font: { family: 'Plus Jakarta Sans', size: 10 },
+                        maxRotation: 0, 
+                        autoSkip: true, 
+                        maxTicksLimit: 12 
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: { color: '#888', font: { family: 'Plus Jakarta Sans', size: 12 }, usePointStyle: true, boxWidth: 8 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(10, 10, 12, 0.95)',
+                    titleColor: '#fff',
+                    bodyColor: '#ccc',
+                    borderColor: '#222',
+                    borderWidth: 1,
+                    padding: 12,
+                    titleFont: { family: 'Plus Jakarta Sans', size: 13, weight: 'bold' },
+                    bodyFont: { family: 'Plus Jakarta Sans', size: 13 },
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': R$ ' + context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                        }
+                    }
+                }
+            }
         }
     });
 });

@@ -1,49 +1,65 @@
 {% extends "base_app.html" %}
+{% block title %}Análise de Gap — ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="content-header">
-    <h1 style="margin: 0; font-size: 2rem; color: #fff;">Análise de Gap</h1>
-    <p style="color: #aaa; margin: 0.5rem 0 0 0;">Comparação entre sua carteira atual e a alocação institucional recomendada.</p>
-</div>
+<header class="dash-header">
+    <div>
+        <span class="user-badge">{{ user_name }} — Perfil {{ profile_type }}</span>
+        <h1 class="dash-title">Análise de Gap</h1>
+        <p style="color: #888; font-size: 0.95rem; margin-top: 0.5rem;">Comparação entre o que você tem hoje e a carteira ideal montada com produtos reais.</p>
+    </div>
+</header>
 
-<div class="metrics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+<div class="kpi-grid" style="margin-bottom: 2rem;">
     <!-- Atual -->
-    <div class="metric-card" style="background: #111; border: 1px solid #ff444433;">
-        <div class="kpi-label">Carteira Atual (Estimada)</div>
-        <div class="kpi-value" style="color: #ff4444;">{{ "%.2f"|format(current_score) }} <span style="font-size: 1rem;">/ 100 pt</span></div>
-        <div class="kpi-label" style="margin-top: 1rem;">Alocação Principal</div>
-        {% for asset, weight in current_weights.items() %}
-        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #ccc;">
-            <span>{{ asset }}</span>
-            <strong>{{ "%.0f"|format(weight * 100) }}%</strong>
+    <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.3);">
+        <div class="kpi-label">Sua Carteira Atual</div>
+        <div class="kpi-value" style="color: #f43f5e;">Sub-otimizada</div>
+        <div class="kpi-sub">Alocação Atual</div>
+        <div style="margin-top: 1rem; border-top: 1px solid #111; padding-top: 1rem;">
+            {% for asset, weight in current_weights.items() %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                <span>{{ asset }}</span>
+                <strong style="color: #fff; font-family: monospace;">{{ "%.0f"|format(weight * 100) }}%</strong>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 
     <!-- Ideal -->
-    <div class="metric-card" style="background: #111; border: 1px solid #44ff8833;">
-        <div class="kpi-label">Alocação Institucional ({{ profile_type }})</div>
-        <div class="kpi-value" style="color: #44ff88;">{{ "%.2f"|format(ideal_score) }} <span style="font-size: 1rem;">/ 100 pt</span></div>
-        <div class="kpi-label" style="margin-top: 1rem;">Alocação Recomendada</div>
-        {% for asset, weight in ideal_weights.items() %}
-        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #ccc;">
-            <span>{{ asset }}</span>
-            <strong>{{ "%.0f"|format(weight * 100) }}%</strong>
+    <div class="kpi-card kpi-highlight">
+        <div class="kpi-label">Carteira Recomendada ({{ profile_type }})</div>
+        <div class="kpi-value" style="color: #10b981;">Otimizada</div>
+        <div class="kpi-sub">Produtos Reais do Mercado</div>
+        <div style="margin-top: 1rem; border-top: 1px solid #111; padding-top: 1rem;">
+            {% if ideal_allocations %}
+                {% for a in ideal_allocations %}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: #aaa;">
+                    <span>{{ a.asset_name }}</span>
+                    <strong style="color: #fff; font-family: monospace;">{{ a.percentage_display }}</strong>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="color: #888; font-size: 0.9rem; font-style: italic;">Dados indisponíveis.</div>
+            {% endif %}
         </div>
-        {% endfor %}
     </div>
 </div>
 
-<div class="metric-card" style="background: #111; border: 1px solid #333; margin-bottom: 2rem;">
-    <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.2rem;">Impacto Financeiro da Ineficiência (Gap)</h3>
-    <p style="color: #aaa; margin-bottom: 1.5rem; font-size: 1.1rem;">
-        Se você mantiver a sua alocação atual ao invés de migrar para a Estratégia Recomendada, você deixará de ganhar aproximadamente <strong style="color: #ff4444;">R$ {{ "%.2f"|format(gain_lost) }}</strong> nos próximos 5 anos devido a ineficiências de risco-retorno.
+<div class="narration-box animate-fade-in delay-2" style="margin-bottom: 2rem;">
+    <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.2rem; font-weight: 600;">O que você está deixando na mesa (Gap)</h3>
+    <p style="color: #aaa; margin-bottom: 1.5rem; font-size: 1.05rem; line-height: 1.6;">
+        Ao manter a sua alocação atual em vez de migrar para a carteira recomendada com produtos otimizados (isentos de IR, IPCA+, CDBs), você deixará de ganhar aproximadamente <strong style="color: #f43f5e; font-size: 1.15rem;">R$ {{ "{:,.2f}".format(gain_lost).replace(",", "X").replace(".", ",").replace("X", ".") }}</strong> nos próximos 5 anos.
     </p>
-    <div style="padding: 1.5rem; background: #0a0a0c; border-radius: 8px; border-left: 4px solid #00E676;">
-        <h4 style="color: #00E676; margin-bottom: 0.5rem;">Parecer do Comitê de Risco</h4>
-        <p style="color: #ddd; line-height: 1.6; font-style: italic;">
-            "{{ narration }}"
-        </p>
+    <div style="padding: 1.5rem; background: rgba(0, 212, 255, 0.05); border-radius: 6px; border-left: 3px solid #00d4ff;">
+        <h4 style="color: #00d4ff; margin-bottom: 0.75rem; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em;">Explicação Educativa</h4>
+        <div style="color: #ddd; line-height: 1.6;">
+            {{ narration | safe }}
+        </div>
     </div>
+</div>
+
+<div style="text-align: center; margin-top: 3rem;">
+    <a href="/dashboard" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.05rem;">Ir para Dashboard Completo</a>
 </div>
 {% endblock %}
