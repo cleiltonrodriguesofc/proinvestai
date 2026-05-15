@@ -98,8 +98,9 @@ def _build_portfolio_for_profile(profile, macro=None):
     profile_key = _normalize_profile(profile.risk_profile)
     initial_amount = float(profile.initial_amount)
     
-    # Extract real expenses from Q29 if available, else estimate 70% of income
+    # Extract real expenses from Q29 and dependents from Q30 if available
     monthly_expenses = float(getattr(profile, "monthly_income", 0)) * 0.7
+    reserve_multiplier = 1.0
     
     if hasattr(profile, "raw_responses") and profile.raw_responses:
         responses = profile.raw_responses
@@ -109,16 +110,22 @@ def _build_portfolio_for_profile(profile, macro=None):
             except:
                 responses = []
         
-        # responses is typically a list of dicts: [{"question_id": "q29", "option_id": "o29b"}, ...]
         if isinstance(responses, list):
             for ans in responses:
-                if ans.get("question_id") == "q29":
-                    opt = ans.get("option_id")
+                q_id = ans.get("question_id")
+                opt = ans.get("option_id")
+                
+                if q_id == "q29":
                     if opt == "o29a": monthly_expenses = 3000.0
                     elif opt == "o29b": monthly_expenses = 5500.0
                     elif opt == "o29c": monthly_expenses = 11500.0
                     elif opt == "o29d": monthly_expenses = 20000.0
-                    break
+                
+                elif q_id == "q30":
+                    if opt == "o30a": reserve_multiplier = 2.0  # 5+ people
+                    elif opt == "o30b": reserve_multiplier = 1.5  # 3-4 people
+                    elif opt == "o30c": reserve_multiplier = 1.2  # 1-2 people
+                    elif opt == "o30d": reserve_multiplier = 1.0  # 0 people
 
     # build catalog and portfolio
     catalog = build_asset_catalog(macro, profile_key)
@@ -136,6 +143,7 @@ def _build_portfolio_for_profile(profile, macro=None):
         profile=profile_key,
         macro=macro,
         historical_returns=hist_data if hist_data else None,
+        reserve_multiplier=reserve_multiplier,
     )
 
     # forward projections (5 years with selic trajectory)

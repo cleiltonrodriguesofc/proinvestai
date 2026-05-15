@@ -295,18 +295,19 @@ def build_optimized_portfolio(
     profile: str,
     macro: MacroScenario,
     historical_returns: Optional[Dict[str, np.ndarray]] = None,
+    reserve_multiplier: float = 1.0,
 ) -> Portfolio:
     """
     build a markowitz-optimized portfolio with real constraints.
 
     constraints per profile:
-      - emergency reserve (liquid assets >= expenses * months)
+      - emergency reserve (liquid assets >= expenses * months * multiplier)
       - max variable income percentage
       - max single asset concentration
       - no short selling
     """
     constraints = PROFILE_CONSTRAINTS.get(profile, PROFILE_CONSTRAINTS["moderate"])
-    reserve_months = constraints["reserve_months"]
+    reserve_months = int(constraints["reserve_months"] * reserve_multiplier)
 
     # compute reserve constraint
     if monthly_expenses > 0:
