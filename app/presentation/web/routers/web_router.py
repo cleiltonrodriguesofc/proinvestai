@@ -60,38 +60,61 @@ async def pricing(request: Request):
 async def dashboard(request: Request, user: DomainUser | None = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
     if not user:
         return RedirectResponse(url="/login")
-        
+
+    # fix plan display — strip enum class if present
+    raw_plan = getattr(user, "plan", "free") or "free"
+    plan_display = str(raw_plan).split(".")[-1].capitalize()
+
     # 1. Fetch user profile
     profile_repo = SQLAlchemyProfileRepository(session)
-    profile = await profile_repo.get_by_user_id(user.id)
+    profile = await profile_repo.get_by_user(user.id)
+
+    # profile type translation
+    PROFILE_LABELS = {
+        "conservative": "Conservador",
+        "moderate": "Moderado",
+        "aggressive": "Arrojado",
+    }
+
+    # 2. If no profile exists, show onboarding state
+    if not profile:
+        return templates.TemplateResponse("dashboard.html", {
+            "request": request,
+            "user_name": user.name,
+            "user_plan": plan_display,
+            "active_page": "dashboard",
+            "has_profile": False,
+        })
+
+    profile_type = profile.risk_profile.value if hasattr(profile.risk_profile, 'value') else str(profile.risk_profile)
+    profile_label = PROFILE_LABELS.get(profile_type, profile_type.capitalize())
+    initial_amount = float(profile.initial_amount)
     
-    profile_type = profile.risk_profile.value if profile else "moderate"
-    initial_amount = float(profile.initial_amount) if profile else 100000.0
-    
-    # 2. Define Target Portfolio based on Profile (Institutional weights)
-    # This maps to the benchmarks we have in MarketDataService
+    needs_patrimony = initial_amount <= 0
+
+    # 3. Define Target Portfolio based on Profile (Institutional weights)
     if profile_type == "conservative":
         weights = {"IRF-M 1": 0.80, "CDI": 0.15, "IMA-B": 0.05}
     elif profile_type == "aggressive":
         weights = {"IBOVESPA": 0.40, "SMLL": 0.10, "IMA-B": 0.30, "CDI": 0.20}
-    else: # moderate
+    else:  # moderate
         weights = {"CDI": 0.40, "IMA-B": 0.30, "IRF-M": 0.20, "IBOVESPA": 0.10}
 
-    # 3. Fetch Real Historical Data
+    # 4. Fetch Real Historical Data
     benchmarks = list(weights.keys())
     hist_data = market_data.get_all_benchmarks(benchmarks)
-    
-    # 4. Calculate Institutional Risk Metrics (Comitê Standard)
+
+    # 5. Calculate Institutional Risk Metrics (Comitê Standard)
     risk_report = risk_engine.compute_portfolio(
         asset_returns=hist_data,
         weights=weights,
         benchmark_name="Meta Atuarial"
     )
-    
-    # 5. Asset mapping for UI
+
+    # 6. Asset mapping for UI
     asset1 = Asset(name="Renda Fixa Pos", asset_class=AssetClass.FIXED_INCOME, subclass="post", benchmark="CDI", spread=Decimal("0.0"), tax_exempt=False, min_investment=Decimal("100"), liquidity_days=1)
     asset2 = Asset(name="Renda Fixa Inflação", asset_class=AssetClass.FIXED_INCOME, subclass="ipca", benchmark="IMA-B", spread=Decimal("0.0"), tax_exempt=False, min_investment=Decimal("100"), liquidity_days=1)
-    
+
     portfolio = Portfolio(
         allocations=[
             PortfolioAllocation(asset=asset1, weight=Decimal(str(weights.get("CDI", 0.5)))),
@@ -101,23 +124,66 @@ async def dashboard(request: Request, user: DomainUser | None = Depends(get_curr
         volatility=Decimal(str(risk_report.volatility_12m)),
         sharpe_ratio=Decimal(str(risk_report.sharpe_12m))
     )
-    
-    # 6. Run Simulations (Monte Carlo)
-    analysis = await analyze_use_case.execute(portfolio, initial_amount=initial_amount)
-    
+
+    # 7. Run Simulations (Monte Carlo)
+    analysis = await analyze_use_case.execute(
+        portfolio, 
+        initial_amount=initial_amount,
+        target_weights=weights,
+        risk_metrics=risk_report,
+        profile_type=profile_label
+    )
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user_name": user.name,
-        "profile_type": profile_type.capitalize(),
+        "user_plan": plan_display,
+        "active_page": "dashboard",
+        "has_profile": True,
+        "needs_patrimony": needs_patrimony,
+        "profile_type": profile_label,
         "total_value": f"{initial_amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."),
+        "initial_amount": initial_amount,
         "risk": risk_report,
         "analysis": analysis,
         "weights": weights,
         "narration": analysis["narration"]
     })
 
+from fastapi import Form
+from starlette.responses import RedirectResponse
+from sqlalchemy import update
+from ....infrastructure.database.models import InvestorProfile as ProfileModel
+
+@router.post("/update-patrimony")
+async def update_patrimony(
+    patrimony: float = Form(...),
+    user: DomainUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    profile_repo = SQLAlchemyProfileRepository(session)
+    profile = await profile_repo.get_by_user(user.id)
+    if profile:
+        # Update via raw SQL for simplicity since repo doesn't have an update method yet
+        await session.execute(
+            update(ProfileModel)
+            .where(ProfileModel.user_id == user.id)
+            .values(initial_amount=patrimony)
+        )
+        await session.commit()
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+
 @router.get("/quiz")
-async def quiz(request: Request):
+async def quiz(request: Request, user: DomainUser | None = Depends(get_current_user), session: AsyncSession = Depends(get_session)):
+    # Check if user already has a profile
+    has_existing_profile = False
+    if user:
+        profile_repo = SQLAlchemyProfileRepository(session)
+        profile = await profile_repo.get_by_user(user.id)
+        if profile:
+            has_existing_profile = True
+
     questions = quiz_service.get_questions()
     # Convert to serializable dict for JSON
     questions_data = []
@@ -131,5 +197,25 @@ async def quiz(request: Request):
         
     return templates.TemplateResponse("quiz.html", {
         "request": request,
-        "questions_json": json.dumps(questions_data)
+        "questions_json": json.dumps(questions_data),
+        "user": user,
+        "user_name": user.name if user else None,
+        "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].capitalize() if user else "Free",
+        "active_page": "quiz",
+        "has_existing_profile": has_existing_profile
     })
+
+@router.get("/simulation")
+async def simulation(request: Request, user: DomainUser | None = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url="/login")
+    # placeholder — full implementation pending
+    return RedirectResponse(url="/dashboard")
+
+@router.get("/gap-analysis")
+async def gap_analysis(request: Request, user: DomainUser | None = Depends(get_current_user)):
+    if not user:
+        return RedirectResponse(url="/login")
+    # placeholder — full implementation pending
+    return RedirectResponse(url="/dashboard")
+

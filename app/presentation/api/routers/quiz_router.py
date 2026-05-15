@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+import uuid
+
 from ....application.services.quiz_service import QuizService
 from ....infrastructure.database.connection import get_session as get_db
 from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
@@ -23,7 +25,7 @@ async def submit_quiz(
     result = quiz_service.calculate_result(responses)
     
     # 2. Map to InvestorProfile entity
-    user_id = user.id if user else "00000000-0000-0000-0000-000000000000"
+    user_id = user.id if user else uuid.UUID("00000000-0000-0000-0000-000000000000")
     
     # Convert profile type string to enum
     profile_map = {
@@ -36,11 +38,11 @@ async def submit_quiz(
         user_id=user_id,
         risk_profile=profile_map.get(result.profile_type, RiskProfile.MODERATE),
         investment_horizon_months=60, # Mock default
-        monthly_income=Decimal("5000"), # Mock
-        initial_amount=Decimal("10000"), # Mock
-        monthly_contribution=Decimal("500"), # Mock
+        monthly_income=Decimal("0"), # Emptied mock
+        initial_amount=Decimal("0"), # Let user input later
+        monthly_contribution=Decimal("0"), # Emptied mock
         has_emergency_reserve=True,
-        investment_goal="Patrimônio",
+        investment_goal="Crescimento",
         score=result.total_score,
         raw_responses={ans.question_id: ans.option_id for ans in responses}
     )

@@ -27,33 +27,46 @@ class AIService(IAIService):
         
         return await self._call_openai(prompt)
 
-    async def explain_gap(self, current_portfolio: dict, ideal_portfolio: dict, profile: InvestorProfile | None = None) -> str:
+    async def explain_committee_review(self, target_weights: dict, risk_metrics, profile_type: str) -> str:
         """
-        Generates a narration explaining the gap between current and ideal allocation.
+        Generates a professional narration explaining the recommended strategy and risk metrics.
         """
         if not self.api_key:
             return "Integração com IA não configurada. Configure a API Key para receber insights personalizados."
 
-        # Compute potential gain lost for demonstration
-        # In a real app this would come from the gap analysis engine
-        current_alloc_str = str({k: v for k, v in current_portfolio.items() if v > 0})
-        ideal_alloc_str = str({alloc.asset.name: float(alloc.weight) for alloc in ideal_portfolio.allocations})
+        weights_str = str({k: float(v) for k, v in target_weights.items()})
+        
+        # Format the risk metrics
+        risk_str = (
+            f"Rentabilidade 12M: {risk_metrics.return_12m * 100:.2f}% | "
+            f"VaR 95%: {risk_metrics.var_12m * 100:.2f}% | "
+            f"Sharpe: {risk_metrics.sharpe_12m:.2f} | "
+            f"Drawdown Max: {risk_metrics.drawdown_12m * 100:.2f}%"
+        )
 
         prompt = f"""
-        Você é um consultor financeiro profissional nível CEA. 
-        Analise a carteira do usuário e explique em português simples (mas profissional) por que a alocação ideal é melhor.
+Você é um analista quantitativo sênior (Nível CFA/CEA) do "Comitê Digital" da ProInvestAI.
+Sua tarefa é gerar um "Parecer Técnico" curto e institucional sobre a alocação recomendada abaixo para um cliente.
+
+Perfil do Cliente: {profile_type}
+Alocação Recomendada: {weights_str}
+Métricas de Risco Esperadas da Carteira (Backtest 12M): {risk_str}
+
+REGRAS RÍGIDAS (Siga ou será penalizado):
+1. NUNCA mencione ativos ou classes que não estão na "Alocação Recomendada" acima.
+2. NUNCA diga que o cliente tem a carteira X (ele ainda não tem). Diga que a ESTRATÉGIA RECOMENDADA foca em Y.
+3. Use um tom estritamente profissional, institucional e conciso (máximo de 120 palavras).
+4. Explique brevemente por que essa alocação faz sentido para o perfil dele e destaque a segurança (VaR/Drawdown) ou o prêmio de risco (Sharpe).
+5. Fale diretamente com o cliente ("Seu comitê digital recomenda...", "Para o seu perfil...").
+"""
         
-        Carteira Atual: {current_alloc_str}
-        Carteira Ideal: {ideal_alloc_str}
-        Perfil: {profile.risk_profile.value if hasattr(profile, 'risk_profile') and hasattr(profile.risk_profile, 'value') else 'Moderado'}
+        logger.info(f"--- AI PROMPT SENDING ---\n{prompt}\n-------------------------")
         
-        Siga estas regras:
-        1. Fale diretamente com o usuário ("Você", "Sua carteira").
-        2. Explique o conceito de risco/retorno de forma educativa.
-        3. Seja encorajador mas firme sobre a necessidade de rebalanceamento.
-        4. Use no máximo 150 palavras.
-        """
-        return await self._call_openai(prompt)
+        response_text = await self._call_openai(prompt)
+        
+        logger.info(f"--- AI RESPONSE RECEIVED ---\n{response_text}\n----------------------------")
+        
+        return response_text
 
     async def explain_stress_test(self, results: dict, profile: InvestorProfile) -> str:
         if not self.api_key:

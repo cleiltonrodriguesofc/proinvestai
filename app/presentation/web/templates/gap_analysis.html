@@ -1,110 +1,49 @@
-{% extends "base.html" %}
-
-{% block title %}Gap Analysis - ProInvestAI{% endblock %}
+{% extends "base_app.html" %}
 
 {% block content %}
-<div class="glass-panel" style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
-    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-        Gap Analysis: Realidade vs Ideal
-    </h2>
+<div class="content-header">
+    <h1 style="margin: 0; font-size: 2rem; color: #fff;">Análise de Gap</h1>
+    <p style="color: #aaa; margin: 0.5rem 0 0 0;">Comparação entre sua carteira atual e a alocação institucional recomendada.</p>
+</div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-        
-        <!-- Cost of Opportunity -->
-        <div class="glass-panel text-center" style="background: rgba(255, 99, 132, 0.1); border: 1px solid rgba(255, 99, 132, 0.3);">
-            <h3 style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 0.5rem;">Custo de Oportunidade Estimado (Ao Ano)</h3>
-            <div style="font-size: 3rem; font-weight: bold; color: #ff6b81;">
-                - R$ {{ potential_gain_lost | round(2) }}
-            </div>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-                Valor estimado que você deixa na mesa por não estar com a carteira otimizada.
-            </p>
+<div class="metrics-grid" style="grid-template-columns: 1fr 1fr; margin-bottom: 2rem;">
+    <!-- Atual -->
+    <div class="metric-card" style="background: #111; border: 1px solid #ff444433;">
+        <div class="kpi-label">Carteira Atual (Estimada)</div>
+        <div class="kpi-value" style="color: #ff4444;">{{ "%.2f"|format(current_score) }} <span style="font-size: 1rem;">/ 100 pt</span></div>
+        <div class="kpi-label" style="margin-top: 1rem;">Alocação Principal</div>
+        {% for asset, weight in current_weights.items() %}
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #ccc;">
+            <span>{{ asset }}</span>
+            <strong>{{ "%.0f"|format(weight * 100) }}%</strong>
         </div>
-
-        <!-- AI Narration -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-left: 4px solid var(--primary-color);">
-            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🧠</span> Parecer do Consultor IA (Nível CEA)
-            </h3>
-            <p style="color: #e0e0e0; line-height: 1.6; font-style: italic;">
-                "{{ ai_narration }}"
-            </p>
-        </div>
+        {% endfor %}
     </div>
 
-    <!-- Charts Section -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
-        
-        <!-- Current -->
-        <div class="glass-panel text-center" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; color: var(--text-muted);">Sua Carteira Atual</h3>
-            <div style="max-width: 300px; margin: 0 auto;">
-                <canvas id="currentChart"></canvas>
-            </div>
+    <!-- Ideal -->
+    <div class="metric-card" style="background: #111; border: 1px solid #44ff8833;">
+        <div class="kpi-label">Alocação Institucional ({{ profile_type }})</div>
+        <div class="kpi-value" style="color: #44ff88;">{{ "%.2f"|format(ideal_score) }} <span style="font-size: 1rem;">/ 100 pt</span></div>
+        <div class="kpi-label" style="margin-top: 1rem;">Alocação Recomendada</div>
+        {% for asset, weight in ideal_weights.items() %}
+        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; color: #ccc;">
+            <span>{{ asset }}</span>
+            <strong>{{ "%.0f"|format(weight * 100) }}%</strong>
         </div>
-
-        <!-- Ideal -->
-        <div class="glass-panel text-center" style="background: rgba(54, 162, 235, 0.1); padding: 1.5rem; border: 1px solid rgba(54, 162, 235, 0.3);">
-            <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Carteira Ideal (Markowitz)</h3>
-            <div style="max-width: 300px; margin: 0 auto;">
-                <canvas id="idealChart"></canvas>
-            </div>
-        </div>
-
-    </div>
-
-    <div class="text-center">
-        <button class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem;" onclick="alert('Feature em desenvolvimento!')">
-            Executar Rebalanceamento Automático
-        </button>
+        {% endfor %}
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const commonOptions = {
-        responsive: true,
-        plugins: { legend: { position: 'bottom', labels: {color: 'white'} } }
-    };
-    const bgColors = [
-        'rgba(54, 162, 235, 0.8)',
-        'rgba(255, 99, 132, 0.8)',
-        'rgba(255, 206, 86, 0.8)',
-        'rgba(75, 192, 192, 0.8)'
-    ];
-
-    // Current Chart
-    const currCtx = document.getElementById('currentChart').getContext('2d');
-    new Chart(currCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ current_labels | safe }},
-            datasets: [{
-                data: {{ current_weights | safe }},
-                backgroundColor: bgColors,
-                borderColor: 'rgba(0,0,0,0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: commonOptions
-    });
-
-    // Ideal Chart
-    const idealCtx = document.getElementById('idealChart').getContext('2d');
-    new Chart(idealCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ ideal_labels | safe }},
-            datasets: [{
-                data: {{ ideal_weights | safe }},
-                backgroundColor: bgColors,
-                borderColor: 'rgba(0,0,0,0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: commonOptions
-    });
-});
-</script>
+<div class="metric-card" style="background: #111; border: 1px solid #333; margin-bottom: 2rem;">
+    <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.2rem;">Impacto Financeiro da Ineficiência (Gap)</h3>
+    <p style="color: #aaa; margin-bottom: 1.5rem; font-size: 1.1rem;">
+        Se você mantiver a sua alocação atual ao invés de migrar para a Estratégia Recomendada, você deixará de ganhar aproximadamente <strong style="color: #ff4444;">R$ {{ "%.2f"|format(gain_lost) }}</strong> nos próximos 5 anos devido a ineficiências de risco-retorno.
+    </p>
+    <div style="padding: 1.5rem; background: #0a0a0c; border-radius: 8px; border-left: 4px solid #00E676;">
+        <h4 style="color: #00E676; margin-bottom: 0.5rem;">Parecer do Comitê de Risco</h4>
+        <p style="color: #ddd; line-height: 1.6; font-style: italic;">
+            "{{ narration }}"
+        </p>
+    </div>
+</div>
 {% endblock %}

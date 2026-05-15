@@ -176,3 +176,31 @@ h1, h2, h3, h4 {
 .delay-1 { animation-delay: 0.1s; }
 .delay-2 { animation-delay: 0.2s; }
 .delay-3 { animation-delay: 0.3s; }
+
+/* ──── Mobile-First: Public Navbar ──── */
+@media (max-width: 768px) {
+    .navbar {
+        height: 56px;
+        padding: 0 1rem;
+    }
+
+    .nav-brand { font-size: 1.1rem; }
+
+    .nav-links {
+        gap: 0.75rem;
+    }
+
+    .nav-links a {
+        font-size: 0.8rem;
+    }
+
+    /* hide non-essential links on very small screens */
+    .nav-links a:not(.btn) {
+        display: none;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .nav-links { gap: 1rem; }
+}
+

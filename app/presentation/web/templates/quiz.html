@@ -1,5 +1,5 @@
-{% extends "base.html" %}
-{% block title %}Auditoria Patrimonial — ProInvestAI{% endblock %}
+{% extends "base_app.html" if user else "base.html" %}
+{% block title %}Análise de Perfil Patrimonial — ProInvestAI{% endblock %}
 
 {% block content %}
 <style>
@@ -125,7 +125,7 @@
     <div class="quiz-container">
         <div class="quiz-header">
             <div class="quiz-step-info">
-                <span id="section-name">Iniciando Auditoria</span>
+                <span id="section-name">Iniciando Análise de Perfil</span>
                 <span id="step-counter">1 / 28</span>
             </div>
             <div class="progress-bar-container">
@@ -159,6 +159,19 @@
         <a href="/login" class="btn btn-ghost" style="width:100%;">Já tenho conta</a>
     </div>
 </div>
+
+{% if has_existing_profile %}
+<div id="re-audit-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div style="background: #111; padding: 2.5rem; border-radius: 8px; max-width: 450px; text-align: center; border: 1px solid #333;">
+        <h2 style="margin-bottom: 1rem; color: #fff; font-size: 1.5rem;">Análise Já Realizada</h2>
+        <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.5;">Você já possui um perfil ativo no sistema. Refazer a análise irá recalcular sua estratégia e substituir a alocação recomendada atual. Deseja prosseguir?</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="/dashboard" class="btn btn-ghost" style="padding: 0.8rem 1.5rem;">Voltar ao Painel</a>
+            <button onclick="document.getElementById('re-audit-modal').style.display='none'" class="btn btn-primary" style="padding: 0.8rem 1.5rem;">Refazer Análise</button>
+        </div>
+    </div>
+</div>
+{% endif %}
 
 <script>
 const QUESTIONS = {{ questions_json | safe }};
@@ -210,7 +223,7 @@ async function submitQuiz() {
         const response = await fetch('/api/quiz/submit', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(answers)
+            body: JSON.stringify(Object.values(answers))
         });
         
         const result = await response.json();
@@ -225,7 +238,7 @@ async function submitQuiz() {
             window.location.href = '/dashboard';
         }
     } catch (e) {
-        console.error("Erro ao salvar auditoria:", e);
+        console.error("Erro ao salvar análise:", e);
         alert("Ocorreu um erro ao processar seus dados. Por favor, tente novamente.");
     }
 }

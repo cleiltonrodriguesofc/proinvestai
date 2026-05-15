@@ -45,7 +45,7 @@ class IAIService(ABC):
         ...
 
     @abstractmethod
-    async def explain_gap(self, current_portfolio: dict, ideal_portfolio: dict, profile: InvestorProfile | None = None) -> str:
+    async def explain_committee_review(self, target_weights: dict, risk_metrics, profile_type: str) -> str:
         ...
 
     @abstractmethod

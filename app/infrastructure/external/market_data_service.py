@@ -9,9 +9,17 @@ import logging
 from datetime import datetime
 from typing import Dict, Optional
 import numpy as np
+import requests as _requests
 from .bcb_api import BCBApiClient
 
 logger = logging.getLogger(__name__)
+
+# reusable session with proper headers for bcb sgs api
+_session = _requests.Session()
+_session.headers.update({
+    "Accept": "application/json",
+    "User-Agent": "ProInvestAI/1.0 (python-requests)",
+})
 
 # bcb sgs series codes for all supported benchmarks
 BENCHMARK_SERIES = {
@@ -21,24 +29,20 @@ BENCHMARK_SERIES = {
     "IPCA": 433,           # ipca monthly
     "IGPM": 25433,         # igp-m monthly
     "POUPANCA": 25,        # poupanca monthly
-    # renda fixa — anbima indices via bcb sgs proxy
-    "IRF-M": 12462,        # irf-m total return
-    "IRF-M 1": 12461,      # irf-m 1 year (pre-fixado curto)
-    "IMA-B": 12466,        # ima-b total return (ipca linked)
-    "IMA-B 5": 12467,      # ima-b 5 (ipca linked short)
-    "IMA-B 5+": 12468,     # ima-b 5+ (ipca linked long)
-    "IMA Geral": 12460,    # ima geral total return
-    "IMA Geral ex-C": 28547,  # ima geral ex-c
 }
 
-# b3 equity indices — fetched via yahoo finance ticker
+# b3 equity indices and fixed-income ETFs — fetched via yahoo finance ticker
 EQUITY_TICKERS = {
     "IBOVESPA": "^BVSP",
     "IBrX-100": "^IBX100",
     "SMLL": "SMAL11.SA",
     "IDIV": "DIVO11.SA",
     "IFIX": "IFIX.SA",
-    "IHFA": None,           # no public proxy available
+    "IRF-M": "IRFM11.SA",     # ETF proxy for IRF-M
+    "IRF-M 1": "IRFM11.SA",   # using IRFM11 as proxy for now
+    "IMA-B": "IMAB11.SA",     # ETF proxy for IMA-B
+    "IMA-B 5": "B5P211.SA",   # ETF proxy for IMA-B 5
+    "IHFA": None,             # no public proxy available
 }
 
 
@@ -112,14 +116,14 @@ class MarketDataService:
         )
 
         try:
-            data = self.bcb._http_get_json(url)
+            resp = _session.get(url, timeout=20)
+            resp.raise_for_status()
+            data = resp.json()
             if not data:
                 return np.array([])
 
-            # daily series (cdi, selic, irfm, ima) → accumulate to monthly
-            if benchmark in ("CDI", "SELIC", "IRF-M", "IRF-M 1",
-                             "IMA-B", "IMA-B 5", "IMA-B 5+",
-                             "IMA Geral", "IMA Geral ex-C"):
+            # daily series (cdi, selic) → accumulate to monthly
+            if benchmark in ("CDI", "SELIC"):
                 return self._daily_to_monthly_returns(data)
             else:
                 # monthly series (ipca, igpm, poupanca) — already monthly
@@ -142,8 +146,9 @@ class MarketDataService:
             if df.empty:
                 return np.array([])
 
-            # calculate monthly returns from adjusted close
-            prices = df["Adj Close"].values.flatten()
+            # yfinance >= 0.2.31 renamed 'Adj Close' to 'Close'
+            price_col = "Adj Close" if "Adj Close" in df.columns else "Close"
+            prices = df[price_col].values.flatten()
             returns = np.diff(prices) / prices[:-1]
             return returns
 

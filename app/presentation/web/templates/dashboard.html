@@ -1,256 +1,337 @@
-{% extends "base.html" %}
+{% extends "base_app.html" %}
 {% block title %}Dashboard — ProInvestAI{% endblock %}
 
 {% block content %}
+
+{% if not has_profile %}
+<!-- ══════════════════════════════════════════════
+     ONBOARDING STATE — No profile yet
+     ══════════════════════════════════════════════ -->
+<div class="onboarding-state">
+    <div class="onboarding-icon">🏛️</div>
+    <h1 class="onboarding-title">Bem-vindo ao seu<br><span class="gradient-text">Comitê Digital.</span></h1>
+    <p class="onboarding-text">
+        Para gerar seu relatório institucional com dados reais do BCB, precisamos primeiro mapear seu perfil de investidor através da nossa análise de perfil de 28 diretrizes.
+    </p>
+    <div class="onboarding-features">
+        <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">📊</span>
+            <div>
+                <strong>Indicadores de Risco</strong>
+                <p>VaR, Sharpe, Treynor e Drawdown calculados com dados reais.</p>
+            </div>
+        </div>
+        <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">🎯</span>
+            <div>
+                <strong>Monte Carlo</strong>
+                <p>5.000 cenários de projeção baseados no seu perfil.</p>
+            </div>
+        </div>
+        <div class="onboarding-feature">
+            <span class="onboarding-feature-icon">🧠</span>
+            <div>
+                <strong>Parecer com IA</strong>
+                <p>Análise personalizada do seu patrimônio por inteligência artificial.</p>
+            </div>
+        </div>
+    </div>
+    <a href="/quiz" class="btn btn-primary onboarding-cta" id="start-audit-btn">Iniciar Análise de Perfil</a>
+    <p class="onboarding-time">⏱ Leva apenas 3 minutos</p>
+</div>
+
 <style>
-/* ──── Dashboard Style (Executive Terminal) ──── */
-.dash-page {
-    background: #000;
-    min-height: 100vh;
-    padding: 1.5rem 2rem;
-}
-
-.dash-header {
+.onboarding-state {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #111;
-    padding-bottom: 1.5rem;
-}
-
-.user-badge {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--cyan);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    display: block;
-}
-
-.dash-title {
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-}
-
-.total-value-box { text-align: right; }
-.total-label { font-size: 0.7rem; color: #444; text-transform: uppercase; font-weight: 700; }
-.total-value { font-size: 2rem; font-weight: 800; color: #fff; }
-
-/* ──── Risk Metrics Table (Institutional Standard) ──── */
-.risk-table-container {
-    background: #060608;
-    border: 1px solid #111;
-    border-radius: 4px;
-    margin-bottom: 1.5rem;
-    overflow: hidden;
-}
-
-.table-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid #111;
-    display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: calc(100vh - 120px);
+    padding: 2rem 1rem;
 }
 
-.table-title { font-size: 0.8rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
-
-.risk-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.risk-table th {
-    text-align: left;
-    padding: 0.75rem 1.5rem;
-    font-size: 0.65rem;
-    color: #444;
-    text-transform: uppercase;
-    border-bottom: 1px solid #111;
-}
-
-.risk-table td {
-    padding: 1rem 1.5rem;
-    font-size: 0.95rem;
-    border-bottom: 1px solid #0a0a0a;
-}
-
-.val-up { color: var(--emerald); }
-.val-down { color: var(--rose); }
-.col-label { font-weight: 600; color: #888; width: 250px; }
-.col-month, .col-12m { text-align: right; width: 150px; font-weight: 700; }
-
-/* ──── Charts Grid ──── */
-.charts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+.onboarding-icon {
+    font-size: 3.5rem;
     margin-bottom: 1.5rem;
 }
 
-.chart-card {
+.onboarding-title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+}
+
+.onboarding-text {
+    color: #666;
+    font-size: 1rem;
+    max-width: 500px;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+}
+
+.onboarding-features {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 400px;
+    width: 100%;
+    margin-bottom: 2.5rem;
+    text-align: left;
+}
+
+.onboarding-feature {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem;
     background: #060608;
     border: 1px solid #111;
-    border-radius: 4px;
-    padding: 1.5rem;
+    border-radius: 6px;
 }
 
-.chart-title {
+.onboarding-feature-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.onboarding-feature strong {
+    display: block;
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+}
+
+.onboarding-feature p {
+    font-size: 0.78rem;
+    color: #555;
+    line-height: 1.4;
+    margin: 0;
+}
+
+.onboarding-cta {
+    padding: 1.1rem 3rem !important;
+    border-radius: 4px !important;
+    font-size: 1rem !important;
+}
+
+.onboarding-time {
+    margin-top: 1rem;
     font-size: 0.75rem;
-    font-weight: 700;
     color: #444;
-    text-transform: uppercase;
-    margin-bottom: 1.5rem;
-    display: flex;
-    justify-content: space-between;
 }
 
-/* ──── Narration ──── */
-.narration-box {
-    background: linear-gradient(135deg, #0a0a0c, #000);
-    border: 1px solid #111;
-    padding: 2rem;
-    border-left: 3px solid var(--cyan);
-}
+@media (min-width: 768px) {
+    .onboarding-features {
+        flex-direction: row;
+        max-width: 700px;
+    }
 
-.narration-title { font-size: 0.8rem; font-weight: 700; color: var(--cyan); margin-bottom: 1rem; text-transform: uppercase; }
-.narration-text { font-size: 1.1rem; line-height: 1.6; color: #ccc; }
-
-@media (max-width: 1024px) {
-    .charts-grid { grid-template-columns: 1fr; }
+    .onboarding-feature {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
 }
 </style>
 
-<div class="dash-page">
-    <header class="dash-header">
-        <div>
-            <span class="user-badge">Comitê Digital — {{ user_name }}</span>
-            <h1 class="dash-title">Visão Geral do Patrimônio</h1>
+{% elif needs_patrimony %}
+<!-- ══════════════════════════════════════════════
+     PATRIMONY ONBOARDING — Profile exists but no amount
+     ══════════════════════════════════════════════ -->
+<div class="onboarding-state" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+    <div class="onboarding-icon">💰</div>
+    <h1 class="onboarding-title">Qual o seu patrimônio<br><span class="gradient-text">atual?</span></h1>
+    <p class="onboarding-text">
+        Seu perfil ({{ profile_type }}) já foi mapeado com sucesso! Agora, para gerar as simulações de risco e projeções de Monte Carlo com a sua <strong>carteira real</strong>, informe o valor atual dos seus investimentos.
+    </p>
+    
+    <form action="/update-patrimony" method="post" style="max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 1rem;">
+        <div style="text-align: left;">
+            <label style="color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Valor Total Investido (R$)</label>
+            <input type="number" name="patrimony" placeholder="Ex: 50000" required min="1" step="0.01" style="width: 100%; padding: 1rem; background: #060608; border: 1px solid #222; border-radius: 6px; color: #fff; font-size: 1.1rem; font-family: monospace;">
         </div>
-        <div class="total-value-box">
-            <span class="total-label">Saldo sob Governança</span>
-            <div class="total-value">R$ {{ total_value }}</div>
-            <div style="font-size: 0.75rem; color: var(--emerald); font-weight: 700;">
-                Perfil {{ profile_type }} • Grau Institucional
-            </div>
-        </div>
-    </header>
+        <button type="submit" class="btn btn-primary" style="padding: 1.1rem; border-radius: 6px; font-size: 1rem;">Gerar Meu Dashboard</button>
+    </form>
+</div>
 
-    <!-- ──── Risk Metrics ──── -->
-    <div class="risk-table-container">
-        <div class="table-header">
-            <span class="table-title">Indicadores de Risco e Performance</span>
-            <span style="font-size: 0.7rem; color: #333;">Bench: {{ risk.benchmark }}</span>
-        </div>
-        <table class="risk-table">
-            <thead>
-                <tr>
-                    <th>Indicador</th>
-                    <th style="text-align: right;">Mês Atual</th>
-                    <th style="text-align: right;">Últimos 12 Meses</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="col-label">Rentabilidade Absoluta</td>
-                    <td class="col-month {{ 'val-up' if risk.return_month > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_month * 100) }}%</td>
-                    <td class="col-12m {{ 'val-up' if risk.return_12m > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_12m * 100) }}%</td>
-                </tr>
-                <tr>
-                    <td class="col-label">VaR (Value at Risk — 95%)</td>
-                    <td class="col-month">{{ "%.2f"|format(risk.var_month * 100) }}%</td>
-                    <td class="col-12m">{{ "%.2f"|format(risk.var_12m * 100) }}%</td>
-                </tr>
-                <tr>
-                    <td class="col-label">Volatilidade (Anualizada)</td>
-                    <td class="col-month">{{ "%.2f"|format(risk.volatility_month * 100) }}%</td>
-                    <td class="col-12m">{{ "%.2f"|format(risk.volatility_12m * 100) }}%</td>
-                </tr>
-                <tr>
-                    <td class="col-label">Índice de Sharpe</td>
-                    <td class="col-month">{{ "%.2f"|format(risk.sharpe_month) }}</td>
-                    <td class="col-12m">{{ "%.2f"|format(risk.sharpe_12m) }}</td>
-                </tr>
-                <tr>
-                    <td class="col-label">Drawdown Máximo</td>
-                    <td class="col-month val-down">{{ "%.2f"|format(risk.drawdown_month * 100) }}%</td>
-                    <td class="col-12m val-down">{{ "%.2f"|format(risk.drawdown_12m * 100) }}%</td>
-                </tr>
-            </tbody>
-        </table>
+{% else %}
+<!-- ══════════════════════════════════════════════
+     FULL DASHBOARD — Profile exists
+     ══════════════════════════════════════════════ -->
+
+<header class="dash-header">
+    <div>
+        <span class="user-badge">Comitê Digital — {{ user_name }}</span>
+        <h1 class="dash-title">Visão Geral do Patrimônio</h1>
     </div>
+    <div class="total-value-box">
+        <span class="total-label">Saldo sob Governança</span>
+        <div class="total-value">R$ {{ total_value }}</div>
+        <span class="profile-badge">Perfil {{ profile_type }} • Grau Institucional</span>
+    </div>
+</header>
 
-    <!-- ──── Charts ──── -->
-    <div class="charts-grid">
-        <div class="chart-card">
-            <div class="chart-title">Alocação Estratégica Recomendada</div>
-            <div style="height: 250px; display: flex; align-items: center; justify-content: center;">
-                <canvas id="allocationChart"></canvas>
-            </div>
-        </div>
-        <div class="chart-card">
-            <div class="chart-title">Projeção Monte Carlo (60 Meses)</div>
-            <div style="height: 250px;">
-                <canvas id="monteCarloChart"></canvas>
-            </div>
+<!-- ──── KPI Cards ──── -->
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Rentabilidade 12M</div>
+        <div class="kpi-value {{ 'val-up' if risk.return_12m > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_12m * 100) }}%</div>
+        <div class="kpi-sub">vs Meta Atuarial</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">VaR (95%)</div>
+        <div class="kpi-value" style="color: var(--rose);">{{ "%.2f"|format(risk.var_12m * 100) }}%</div>
+        <div class="kpi-sub">Risco máximo mensal</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Índice de Sharpe</div>
+        <div class="kpi-value" style="color: var(--cyan);">{{ "%.2f"|format(risk.sharpe_12m) }}</div>
+        <div class="kpi-sub">Eficiência risco-retorno</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Drawdown Máximo</div>
+        <div class="kpi-value" style="color: var(--rose);">{{ "%.2f"|format(risk.drawdown_12m * 100) }}%</div>
+        <div class="kpi-sub">Perda máx. acumulada</div>
+    </div>
+</div>
+
+<!-- ──── Risk Metrics Table ──── -->
+<div class="risk-table-container">
+    <div class="table-header">
+        <span class="table-title">Indicadores de Risco e Performance</span>
+        <span style="font-size: 0.65rem; color: #333;">Bench: {{ risk.benchmark }}</span>
+    </div>
+    <table class="risk-table">
+        <thead>
+            <tr>
+                <th>Indicador</th>
+                <th style="text-align: right;">Mês Atual</th>
+                <th style="text-align: right;">Últimos 12 Meses</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="col-label">Rentabilidade Absoluta</td>
+                <td class="col-month {{ 'val-up' if risk.return_month > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_month * 100) }}%</td>
+                <td class="col-12m {{ 'val-up' if risk.return_12m > 0 else 'val-down' }}">{{ "%.2f"|format(risk.return_12m * 100) }}%</td>
+            </tr>
+            <tr>
+                <td class="col-label">VaR (Value at Risk — 95%)</td>
+                <td class="col-month">{{ "%.2f"|format(risk.var_month * 100) }}%</td>
+                <td class="col-12m">{{ "%.2f"|format(risk.var_12m * 100) }}%</td>
+            </tr>
+            <tr>
+                <td class="col-label">Volatilidade (Anualizada)</td>
+                <td class="col-month">{{ "%.2f"|format(risk.volatility_month * 100) }}%</td>
+                <td class="col-12m">{{ "%.2f"|format(risk.volatility_12m * 100) }}%</td>
+            </tr>
+            <tr>
+                <td class="col-label">Índice de Sharpe</td>
+                <td class="col-month">{{ "%.2f"|format(risk.sharpe_month) }}</td>
+                <td class="col-12m">{{ "%.2f"|format(risk.sharpe_12m) }}</td>
+            </tr>
+            <tr>
+                <td class="col-label">Drawdown Máximo</td>
+                <td class="col-month val-down">{{ "%.2f"|format(risk.drawdown_month * 100) }}%</td>
+                <td class="col-12m val-down">{{ "%.2f"|format(risk.drawdown_12m * 100) }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- ──── Charts ──── -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <div class="chart-title">Alocação Estratégica Recomendada</div>
+        <div style="height: 260px; display: flex; align-items: center; justify-content: center;">
+            <canvas id="allocationChart"></canvas>
         </div>
     </div>
-
-    <!-- ──── AI Parecer ──── -->
-    <div class="narration-box animate-fade-in delay-2">
-        <div class="narration-title">Parecer Técnico do Comitê</div>
-        <div class="narration-text">
-            {{ narration | safe }}
+    <div class="chart-card">
+        <div class="chart-title">Projeção Monte Carlo (60 Meses)</div>
+        <div style="height: 260px;">
+            <canvas id="monteCarloChart"></canvas>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ──── AI Parecer ──── -->
+<div class="narration-box animate-fade-in delay-2">
+    <div class="narration-title">Parecer Técnico do Comitê</div>
+    <div class="narration-text">
+        {{ narration | safe }}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if has_profile %}
 <script>
     // 1. Allocation Chart
     const weights = {{ weights | tojson }};
+    const chartColors = ['#00d4ff', '#7c3aed', '#10b981', '#f59e0b', '#f43f5e', '#a855f7'];
+
     new Chart(document.getElementById('allocationChart'), {
         type: 'doughnut',
         data: {
             labels: Object.keys(weights),
             datasets: [{
                 data: Object.values(weights),
-                backgroundColor: ['#00d4ff', '#7c3aed', '#10b981', '#f59e0b'],
+                backgroundColor: chartColors.slice(0, Object.keys(weights).length),
                 borderWidth: 0,
                 hoverOffset: 10
             }]
         },
         options: {
-            plugins: { legend: { position: 'right', labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 } } } },
-            cutout: '70%'
+            plugins: {
+                legend: {
+                    position: window.innerWidth < 768 ? 'bottom' : 'right',
+                    labels: {
+                        color: '#666',
+                        font: { family: 'Plus Jakarta Sans', size: 11 },
+                        padding: 12
+                    }
+                }
+            },
+            cutout: '70%',
+            responsive: true,
+            maintainAspectRatio: false
         }
     });
 
-    // 2. Monte Carlo Chart (Simplified visualization)
+    // 2. Monte Carlo Chart
     const mc = {{ analysis.monte_carlo | tojson }};
     const p = mc.percentiles;
+    const initVal = {{ initial_amount }};
+
     new Chart(document.getElementById('monteCarloChart'), {
         type: 'line',
         data: {
             labels: Array.from({length: 61}, (_, i) => i),
             datasets: [
-                { label: 'P90 (Otimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p90], borderColor: '#10b981', borderWidth: 1, fill: false, pointRadius: 0 },
-                { label: 'P50 (Médio)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p50], borderColor: '#00d4ff', borderWidth: 2, fill: false, pointRadius: 0 },
-                { label: 'P10 (Pessimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p10], borderColor: '#f43f5e', borderWidth: 1, fill: false, pointRadius: 0 }
+                { label: 'P90 (Otimista)', data: [initVal, p.p90], borderColor: '#10b981', borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0.3 },
+                { label: 'P50 (Médio)', data: [initVal, p.p50], borderColor: '#00d4ff', borderWidth: 2, fill: false, pointRadius: 0, tension: 0.3 },
+                { label: 'P10 (Pessimista)', data: [initVal, p.p10], borderColor: '#f43f5e', borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0.3 }
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { grid: { color: '#111' }, ticks: { color: '#444' } },
-                x: { grid: { display: false }, ticks: { color: '#444' } }
+                y: { grid: { color: '#111' }, ticks: { color: '#444', font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { color: '#444', font: { size: 10 }, maxTicksLimit: 6 } }
             },
-            plugins: { legend: { display: false } }
+            plugins: {
+                legend: {
+                    labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 10 }, boxWidth: 12 }
+                }
+            }
         }
     });
 </script>
+{% endif %}
 {% endblock %}
