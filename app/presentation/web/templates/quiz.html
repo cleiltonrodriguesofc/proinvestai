@@ -218,7 +218,12 @@ document.getElementById('btn-back').onclick = () => {
 };
 
 async function submitQuiz() {
-    // 1. Submit to API
+    {% if not user %}
+    // Public user: do not save to DB yet. Save answers to session storage and prompt to register.
+    sessionStorage.setItem('pending_quiz_answers', JSON.stringify(Object.values(answers)));
+    document.getElementById('lead-gate').style.display = 'flex';
+    {% else %}
+    // Logged-in user: submit directly to API
     try {
         const response = await fetch('/api/quiz/submit', {
             method: 'POST',
@@ -226,21 +231,17 @@ async function submitQuiz() {
             body: JSON.stringify(Object.values(answers))
         });
         
-        const result = await response.json();
-        
-        // 2. Check if logged in (if user_id is placeholder, show lead gate)
-        if (result.profile_id === "00000000-0000-0000-0000-000000000000") {
-            // Save temporary result to session
-            sessionStorage.setItem('pending_quiz_result', JSON.stringify(result));
-            document.getElementById('lead-gate').style.display = 'flex';
-        } else {
-            // Success! Go to dashboard
+        if (response.ok) {
             window.location.href = '/dashboard';
+        } else {
+            console.error("Erro ao salvar quiz");
+            alert("Ocorreu um erro ao salvar suas respostas. Tente novamente.");
         }
     } catch (e) {
-        console.error("Erro ao salvar análise:", e);
-        alert("Ocorreu um erro ao processar seus dados. Por favor, tente novamente.");
+        console.error(e);
+        alert("Erro de conexão ao salvar quiz.");
     }
+    {% endif %}
 }
 
 renderQuestion();

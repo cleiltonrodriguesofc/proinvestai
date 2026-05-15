@@ -33,22 +33,7 @@ class MonteCarloEngine:
         n_assets = len(portfolio.allocations)
         dt = 1.0  # monthly time step
 
-        # Extract asset parameters
-        # In this new project, we need to handle the returns properly.
-        # We'll assume the portfolio already has expected_return and volatility calculated
-        # But for Monte Carlo, it's better to simulate asset by asset if we have correlations.
-        
-        # If we don't have per-asset expected returns in the entity yet, 
-        # we might need to compute them from historical_returns or pass them.
-        # For now, let's use the portfolio level metrics as a fallback or 
-        # assume assets have been populated with expected metrics.
-
-        # Let's assume we use the portfolio's expected_return and volatility for a aggregate GBM
-        # if we don't want to get into per-asset details right now, or if they are missing.
-        
-        # However, the old code did per-asset. Let's see if we can do that.
-        # Current Asset entity doesn't have expected_return field, but it has historical_returns.
-        
+        # extract per-asset monthly return and volatility from the new entity model
         mu_list = []
         sigma_list = []
         weights = []

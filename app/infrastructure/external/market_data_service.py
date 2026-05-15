@@ -42,6 +42,7 @@ EQUITY_TICKERS = {
     "IRF-M 1": "IRFM11.SA",   # using IRFM11 as proxy for now
     "IMA-B": "IMAB11.SA",     # ETF proxy for IMA-B
     "IMA-B 5": "B5P211.SA",   # ETF proxy for IMA-B 5
+    "IVVB11": "IVVB11.SA",   # International (S&P 500)
     "IHFA": None,             # no public proxy available
 }
 
