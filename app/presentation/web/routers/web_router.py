@@ -97,7 +97,28 @@ def _build_portfolio_for_profile(profile, macro=None):
 
     profile_key = _normalize_profile(profile.risk_profile)
     initial_amount = float(profile.initial_amount)
-    monthly_expenses = float(getattr(profile, "monthly_income", 0)) * 0.7  # estimate 70% of income
+    
+    # Extract real expenses from Q29 if available, else estimate 70% of income
+    monthly_expenses = float(getattr(profile, "monthly_income", 0)) * 0.7
+    
+    if hasattr(profile, "raw_responses") and profile.raw_responses:
+        responses = profile.raw_responses
+        if isinstance(responses, str):
+            try:
+                responses = json.loads(responses)
+            except:
+                responses = []
+        
+        # responses is typically a list of dicts: [{"question_id": "q29", "option_id": "o29b"}, ...]
+        if isinstance(responses, list):
+            for ans in responses:
+                if ans.get("question_id") == "q29":
+                    opt = ans.get("option_id")
+                    if opt == "o29a": monthly_expenses = 3000.0
+                    elif opt == "o29b": monthly_expenses = 5500.0
+                    elif opt == "o29c": monthly_expenses = 11500.0
+                    elif opt == "o29d": monthly_expenses = 20000.0
+                    break
 
     # build catalog and portfolio
     catalog = build_asset_catalog(macro, profile_key)
