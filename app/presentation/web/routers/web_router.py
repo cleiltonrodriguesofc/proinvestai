@@ -324,8 +324,7 @@ async def quiz(
             "options": [{"id": o.id, "text": o.text, "score": o.score} for o in q.options],
         })
 
-    return templates.TemplateResponse("quiz.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "quiz.html", {
         "questions_json": json.dumps(questions_data),
         "user": user,
         "user_name": user.name if user else None,
@@ -512,23 +511,62 @@ async def gap_analysis(
         ideal_annual = portfolio.weighted_expected_annual_return
         ideal_net_annual = portfolio.expected_net_annual_return(24)
         ideal_allocations = portfolio.get_allocation_summary()
+        ideal_class_breakdown = portfolio.get_class_breakdown()
     else:
         ideal_annual = 0.10
         ideal_net_annual = 0.085
         ideal_allocations = []
+        ideal_class_breakdown = {}
 
-    current_annual = (1 + current_monthly_return) ** 12 - 1
-    annual_gap = ideal_net_annual - current_annual
-    gain_lost = float(profile.initial_amount) * abs(annual_gap) * 5  # 5-year opportunity cost
+    # estimate current return from asset classes instead of hardcoded baseline
+    _return_by_class = {
+        "renda_fixa": 0.1475,       # cdi ≈ selic
+        "renda_variavel": 0.14,     # ibovespa rolling avg
+        "fii": 0.12,                # ifix avg
+        "internacional": 0.15,      # sp500 brl adjusted
+        "previdencia": 0.10,
+        "alternativo": 0.20,
+    }
+    current_annual = sum(
+        w * _return_by_class.get(cls, 0.10)
+        for cls, w in current_weights.items()
+    )
+    # apply 15% ir on current portfolio (conservative)
+    current_net_annual = current_annual * 0.85
+
+    annual_gap = ideal_net_annual - current_net_annual
+    gain_lost = total_current_value * abs(annual_gap) * 5  # 5-year opportunity cost
+
+    # build chart json for dual doughnut
+    class_labels_pt = {
+        "renda_fixa": "Renda Fixa",
+        "renda_variavel": "Renda Variável",
+        "fii": "FII",
+        "internacional": "Internacional",
+        "previdencia": "Previdência",
+        "alternativo": "Alternativo",
+    }
+    current_chart = {
+        "labels": [class_labels_pt.get(k, k) for k in current_weights],
+        "data": [round(v * 100, 1) for v in current_weights.values()],
+    }
+    ideal_chart = {
+        "labels": [class_labels_pt.get(k, k) for k in ideal_class_breakdown],
+        "data": [round(v * 100, 1) for v in ideal_class_breakdown.values()],
+    }
 
     # ai narration for gap
-    narration = await ai_service.explain_gap_analysis(
-        current_weights=current_weights,
-        ideal_allocations=ideal_allocations,
-        annual_gap=annual_gap,
-        gain_lost=gain_lost,
-        profile_label=profile_label,
-    )
+    try:
+        narration = await ai_service.explain_gap_analysis(
+            current_weights=current_weights,
+            ideal_allocations=ideal_allocations,
+            annual_gap=annual_gap,
+            gain_lost=gain_lost,
+            profile_label=profile_label,
+        )
+    except Exception as e:
+        logger.warning(f"gap analysis narration failed: {e}")
+        narration = ""
 
     return templates.TemplateResponse("gap_analysis.html", {
         "request": request,
@@ -538,10 +576,14 @@ async def gap_analysis(
         "profile_type": profile_label,
         "ideal_allocations": ideal_allocations,
         "current_weights": current_weights,
-        "current_score": 42.0,
-        "ideal_score": profile.score,
+        "total_current_value": total_current_value,
+        "current_annual": current_annual,
+        "ideal_annual": ideal_annual,
         "gain_lost": abs(gain_lost),
         "annual_gap": annual_gap,
+        "has_real_assets": len(user_assets) > 0,
+        "current_chart_json": json.dumps(current_chart),
+        "ideal_chart_json": json.dumps(ideal_chart),
         "narration": narration,
     })
 

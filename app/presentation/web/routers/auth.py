@@ -54,7 +54,7 @@ async def get_current_user(request: Request, session: AsyncSession = Depends(get
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse(request, "login.html", {})
 
 @router.post("/login")
 async def login(
@@ -67,8 +67,7 @@ async def login(
     user = await user_repo.get_by_email(email)
     
     if not user or not verify_password(password, user.hashed_password):
-        return templates.TemplateResponse("login.html", {
-            "request": request, 
+        return templates.TemplateResponse(request, "login.html", {
             "error": "Email ou senha incorretos."
         }, status_code=status.HTTP_400_BAD_REQUEST)
         
@@ -89,7 +88,7 @@ async def login(
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse(request, "register.html", {})
 
 @router.post("/register")
 async def register(
@@ -102,8 +101,7 @@ async def register(
     user_repo = SQLAlchemyUserRepository(session)
     existing_user = await user_repo.get_by_email(email)
     if existing_user:
-        return templates.TemplateResponse("register.html", {
-            "request": request, 
+        return templates.TemplateResponse(request, "register.html", {
             "error": "Este email já está cadastrado."
         }, status_code=status.HTTP_400_BAD_REQUEST)
         
