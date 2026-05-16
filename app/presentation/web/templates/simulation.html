@@ -4,40 +4,170 @@
 {% block content %}
 <header class="dash-header">
     <div>
-        <span class="user-badge">{{ user_name }} — Simulação de Patrimônio</span>
-        <h1 class="dash-title">Simulador Monte Carlo</h1>
+        <span class="user-badge">{{ user_name }} — Perfil {{ profile_type | default("") }}</span>
+        <h1 class="dash-title">Simulação & Stress Test</h1>
         <p style="color: #888; font-size: 0.95rem; margin-top: 0.5rem;">
-            A simulação gerou 5.000 trajetórias possíveis para a sua carteira recomendada ao longo de 5 anos (60 meses), considerando a volatilidade e o retorno histórico dos produtos.
+            Projeção estocástica com 5.000 cenários + testes de estresse em crises históricas reais do mercado brasileiro.
         </p>
     </div>
 </header>
 
+<!-- ──── Monte Carlo KPIs ──── -->
 <div class="kpi-grid" style="margin-bottom: 2rem;">
     <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.3);">
         <div class="kpi-label">Pior Cenário (P5)</div>
         <div class="kpi-value" style="color: #f43f5e;">R$ {{ "{:,.2f}".format(results.p5).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
-        <div class="kpi-sub">Apenas 5% de chance de ser menor que isso</div>
+        <div class="kpi-sub">Apenas 5% de chance de ser menor</div>
     </div>
     
     <div class="kpi-card kpi-highlight" style="border-color: rgba(0, 212, 255, 0.5);">
         <div class="kpi-label">Cenário Base (Mediana)</div>
         <div class="kpi-value" style="color: #00d4ff;">R$ {{ "{:,.2f}".format(results.p50).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
-        <div class="kpi-sub">O cenário mais provável para sua carteira</div>
+        <div class="kpi-sub">O cenário mais provável</div>
     </div>
     
     <div class="kpi-card" style="border-color: rgba(16, 185, 129, 0.3);">
         <div class="kpi-label">Cenário Otimista (P95)</div>
         <div class="kpi-value" style="color: #10b981;">R$ {{ "{:,.2f}".format(results.p95).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
-        <div class="kpi-sub">Apenas 5% de chance de superar isso</div>
+        <div class="kpi-sub">Apenas 5% de chance de superar</div>
     </div>
 </div>
 
-<div class="chart-card animate-fade-in delay-1" style="height: 500px; padding: 1.5rem;">
-    <div class="chart-title">Evolução Patrimonial (5.000 Cenários)</div>
-    <div style="height: 420px; width: 100%; position: relative;">
+<!-- ──── Monte Carlo Chart ──── -->
+<div class="chart-card animate-fade-in delay-1" style="height: 440px; padding: 1.5rem;">
+    <div class="chart-title">Evolução Patrimonial — 5.000 Cenários (60 meses)</div>
+    <div style="height: 370px; width: 100%; position: relative;">
         <canvas id="simulationChart"></canvas>
     </div>
 </div>
+
+<!-- ──── Risk Metrics ──── -->
+{% if risk_metrics %}
+<div class="kpi-grid" style="margin-top: 1.5rem;">
+    <div class="kpi-card">
+        <div class="kpi-label">Retorno Bruto Anual</div>
+        <div class="kpi-value val-up">{{ "%.2f"|format(risk_metrics.expected_return * 100) }}%</div>
+        <div class="kpi-sub">Líquido: {{ "%.2f"|format(risk_metrics.net_return * 100) }}%</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Volatilidade Anual</div>
+        <div class="kpi-value">{{ "%.2f"|format(risk_metrics.volatility * 100) }}%</div>
+        <div class="kpi-sub">Risco: {{ risk_metrics.risk_category | capitalize }}</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Índice de Sharpe</div>
+        <div class="kpi-value" style="color: {% if risk_metrics.sharpe > 1.5 %}#10b981{% elif risk_metrics.sharpe > 0.8 %}#00d4ff{% else %}#f59e0b{% endif %};">{{ "%.2f"|format(risk_metrics.sharpe) }}</div>
+        <div class="kpi-sub">{% if risk_metrics.sharpe > 1.5 %}Excelente{% elif risk_metrics.sharpe > 0.8 %}Bom{% else %}Adequado{% endif %}</div>
+    </div>
+    {% if risk_metrics.max_drawdown > 0 %}
+    <div class="kpi-card">
+        <div class="kpi-label">Drawdown Máximo</div>
+        <div class="kpi-value" style="color: #f43f5e;">-{{ "%.2f"|format(risk_metrics.max_drawdown * 100) }}%</div>
+        <div class="kpi-sub">Maior queda histórica</div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- ──── Probability Stats ──── -->
+{% if prob_loss is defined %}
+<div class="kpi-grid" style="margin-top: 1.5rem;">
+    <div class="kpi-card">
+        <div class="kpi-label">Prob. de Perda (5 anos)</div>
+        <div class="kpi-value" style="color: {% if prob_loss < 0.05 %}#10b981{% elif prob_loss < 0.15 %}#f59e0b{% else %}#f43f5e{% endif %};">{{ "%.1f"|format(prob_loss * 100) }}%</div>
+        <div class="kpi-sub">Chance de terminar com menos do que investiu</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Prob. de Dobrar Capital</div>
+        <div class="kpi-value" style="color: #00d4ff;">{{ "%.1f"|format(prob_double * 100) }}%</div>
+        <div class="kpi-sub">Chance de atingir R$ {{ "{:,.0f}".format(initial_amount * 2).replace(",", ".") }} em 5 anos</div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ──── Stress Test Cards ──── -->
+{% if stress_tests %}
+<div style="margin-top: 2rem;">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">🛡️ Stress Test — Crises Reais</h2>
+    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Como sua carteira teria se comportado em cada crise histórica do mercado brasileiro.
+    </p>
+    <div class="kpi-grid">
+        {% for st in stress_tests %}
+        <div class="kpi-card stress-card" style="border-color: {% if st.severity == 'extreme' %}rgba(244, 63, 94, 0.4){% else %}rgba(245, 158, 11, 0.3){% endif %};">
+            <div class="kpi-label">{{ st.name }}</div>
+            <div class="kpi-value" style="color: {% if st.impact < -0.05 %}#f43f5e{% elif st.impact < 0 %}#f59e0b{% else %}#10b981{% endif %};">
+                {{ "%.2f"|format(st.impact * 100) }}%
+            </div>
+            <div class="kpi-sub">
+                Impacto: R$ {{ "{:,.0f}".format(initial_amount * st.impact).replace(",", "X").replace(".", ",").replace("X", ".") }}
+            </div>
+            <div style="margin-top: 0.75rem;">
+                {% if st.severity == 'extreme' %}
+                <span class="badge-risk badge-risk-muito-alto" style="font-size: 0.6rem;">EXTREMO</span>
+                {% elif st.severity == 'high' %}
+                <span class="badge-risk badge-risk-alto" style="font-size: 0.6rem;">ALTO</span>
+                {% else %}
+                <span class="badge-risk badge-risk-moderado" style="font-size: 0.6rem;">MODERADO</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- ──── Backtest Summary ──── -->
+{% if backtest %}
+<div style="margin-top: 2rem;">
+    <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">📈 Backtest Histórico</h2>
+    <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Se você tivesse montado esta carteira no passado, estes seriam os resultados reais.
+    </p>
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Retorno Total</div>
+            <div class="kpi-value val-up">{{ "%.2f"|format(backtest.total_return * 100) }}%</div>
+            <div class="kpi-sub">Acumulado no período</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Retorno Anualizado</div>
+            <div class="kpi-value val-up">{{ "%.2f"|format(backtest.annualized_return * 100) }}%</div>
+            <div class="kpi-sub">Média anual composta</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Volatilidade Realizada</div>
+            <div class="kpi-value">{{ "%.2f"|format(backtest.volatility * 100) }}%</div>
+            <div class="kpi-sub">Risco real observado</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Meses Negativos</div>
+            <div class="kpi-value" style="color: #f59e0b;">{{ "%.0f"|format(backtest.negative_months_pct * 100) }}%</div>
+            <div class="kpi-sub">Dos meses observados</div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- ──── AI Narration ──── -->
+{% if narration %}
+<div class="narration-box animate-fade-in delay-2" style="margin-top: 2rem;">
+    <div class="narration-title">🧠 Interpretação da Simulação</div>
+    <div class="narration-text">
+        {{ narration | safe }}
+    </div>
+</div>
+{% endif %}
+
+<style>
+.kpi-highlight { border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-risk { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+.badge-risk-muito-alto { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.badge-risk-alto { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+.badge-risk-moderado { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.stress-card { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.stress-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -46,6 +176,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const ctx = document.getElementById('simulationChart').getContext('2d');
     const data = {{ chart_data_json | safe }};
     
+    if (!data.labels || data.labels.length === 0) return;
+
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -54,17 +186,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: 'Cenário Otimista (P95)',
                     data: data.p95,
-                    borderColor: '#10b981', // green
+                    borderColor: '#10b981',
                     backgroundColor: 'rgba(16, 185, 129, 0.05)',
                     borderWidth: 2,
                     pointRadius: 0,
-                    fill: false,
+                    fill: '+1',
                     tension: 0.1
                 },
                 {
                     label: 'Cenário Base (Mediana)',
                     data: data.p50,
-                    borderColor: '#00d4ff', // cyan
+                    borderColor: '#00d4ff',
                     borderWidth: 3,
                     pointRadius: 0,
                     fill: false,
@@ -73,11 +205,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 {
                     label: 'Pior Cenário (P5)',
                     data: data.p5,
-                    borderColor: '#f43f5e', // rose
+                    borderColor: '#f43f5e',
                     backgroundColor: 'rgba(244, 63, 94, 0.05)',
                     borderWidth: 2,
                     pointRadius: 0,
-                    fill: false,
+                    fill: '-1',
                     tension: 0.1
                 }
             ]
@@ -130,6 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             return context.dataset.label + ': R$ ' + context.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
                         }
                     }
+                },
+                filler: {
+                    propagate: false
                 }
             }
         }

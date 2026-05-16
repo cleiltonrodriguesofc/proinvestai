@@ -7,28 +7,36 @@ to the jinja2 frontend templates.
 
 import json
 import logging
+import uuid
+from datetime import datetime
+from pathlib import Path
+
 import numpy as np
 from fastapi import APIRouter, Request, Depends, Form
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
-from pathlib import Path
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ....application.services.quiz_service import QuizService
 from ....application.services.monte_carlo_engine import MonteCarloEngine
 from ....application.services.risk_metrics_engine import RiskMetricsEngine
+from ....application.services.stress_test_engine import StressTestEngine
+from ....application.services.tax_calculator import TaxCalculator
 from ....application.services.portfolio_builder import (
     build_asset_catalog,
     build_optimized_portfolio,
     compute_forward_projections,
 )
 from ....domain.entities.user import User as DomainUser
+from ....domain.entities.user_asset import UserAsset as DomainAsset
+from ....domain.entities.asset import AssetClass
 from ....infrastructure.external.bcb_service import BCBService
 from ....infrastructure.external.openai_service import AIService
 from ....infrastructure.external.market_data_service import MarketDataService
 from ....infrastructure.external.macro_scenario_service import MacroScenarioService
 from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
+from ....infrastructure.repositories.user_asset_repository import SQLAlchemyUserAssetRepository
 from ....infrastructure.database.connection import get_session
 from ....infrastructure.database.models import InvestorProfile as ProfileModel
 from .auth import get_current_user
@@ -67,6 +75,7 @@ bcb_service = BCBService()
 ai_service = AIService()
 monte_carlo = MonteCarloEngine()
 macro_service = MacroScenarioService(market_data.bcb)
+stress_engine = StressTestEngine(bcb_service, TaxCalculator())
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
@@ -341,25 +350,34 @@ async def simulation(
         return RedirectResponse(url="/dashboard")
 
     initial_amount = float(profile.initial_amount)
+    profile_key = _normalize_profile(profile.risk_profile)
+    profile_label = PROFILE_LABELS.get(profile_key, profile_key.capitalize())
 
     # build portfolio
     portfolio, projections, macro = _build_portfolio_for_profile(profile)
 
+    empty_ctx = {
+        "request": request,
+        "user_name": user.name,
+        "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].capitalize(),
+        "active_page": "simulation",
+        "profile_type": profile_label,
+        "initial_amount": initial_amount,
+        "chart_data_json": json.dumps({"labels": [], "p5": [], "p50": [], "p95": []}),
+        "results": {"p5": 0, "p50": 0, "p95": 0},
+        "stress_tests": [],
+        "backtest": None,
+        "risk_metrics": None,
+        "narration": "",
+    }
+
     if portfolio is None:
-        return templates.TemplateResponse("simulation.html", {
-            "request": request,
-            "user_name": user.name,
-            "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].capitalize(),
-            "active_page": "simulation",
-            "initial_amount": initial_amount,
-            "chart_data_json": json.dumps({"labels": [], "p5": [], "p50": [], "p95": []}),
-            "results": {"p5": 0, "p50": 0, "p95": 0},
-        })
+        return templates.TemplateResponse("simulation.html", empty_ctx)
 
     logger.info(f"--- SIMULATION START ---")
-    logger.info(f"Amount: R$ {initial_amount:,.2f} | Profile: {_normalize_profile(profile.risk_profile)}")
+    logger.info(f"Amount: R$ {initial_amount:,.2f} | Profile: {profile_key}")
 
-    # run monte carlo using the real portfolio
+    # ── 1. monte carlo ──
     logger.info(f"Running 5,000 stochastic scenarios for {len(portfolio.allocations)} products...")
     sim_result = monte_carlo.simulate(
         portfolio,
@@ -373,7 +391,7 @@ async def simulation(
     p50_path = np.percentile(sim_result.paths, 50, axis=0)
     p95_path = np.percentile(sim_result.paths, 95, axis=0)
 
-    logger.info(f"Simulation complete. P5={p5_path[-1]:,.0f} | P50={p50_path[-1]:,.0f} | P95={p95_path[-1]:,.0f}")
+    logger.info(f"MC complete. P5={p5_path[-1]:,.0f} | P50={p50_path[-1]:,.0f} | P95={p95_path[-1]:,.0f}")
 
     chart_data = {
         "labels": list(range(61)),
@@ -382,11 +400,54 @@ async def simulation(
         "p95": p95_path.tolist(),
     }
 
+    # ── 2. stress test (crisis scenarios) ──
+    try:
+        stress_tests = stress_engine.run_crisis_tests(portfolio, initial_amount)
+    except Exception as e:
+        logger.warning(f"stress test failed: {e}")
+        stress_tests = []
+
+    # ── 3. backtest ──
+    try:
+        backtest = stress_engine.run_backtest(portfolio, initial_amount)
+        if "error" in backtest:
+            logger.warning(f"backtest returned error: {backtest['error']}")
+            backtest = None
+    except Exception as e:
+        logger.warning(f"backtest failed: {e}")
+        backtest = None
+
+    # ── 4. risk metrics from portfolio properties ──
+    risk_metrics = {
+        "sharpe": portfolio.weighted_expected_annual_return / max(portfolio.weighted_volatility, 0.001),
+        "volatility": portfolio.weighted_volatility,
+        "expected_return": portfolio.weighted_expected_annual_return,
+        "net_return": portfolio.expected_net_annual_return(24),
+        "max_drawdown": backtest.get("max_drawdown", 0.0) if backtest else 0.0,
+        "risk_category": portfolio.risk_category,
+    }
+
+    # ── 5. ai narration ──
+    try:
+        narration = await ai_service.explain_simulation(
+            profile_label=profile_label,
+            initial_amount=initial_amount,
+            p5=float(p5_path[-1]),
+            p50=float(p50_path[-1]),
+            p95=float(p95_path[-1]),
+            stress_tests=stress_tests,
+            risk_metrics=risk_metrics,
+        )
+    except Exception as e:
+        logger.warning(f"ai narration failed: {e}")
+        narration = ""
+
     return templates.TemplateResponse("simulation.html", {
         "request": request,
         "user_name": user.name,
         "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].capitalize(),
         "active_page": "simulation",
+        "profile_type": profile_label,
         "initial_amount": initial_amount,
         "chart_data_json": json.dumps(chart_data),
         "results": {
@@ -394,6 +455,13 @@ async def simulation(
             "p50": p50_path[-1],
             "p95": p95_path[-1],
         },
+        "stress_tests": stress_tests,
+        "backtest": backtest,
+        "risk_metrics": risk_metrics,
+        "narration": narration,
+        # monte carlo extra stats
+        "prob_loss": sim_result.probability_of_loss(initial_amount),
+        "prob_double": sim_result.probability_above_target(initial_amount * 2),
     })
 
 
@@ -417,9 +485,27 @@ async def gap_analysis(
     # build ideal portfolio
     portfolio, projections, macro = _build_portfolio_for_profile(profile)
 
-    # placeholder current portfolio (until user imports real holdings)
-    current_weights = {"Poupanca": 0.85, "Acoes (Varejo)": 0.15}
-    current_monthly_return = 0.007  # ~cdi
+    # fetch current assets from database
+    asset_repo = SQLAlchemyUserAssetRepository(session)
+    user_assets = await asset_repo.list_by_user(user.id)
+    
+    if user_assets:
+        current_weights = {}
+        total_current_value = sum(float(a.current_value or (a.quantity * a.average_price)) for a in user_assets)
+        if total_current_value > 0:
+            for a in user_assets:
+                val = float(a.current_value or (a.quantity * a.average_price))
+                cls_key = a.asset_class.value
+                current_weights[cls_key] = current_weights.get(cls_key, 0.0) + (val / total_current_value)
+        else:
+            current_weights = {"renda_fixa": 1.0}
+            total_current_value = float(profile.initial_amount)
+    else:
+        # fallback placeholder current portfolio
+        current_weights = {"renda_fixa": 0.85, "renda_variavel": 0.15}
+        total_current_value = float(profile.initial_amount)
+
+    current_monthly_return = 0.007  # ~cdi baseline for legacy
 
     # compute gap
     if portfolio is not None:
@@ -458,3 +544,63 @@ async def gap_analysis(
         "annual_gap": annual_gap,
         "narration": narration,
     })
+
+
+@router.get("/my-portfolio")
+async def my_portfolio(
+    request: Request,
+    user: DomainUser | None = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    if not user:
+        return RedirectResponse(url="/login")
+
+    asset_repo = SQLAlchemyUserAssetRepository(session)
+    assets = await asset_repo.list_by_user(user.id)
+    
+    return templates.TemplateResponse("my_portfolio.html", {
+        "request": request,
+        "user_name": user.name,
+        "active_page": "my-portfolio",
+        "assets": assets
+    })
+
+
+@router.post("/add-asset")
+async def add_asset(
+    asset_name: str = Form(...),
+    asset_class: str = Form(...),
+    quantity: float = Form(...),
+    average_price: float = Form(...),
+    purchase_date: str = Form(...),
+    ticker: str = Form(None),
+    user: DomainUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    asset_repo = SQLAlchemyUserAssetRepository(session)
+    
+    new_asset = DomainAsset(
+        id=uuid.uuid4(),
+        user_id=user.id,
+        asset_name=asset_name,
+        asset_class=AssetClass(asset_class),
+        quantity=quantity,
+        average_price=average_price,
+        purchase_date=datetime.strptime(purchase_date, "%Y-%m-%d").date(),
+        ticker=ticker,
+        current_value=quantity * average_price # placeholder current value
+    )
+    
+    await asset_repo.create(new_asset)
+    return RedirectResponse(url="/my-portfolio", status_code=303)
+
+
+@router.post("/delete-asset/{asset_id}")
+async def delete_asset(
+    asset_id: uuid.UUID,
+    user: DomainUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    asset_repo = SQLAlchemyUserAssetRepository(session)
+    await asset_repo.delete(asset_id)
+    return RedirectResponse(url="/my-portfolio", status_code=303)

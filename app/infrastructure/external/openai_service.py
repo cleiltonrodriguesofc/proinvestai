@@ -164,6 +164,56 @@ INSTRUCOES:
 """
         return await self._call_openai(prompt)
 
+    async def explain_simulation(
+        self,
+        profile_label: str,
+        initial_amount: float,
+        p5: float,
+        p50: float,
+        p95: float,
+        stress_tests: list,
+        risk_metrics: dict,
+    ) -> str:
+        """generate a narration explaining the simulation results."""
+        if not self.api_key:
+            return "Integracao com IA nao configurada."
+
+        stress_lines = []
+        for st in stress_tests:
+            stress_lines.append(f"- {st['name']}: impacto de {st['impact']:.2%}")
+        stress_str = "\n".join(stress_lines) if stress_lines else "Nenhum dado disponivel."
+
+        prompt = f"""Voce e um consultor financeiro que explica simulacoes para investidores leigos.
+
+Perfil: {profile_label}
+Patrimonio investido: R$ {initial_amount:,.2f}
+
+SIMULACAO MONTE CARLO (5.000 cenarios, 5 anos):
+- Pior cenario (P5): R$ {p5:,.2f}
+- Cenario base (mediana): R$ {p50:,.2f}
+- Melhor cenario (P95): R$ {p95:,.2f}
+
+METRICAS DE RISCO:
+- Retorno bruto anual: {risk_metrics.get('expected_return', 0):.2%}
+- Retorno liquido anual: {risk_metrics.get('net_return', 0):.2%}
+- Volatilidade: {risk_metrics.get('volatility', 0):.2%}
+- Sharpe Ratio: {risk_metrics.get('sharpe', 0):.2f}
+- Drawdown maximo: {risk_metrics.get('max_drawdown', 0):.2%}
+
+STRESS TEST (crises historicas):
+{stress_str}
+
+INSTRUCOES:
+1. Explique o que significa cada cenario (P5, mediana, P95) em linguagem simples.
+2. Interprete o Sharpe Ratio de forma educativa (eficiencia risco-retorno).
+3. Comente os resultados dos stress tests — o que aconteceria em crises reais.
+4. Seja honesto sobre riscos, mas construtivo.
+5. Use no maximo 200 palavras. Portugues do Brasil.
+6. NAO use jargao tecnico excessivo.
+"""
+        return await self._call_openai(prompt)
+
+
     async def _call_openai(self, prompt: str) -> str:
         try:
             from openai import AsyncOpenAI
