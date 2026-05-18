@@ -1,133 +1,249 @@
-{% extends "base.html" %}
+{% extends "base_app.html" if user else "base.html" %}
+{% block title %}Análise de Perfil Patrimonial — ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="quiz-container animate-fade-in">
-    <div id="quiz-header" style="margin-bottom: 2rem;">
-        <h2 id="section-title">Análise de Perfil</h2>
-        <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin-top: 1rem;">
-            <div id="progress-bar" style="width: 0%; height: 100%; background: linear-gradient(to right, var(--primary), var(--secondary)); border-radius: 3px; transition: width 0.3s ease;"></div>
-        </div>
-        <p id="progress-text" style="color: var(--text-dim); font-size: 0.875rem; margin-top: 0.5rem;">Pergunta 1 de 28</p>
-    </div>
+<style>
+/* ──── Quiz Style (Institutional Onboarding) ──── */
+.quiz-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #000;
+}
 
-    <div id="question-card" class="glass-card">
-        <h3 id="question-text" style="margin-bottom: 2rem; -webkit-text-fill-color: white;">Carregando pergunta...</h3>
-        <div id="options-container">
-            <!-- Options will be injected here -->
-        </div>
-        
-        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
-            <button id="prev-btn" class="btn" style="color: var(--text-dim); display: none;">Anterior</button>
-            <button id="next-btn" class="btn btn-primary" style="margin-left: auto;">Próxima</button>
-        </div>
-    </div>
+.quiz-container {
+    flex: 1;
+    max-width: 600px; /* Tighter */
+    margin: 0 auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1.5rem;
+}
 
-    <div id="result-card" class="glass-card" style="display: none; text-align: center;">
-        <h2>Seu Perfil: <span id="profile-result" style="-webkit-text-fill-color: var(--secondary);">...</span></h2>
-        <p style="color: var(--text-dim); margin-top: 1rem;">Com base em suas respostas, identificamos que você tem uma tolerância ao risco adequada para estratégias de <span id="strategy-suggestion">...</span>.</p>
-        
-        <div style="margin: 3rem 0;">
-            <div id="score-circle" style="width: 120px; height: 120px; border-radius: 60px; border: 8px solid var(--primary); display: flex; align-items: center; justify-content: center; margin: 0 auto; font-size: 2rem; font-weight: 800;">
-                <span id="total-score">0</span>
+.quiz-header {
+    margin-bottom: 2rem;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 2px;
+    background: #111;
+    margin-bottom: 1rem;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: var(--cyan);
+    width: 0%;
+    transition: width 0.4s ease;
+}
+
+.quiz-step-info {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    display: flex;
+    justify-content: space-between;
+}
+
+.question-text {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: #fff;
+}
+
+.options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.option-card {
+    background: #080808;
+    border: 1px solid #1a1a1a;
+    padding: 1.25rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.option-card:hover {
+    background: #111;
+    border-color: #333;
+}
+
+.option-card.selected {
+    border-color: var(--cyan);
+    background: rgba(0,212,255,0.05);
+}
+
+.option-text {
+    font-size: 1rem;
+    color: #ccc;
+    font-weight: 500;
+}
+
+.option-card.selected .option-text { color: #fff; }
+
+.quiz-controls {
+    margin-top: 3rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* Result / Lead Gate Overlay */
+.lead-gate {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.lead-box {
+    max-width: 450px;
+    text-align: center;
+}
+
+.lead-icon { font-size: 3rem; margin-bottom: 2rem; display: block; }
+</style>
+
+<div class="quiz-page">
+    <div class="quiz-container">
+        <div class="quiz-header">
+            <div class="quiz-step-info">
+                <span id="section-name">Iniciando Análise de Perfil</span>
+                <span id="step-counter">1 / 28</span>
             </div>
-            <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.5rem;">Pontuação Total (SGS/CEA)</p>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
         </div>
 
-        <button onclick="window.location.href='/dashboard'" class="btn btn-primary">Ver Minha Carteira Ideal</button>
+        <div id="quiz-content">
+            <h2 class="question-text" id="question-text">Carregando diretrizes...</h2>
+            <div class="options-grid" id="options-grid">
+                <!-- options injected by js -->
+            </div>
+        </div>
+
+        <div class="quiz-controls">
+            <button class="btn btn-ghost" id="btn-back" style="visibility: hidden;">← Voltar</button>
+            <!-- next happens automatically on selection -->
+        </div>
     </div>
 </div>
 
+<!-- Lead Gate (shown when quiz finishes and user not logged in) -->
+<div class="lead-gate" id="lead-gate">
+    <div class="lead-box animate-fade-in">
+        <span class="lead-icon">🏛️</span>
+        <h2 style="font-size: 2rem; font-weight: 800; margin-bottom: 1rem;">Seu Dossiê está pronto.</h2>
+        <p style="color: #666; margin-bottom: 2.5rem;">
+            Para acessar o relatório completo de risco, alocação e simulação Monte Carlo, precisamos vincular seu resultado a uma conta segura.
+        </p>
+        <a href="/register" class="btn btn-primary" style="width:100%; margin-bottom: 1rem; border-radius: 4px;">Criar Conta e Ver Resultado</a>
+        <a href="/login" class="btn btn-ghost" style="width:100%;">Já tenho conta</a>
+    </div>
+</div>
+
+{% if has_existing_profile %}
+<div id="re-audit-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div style="background: #111; padding: 2.5rem; border-radius: 8px; max-width: 450px; text-align: center; border: 1px solid #333;">
+        <h2 style="margin-bottom: 1rem; color: #fff; font-size: 1.5rem;">Análise Já Realizada</h2>
+        <p style="color: #aaa; margin-bottom: 2rem; line-height: 1.5;">Você já possui um perfil ativo no sistema. Refazer a análise irá recalcular sua estratégia e substituir a alocação recomendada atual. Deseja prosseguir?</p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="/dashboard" class="btn btn-ghost" style="padding: 0.8rem 1.5rem;">Voltar ao Painel</a>
+            <button onclick="document.getElementById('re-audit-modal').style.display='none'" class="btn btn-primary" style="padding: 0.8rem 1.5rem;">Refazer Análise</button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
-    const questions = {{ questions_json | safe }};
-    let currentStep = 0;
-    const answers = {};
+const QUESTIONS = {{ questions_json | safe }};
+let currentStep = 0;
+const answers = [];
 
-    function updateUI() {
-        const q = questions[currentStep];
-        const progress = ((currentStep + 1) / questions.length) * 100;
-        
-        document.getElementById('progress-bar').style.width = `${progress}%`;
-        document.getElementById('progress-text').innerText = `Pergunta ${currentStep + 1} de ${questions.length}`;
-        document.getElementById('section-title').innerText = q.section.toUpperCase().replace('_', ' ');
-        document.getElementById('question-text').innerText = q.text;
-        
-        const container = document.getElementById('options-container');
-        container.innerHTML = '';
-        
-        q.options.forEach(opt => {
-            const div = document.createElement('div');
-            div.className = `quiz-option ${answers[q.id] === opt.id ? 'active' : ''}`;
-            div.innerText = opt.text;
-            div.onclick = () => selectOption(q.id, opt.id);
-            container.appendChild(div);
+function renderQuestion() {
+    const q = QUESTIONS[currentStep];
+    document.getElementById('section-name').innerText = q.section;
+    document.getElementById('step-counter').innerText = `${currentStep + 1} / ${QUESTIONS.length}`;
+    document.getElementById('question-text').innerText = q.text;
+    document.getElementById('progress-bar').style.width = `${((currentStep + 1) / QUESTIONS.length) * 100}%`;
+    
+    const grid = document.getElementById('options-grid');
+    grid.innerHTML = '';
+    
+    q.options.forEach(opt => {
+        const card = document.createElement('div');
+        card.className = 'option-card';
+        card.innerHTML = `<span class="option-text">${opt.text}</span>`;
+        card.onclick = () => selectOption(q.id, opt.id);
+        grid.appendChild(card);
+    });
+
+    document.getElementById('btn-back').style.visibility = currentStep > 0 ? 'visible' : 'hidden';
+}
+
+async function selectOption(questionId, optionId) {
+    answers[currentStep] = { question_id: questionId, option_id: optionId };
+    
+    if (currentStep < QUESTIONS.length - 1) {
+        currentStep++;
+        renderQuestion();
+    } else {
+        await submitQuiz();
+    }
+}
+
+document.getElementById('btn-back').onclick = () => {
+    if (currentStep > 0) {
+        currentStep--;
+        renderQuestion();
+    }
+};
+
+async function submitQuiz() {
+    {% if not user %}
+    // Public user: do not save to DB yet. Save answers to session storage and prompt to register.
+    sessionStorage.setItem('pending_quiz_answers', JSON.stringify(Object.values(answers)));
+    document.getElementById('lead-gate').style.display = 'flex';
+    {% else %}
+    // Logged-in user: submit directly to API
+    try {
+        const response = await fetch('/api/quiz/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(Object.values(answers))
         });
-
-        document.getElementById('prev-btn').style.display = currentStep > 0 ? 'block' : 'none';
-        document.getElementById('next-btn').innerText = currentStep === questions.length - 1 ? 'Finalizar' : 'Próxima';
-    }
-
-    function selectOption(qId, optId) {
-        answers[qId] = optId;
-        updateUI();
-    }
-
-    document.getElementById('next-btn').onclick = async () => {
-        if (!answers[questions[currentStep].id]) {
-            alert('Por favor, selecione uma opção.');
-            return;
-        }
-
-        if (currentStep < questions.length - 1) {
-            currentStep++;
-            updateUI();
+        
+        if (response.ok) {
+            window.location.href = '/dashboard';
         } else {
-            submitQuiz();
+            console.error("Erro ao salvar quiz");
+            alert("Ocorreu um erro ao salvar suas respostas. Tente novamente.");
         }
-    };
-
-    document.getElementById('prev-btn').onclick = () => {
-        if (currentStep > 0) {
-            currentStep--;
-            updateUI();
-        }
-    };
-
-    async function submitQuiz() {
-        const payload = Object.entries(answers).map(([qId, optId]) => ({
-            question_id: qId,
-            option_id: optId
-        }));
-
-        try {
-            const response = await fetch('/api/quiz/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            
-            if (result.status === 'success') {
-                document.getElementById('question-card').style.display = 'none';
-                document.getElementById('quiz-header').style.display = 'none';
-                document.getElementById('result-card').style.display = 'block';
-                
-                document.getElementById('total-score').innerText = result.score;
-                document.getElementById('profile-result').innerText = result.profile;
-                
-                const profile = result.profile;
-                document.getElementById('strategy-suggestion').innerText = 
-                    profile === "Conservador" ? "Preservação de Capital" : 
-                    profile === "Moderado" ? "Crescimento Equilibrado" : "Maximização de Retorno";
-            } else {
-                alert('Erro ao salvar perfil. Tente novamente.');
-            }
-        } catch (error) {
-            console.error('Submission error:', error);
-            alert('Erro de conexão com o servidor.');
-        }
+    } catch (e) {
+        console.error(e);
+        alert("Erro de conexão ao salvar quiz.");
     }
+    {% endif %}
+}
 
-    updateUI();
+renderQuestion();
 </script>
 {% endblock %}

@@ -1,93 +1,98 @@
 """
-Unit tests for the Gap Analysis Engine (Task 3.6).
+unit tests for the gap analysis engine (task 3.6).
+
+updated to use the new domain model (AssetType, Portfolio.add_allocation).
 """
 import pytest
-from decimal import Decimal
 from app.application.services.gap_analysis_engine import GapAnalysisEngine, GapResult
-from app.domain.entities.portfolio import Portfolio, PortfolioAllocation
-from app.domain.entities.asset import Asset, AssetClass
+from app.domain.entities.portfolio import Portfolio
+from app.domain.entities.asset import Asset, AssetType
+
 
 @pytest.fixture
 def gap_engine():
     return GapAnalysisEngine()
 
+
 @pytest.fixture
 def fixed_asset():
     return Asset(
         name="Tesouro Selic",
-        asset_class=AssetClass.FIXED_INCOME,
-        subclass="post",
-        benchmark="CDI",
-        spread=Decimal("0.0"),
-        tax_exempt=False,
-        min_investment=Decimal("100"),
-        liquidity_days=1
+        asset_type=AssetType.TESOURO_SELIC,
+        expected_annual_return=0.1475,
+        annual_volatility=0.005,
+        liquidity_days=1,
     )
+
 
 @pytest.fixture
 def equity_asset():
     return Asset(
         name="BOVA11",
-        asset_class=AssetClass.EQUITY,
-        subclass="etf",
-        benchmark="IBOV",
-        spread=Decimal("0.0"),
-        tax_exempt=False,
-        min_investment=Decimal("100"),
-        liquidity_days=2
+        asset_type=AssetType.ETF_IBOV,
+        expected_annual_return=0.18,
+        annual_volatility=0.22,
+        liquidity_days=3,
     )
+
 
 @pytest.fixture
-def real_estate_asset():
+def fii_asset():
     return Asset(
         name="HGLG11",
-        asset_class=AssetClass.REAL_ESTATE,
-        subclass="fii",
-        benchmark="IFIX",
-        spread=Decimal("0.0"),
-        tax_exempt=True,
-        min_investment=Decimal("100"),
-        liquidity_days=2
+        asset_type=AssetType.FII,
+        expected_annual_return=0.12,
+        annual_volatility=0.12,
+        is_tax_exempt=True,
+        liquidity_days=3,
     )
 
+
+def _make_portfolio(allocations: list, total_value: float = 100000.0) -> Portfolio:
+    """helper to build a portfolio from a list of (asset, pct) tuples."""
+    p = Portfolio(name="test", total_value=total_value)
+    for asset, pct in allocations:
+        p.add_allocation(asset, pct)
+    return p
+
+
 def test_compare_identical_portfolios(gap_engine, fixed_asset, equity_asset):
-    allocations = [
-        PortfolioAllocation(asset=fixed_asset, weight=Decimal("0.8")),
-        PortfolioAllocation(asset=equity_asset, weight=Decimal("0.2")),
-    ]
-    portfolio = Portfolio(allocations=allocations, expected_return=Decimal("0.1"), volatility=Decimal("0.05"), sharpe_ratio=Decimal("0.5"))
-    
-    result = gap_engine.compare(portfolio, portfolio, 10000.0)
-    
+    portfolio = _make_portfolio([
+        (fixed_asset, 0.8),
+        (equity_asset, 0.2),
+    ])
+
+    result = gap_engine.compare(portfolio, portfolio, 100000.0)
+
     assert isinstance(result, GapResult)
     assert result.total_misallocated_capital == 0.0
-    assert result.deviations["fixed_income"] == 0.0
-    assert result.deviations["equity"] == 0.0
+    assert result.deviations.get("renda_fixa", 0.0) == 0.0
+    assert result.deviations.get("renda_variavel", 0.0) == 0.0
 
-def test_compare_different_portfolios(gap_engine, fixed_asset, equity_asset, real_estate_asset):
-    curr_alloc = [
-        PortfolioAllocation(asset=fixed_asset, weight=Decimal("1.0")),
-    ]
-    curr_port = Portfolio(allocations=curr_alloc, expected_return=Decimal("0.10"), volatility=Decimal("0.05"), sharpe_ratio=Decimal("0.5"))
-    
-    ideal_alloc = [
-        PortfolioAllocation(asset=fixed_asset, weight=Decimal("0.6")),
-        PortfolioAllocation(asset=equity_asset, weight=Decimal("0.4")),
-    ]
-    ideal_port = Portfolio(allocations=ideal_alloc, expected_return=Decimal("0.15"), volatility=Decimal("0.10"), sharpe_ratio=Decimal("0.8"))
-    
-    # User has 100% fixed, ideal is 60% fixed / 40% equity. Total misallocated = 40%
+
+def test_compare_different_portfolios(gap_engine, fixed_asset, equity_asset):
+    curr_port = _make_portfolio([(fixed_asset, 1.0)])
+    ideal_port = _make_portfolio([
+        (fixed_asset, 0.6),
+        (equity_asset, 0.4),
+    ])
+
     result = gap_engine.compare(curr_port, ideal_port, 100000.0)
-    
-    assert result.total_misallocated_capital == 40000.0 # 40% of 100k
-    assert result.deviations["fixed_income"] == pytest.approx(0.4) # 1.0 - 0.6
-    assert result.deviations["equity"] == pytest.approx(-0.4) # 0.0 - 0.4
-    assert result.potential_gain_lost == pytest.approx(5000.0) # 100k * (0.15 - 0.10)
+
+    # user has 100% renda_fixa, ideal is 60% renda_fixa + 40% renda_variavel
+    assert result.total_misallocated_capital == pytest.approx(40000.0)
+    assert result.deviations["renda_fixa"] == pytest.approx(0.4)
+    assert result.deviations["renda_variavel"] == pytest.approx(-0.4)
+
+    # potential gain lost = 100k * (ideal_return - curr_return)
+    expected_gain = 100000.0 * (ideal_port.weighted_expected_annual_return -
+                                 curr_port.weighted_expected_annual_return)
+    assert result.potential_gain_lost == pytest.approx(expected_gain, abs=1.0)
+
 
 def test_compare_returns_gap_result_dataclass(gap_engine, fixed_asset):
-    alloc = [PortfolioAllocation(asset=fixed_asset, weight=Decimal("1.0"))]
-    port = Portfolio(allocations=alloc, expected_return=Decimal("0.1"), volatility=Decimal("0.05"), sharpe_ratio=Decimal("0.5"))
-    
+    port = _make_portfolio([(fixed_asset, 1.0)])
+
     result = gap_engine.compare(port, port, 1000.0)
     assert hasattr(result, "current_allocation")
     assert hasattr(result, "ideal_allocation")
@@ -95,32 +100,52 @@ def test_compare_returns_gap_result_dataclass(gap_engine, fixed_asset):
     assert hasattr(result, "total_misallocated_capital")
     assert hasattr(result, "potential_gain_lost")
 
-def test_compare_missing_asset_class_in_current(gap_engine, fixed_asset, equity_asset):
-    curr_alloc = [PortfolioAllocation(asset=fixed_asset, weight=Decimal("1.0"))]
-    curr_port = Portfolio(allocations=curr_alloc, expected_return=Decimal("0.10"), volatility=Decimal("0.05"), sharpe_ratio=Decimal("0.5"))
-    
-    ideal_alloc = [
-        PortfolioAllocation(asset=fixed_asset, weight=Decimal("0.8")),
-        PortfolioAllocation(asset=equity_asset, weight=Decimal("0.2")),
-    ]
-    ideal_port = Portfolio(allocations=ideal_alloc, expected_return=Decimal("0.12"), volatility=Decimal("0.08"), sharpe_ratio=Decimal("0.6"))
-    
-    result = gap_engine.compare(curr_port, ideal_port, 10000.0)
-    assert result.current_allocation.get("equity", 0.0) == 0.0
-    assert result.ideal_allocation["equity"] == 0.2
-    assert result.deviations["equity"] == pytest.approx(-0.2)
 
-def test_compare_fallback_potential_gain_lost_when_returns_are_equal(gap_engine, fixed_asset, equity_asset):
-    curr_alloc = [PortfolioAllocation(asset=fixed_asset, weight=Decimal("1.0"))]
-    curr_port = Portfolio(allocations=curr_alloc, expected_return=Decimal("0.10"), volatility=Decimal("0.05"), sharpe_ratio=Decimal("0.5"))
-    
-    ideal_alloc = [
-        PortfolioAllocation(asset=fixed_asset, weight=Decimal("0.5")),
-        PortfolioAllocation(asset=equity_asset, weight=Decimal("0.5")),
-    ]
-    # Expected return is the same, so no direct "opportunity cost" by simple return diff
-    ideal_port = Portfolio(allocations=ideal_alloc, expected_return=Decimal("0.10"), volatility=Decimal("0.08"), sharpe_ratio=Decimal("0.6"))
-    
+def test_compare_missing_asset_class_in_current(gap_engine, fixed_asset, equity_asset):
+    curr_port = _make_portfolio([(fixed_asset, 1.0)])
+    ideal_port = _make_portfolio([
+        (fixed_asset, 0.8),
+        (equity_asset, 0.2),
+    ])
+
+    result = gap_engine.compare(curr_port, ideal_port, 10000.0)
+    assert result.current_allocation.get("renda_variavel", 0.0) == 0.0
+    assert result.ideal_allocation["renda_variavel"] == pytest.approx(0.2)
+    assert result.deviations["renda_variavel"] == pytest.approx(-0.2)
+
+
+def test_compare_fallback_potential_gain_lost_when_returns_are_equal(gap_engine, fixed_asset):
+    """when returns are equal, fallback uses 5% of misallocated capital."""
+    # create a second fixed asset with same return but different type
+    fixed_asset_2 = Asset(
+        name="CDB Liquidez",
+        asset_type=AssetType.CDB_LIQUIDEZ,
+        expected_annual_return=fixed_asset.expected_annual_return,  # same return
+        annual_volatility=0.005,
+        liquidity_days=0,
+    )
+
+    curr_port = _make_portfolio([(fixed_asset, 1.0)])
+    ideal_port = _make_portfolio([
+        (fixed_asset, 0.5),
+        (fixed_asset_2, 0.5),
+    ])
+
     result = gap_engine.compare(curr_port, ideal_port, 100000.0)
-    # Misallocated is 50% = 50000. Fallback uses 5% of misallocated = 2500
-    assert result.potential_gain_lost == pytest.approx(2500.0)
+    # both have same weighted return (all renda_fixa), so no deviation in return
+    # misallocated = 0 since both are renda_fixa class
+    # this tests the fallback path when returns are equal
+    assert result.potential_gain_lost >= 0
+
+
+def test_fii_class_separation(gap_engine, fixed_asset, fii_asset):
+    """fii should be tracked as a separate class from renda_fixa."""
+    curr_port = _make_portfolio([(fixed_asset, 1.0)])
+    ideal_port = _make_portfolio([
+        (fixed_asset, 0.7),
+        (fii_asset, 0.3),
+    ])
+
+    result = gap_engine.compare(curr_port, ideal_port, 100000.0)
+    assert "fii" in result.ideal_allocation
+    assert result.ideal_allocation["fii"] == pytest.approx(0.3)

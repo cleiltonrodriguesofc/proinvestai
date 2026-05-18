@@ -1,3 +1,4 @@
+from uuid import UUID
 from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from ...domain.entities.investor_profile import InvestorProfile as DomainProfile, RiskProfile
@@ -28,13 +29,13 @@ class SQLAlchemyProfileRepository(IProfileRepository):
         await self.session.refresh(model)
         return self._to_domain(model)
 
-    async def get_by_user(self, user_id: str) -> DomainProfile | None:
-        query = select(ProfileModel).where(ProfileModel.user_id == user_id)
+    async def get_by_user(self, user_id: UUID) -> DomainProfile | None:
+        query = select(ProfileModel).where(ProfileModel.user_id == user_id).order_by(desc(ProfileModel.created_at)).limit(1)
         result = await self.session.execute(query)
         model = result.scalar_one_or_none()
         return self._to_domain(model) if model else None
 
-    async def get_latest_by_user(self, user_id: str) -> DomainProfile | None:
+    async def get_latest_by_user(self, user_id: UUID) -> DomainProfile | None:
         query = (
             select(ProfileModel)
             .where(ProfileModel.user_id == user_id)

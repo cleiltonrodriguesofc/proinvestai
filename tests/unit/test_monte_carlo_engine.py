@@ -1,12 +1,13 @@
 """
 unit tests for monte carlo simulation engine (task 3.5 / task 6.1).
+
+updated to use the new domain model (AssetType, Portfolio.add_allocation, Allocation).
 """
 import pytest
 import numpy as np
-from decimal import Decimal
 from app.application.services.monte_carlo_engine import MonteCarloEngine
-from app.domain.entities.asset import Asset, AssetClass
-from app.domain.entities.portfolio import Portfolio, PortfolioAllocation
+from app.domain.entities.asset import Asset, AssetType
+from app.domain.entities.portfolio import Portfolio
 from app.domain.value_objects.simulation_result import SimulationResult
 
 
@@ -17,38 +18,31 @@ def engine():
 
 @pytest.fixture
 def portfolio_with_returns():
-    """portfolio with historical returns on assets."""
+    """portfolio using the new entity model."""
     asset_fi = Asset(
         name="Tesouro Selic",
-        asset_class=AssetClass.FIXED_INCOME,
-        subclass="tesouro_selic",
-        benchmark="CDI",
-        spread=Decimal("1.0"),
-        tax_exempt=False,
-        min_investment=Decimal("100"),
+        asset_type=AssetType.TESOURO_SELIC,
+        expected_annual_return=0.1475,
+        annual_volatility=0.005,
         liquidity_days=1,
-        historical_returns=[Decimal("0.008")] * 60,
     )
     asset_eq = Asset(
         name="BOVA11",
-        asset_class=AssetClass.EQUITY,
-        subclass="etf",
-        benchmark="IBOV",
-        spread=Decimal("0"),
-        tax_exempt=False,
-        min_investment=Decimal("100"),
-        liquidity_days=2,
-        historical_returns=[Decimal("0.01")] * 60,
+        asset_type=AssetType.ETF_IBOV,
+        expected_annual_return=0.18,
+        annual_volatility=0.22,
+        liquidity_days=3,
     )
-    return Portfolio(
-        allocations=[
-            PortfolioAllocation(asset=asset_fi, weight=Decimal("0.7")),
-            PortfolioAllocation(asset=asset_eq, weight=Decimal("0.3")),
-        ],
-        expected_return=Decimal("0.11"),
-        volatility=Decimal("0.05"),
-        sharpe_ratio=Decimal("0.8"),
+
+    portfolio = Portfolio(
+        name="Test MC Portfolio",
+        total_value=100000.0,
+        monthly_expenses=5000.0,
+        reserve_months=6,
     )
+    portfolio.add_allocation(asset_fi, 0.7)
+    portfolio.add_allocation(asset_eq, 0.3)
+    return portfolio
 
 
 class TestMonteCarloEngine:
@@ -129,3 +123,15 @@ class TestMonteCarloEngine:
         r1 = e1.simulate(portfolio_with_returns, 100000.0, 12, 50)
         r2 = e2.simulate(portfolio_with_returns, 100000.0, 12, 50)
         assert np.allclose(r1.paths, r2.paths)
+
+    def test_monthly_contribution_increases_value(self, engine, portfolio_with_returns):
+        """portfolios with monthly contribution should end higher than without."""
+        r_no_contrib = engine.simulate(
+            portfolio_with_returns, 100000.0, 12, 100, monthly_contribution=0.0
+        )
+        engine2 = MonteCarloEngine(seed=42)
+        r_with_contrib = engine2.simulate(
+            portfolio_with_returns, 100000.0, 12, 100, monthly_contribution=1000.0
+        )
+        # median final value should be higher with contributions
+        assert np.median(r_with_contrib.paths[:, -1]) > np.median(r_no_contrib.paths[:, -1])

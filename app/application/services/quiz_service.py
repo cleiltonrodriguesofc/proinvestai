@@ -29,10 +29,10 @@ class QuizService:
             total_score += opt.score
             section_scores[q.section] = section_scores.get(q.section, 0) + opt.score
 
-        # Profile classification based on total score (28 to 112)
-        if total_score <= 45:
+        # Profile classification based on total score (36 questions, min 36, max 144)
+        if total_score <= 65:
             profile = "Conservador"
-        elif total_score <= 85:
+        elif total_score <= 105:
             profile = "Moderado"
         else:
             profile = "Arrojado"
