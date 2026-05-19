@@ -369,17 +369,17 @@ def build_efficient_frontier(
     min_return = min(feasible_returns)
     max_return = max(feasible_returns) * available_weight
 
-    # generate target returns
-    target_returns = np.linspace(
+    # generate target returns (oversample to guarantee we get exactly n_portfolios)
+    candidate_targets = np.linspace(
         min_return * available_weight * 0.95,
-        max_return * 0.98,
-        n_portfolios,
+        max_return * 0.99,
+        n_portfolios * 2,
     )
 
     # optimize each portfolio
-    portfolios: list[OptimizedPortfolio] = []
+    raw_portfolios = []
 
-    for port_id, target in enumerate(target_returns, 1):
+    for target in candidate_targets:
         result = optimize_single_portfolio(
             target, returns, cov, bounds, constraints,
         )
@@ -419,12 +419,36 @@ def build_efficient_frontier(
         # sharpe ratio using risk_free_rate (cdi real when in real terms)
         sharpe = (total_return - risk_free_rate) / total_vol if total_vol > 0.001 else 0
 
+        raw_portfolios.append({
+            "expected_return": round(total_return * 100, 2),
+            "volatility": round(total_vol * 100, 2),
+            "sharpe_ratio": round(sharpe, 2),
+            "weights": full_weights,
+        })
+
+    # deduplicate by expected return
+    unique_ports = []
+    seen_returns = set()
+    for p in raw_portfolios:
+        if p["expected_return"] not in seen_returns:
+            seen_returns.add(p["expected_return"])
+            unique_ports.append(p)
+
+    # select exactly n_portfolios evenly spaced
+    if len(unique_ports) <= n_portfolios:
+        selected = unique_ports
+    else:
+        indices = np.linspace(0, len(unique_ports) - 1, n_portfolios, dtype=int)
+        selected = [unique_ports[i] for i in indices]
+
+    portfolios: list[OptimizedPortfolio] = []
+    for i, p in enumerate(selected, 1):
         portfolios.append(OptimizedPortfolio(
-            portfolio_id=port_id,
-            expected_return=round(total_return * 100, 2),
-            volatility=round(total_vol * 100, 2),
-            sharpe_ratio=round(sharpe, 2),
-            weights=full_weights,
+            portfolio_id=i,
+            expected_return=p["expected_return"],
+            volatility=p["volatility"],
+            sharpe_ratio=p["sharpe_ratio"],
+            weights=p["weights"],
         ))
 
     return portfolios

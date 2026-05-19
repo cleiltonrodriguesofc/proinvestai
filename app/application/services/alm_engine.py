@@ -476,10 +476,13 @@ class ALMEngine:
             if h.maturity_date is not None:  # vértice fund
                 w = h.balance / total_inv if total_inv > 0 else 0
                 # map to the closest index
-                if h.benchmark in index_map:
-                    locked_positions[h.benchmark] = (
-                        locked_positions.get(h.benchmark, 0) + w
-                    )
+                mapped_idx = h.benchmark
+                if mapped_idx not in index_map:
+                    mapped_idx = "IMA-B 5" if "IPCA" in mapped_idx else "IRF-M 1"
+                
+                locked_positions[mapped_idx] = (
+                    locked_positions.get(mapped_idx, 0.0) + w
+                )
 
         pro_gestao = self.config.get("pro_gestao_level")
 
@@ -551,17 +554,25 @@ class ALMEngine:
 
         # step 6: gap analysis (current vs recommended)
         gap_table: dict[str, dict[str, float]] = {}
-        for bench, balance in benchmark_weights.items():
+        
+        all_benchmarks = set(benchmark_weights.keys())
+        if recommended:
+            all_benchmarks.update(recommended.weights.keys())
+            
+        for bench in all_benchmarks:
+            balance = benchmark_weights.get(bench, 0.0)
             current_pct = (balance / total_inv * 100) if total_inv > 0 else 0
             recommended_pct = 0.0
             if recommended:
                 recommended_pct = recommended.weight_for(bench) * 100
-            gap_table[bench] = {
-                "current_pct": round(current_pct, 2),
-                "current_value": balance,
-                "recommended_pct": round(recommended_pct, 2),
-                "gap_pct": round(recommended_pct - current_pct, 2),
-            }
+                
+            if current_pct > 0.01 or recommended_pct > 0.01:
+                gap_table[bench] = {
+                    "current_pct": round(current_pct, 2),
+                    "current_value": balance,
+                    "recommended_pct": round(recommended_pct, 2),
+                    "gap_pct": round(recommended_pct - current_pct, 2),
+                }
 
         return ALMResult(
             rpps_name=self.config["rpps_name"],

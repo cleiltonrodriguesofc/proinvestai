@@ -68,16 +68,19 @@ def _build_alm_context(
     # flow summary
     flow_summary = get_flow_summary(result.cashflows)
 
+    # cashflow chart (full horizon up to 75 years)
+    cf_horizon = min(75, len(result.cashflows))
+
     # patrimony projection with required return
     patrimony_projection = project_patrimony(
-        result.cashflows[:horizon],
+        result.cashflows[:cf_horizon],
         result.patrimony,
         result.required_return / 100,
     )
 
     # patrimony projection with actuarial rate (for comparison)
     patrimony_projection_meta = project_patrimony(
-        result.cashflows[:horizon],
+        result.cashflows[:cf_horizon],
         result.patrimony,
         result.actuarial_rate / 100,
     )
@@ -91,11 +94,17 @@ def _build_alm_context(
     projection_net_flow = [p["flow_without_investments"] for p in patrimony_projection]
 
     # cashflow chart (full horizon up to 75 years)
-    cf_horizon = min(75, len(result.cashflows))
     cf_years = [cf.year for cf in result.cashflows[:cf_horizon]]
     cf_revenues = [cf.total_revenues for cf in result.cashflows[:cf_horizon]]
     cf_expenditures = [cf.total_expenditures for cf in result.cashflows[:cf_horizon]]
     cf_net = [cf.net_flow for cf in result.cashflows[:cf_horizon]]
+
+    # calculate ruin year (when patrimony drops below zero under meta atuarial)
+    ruin_year = "Não Zera (Sustentável)"
+    for p in patrimony_projection_meta:
+        if p["projected_patrimony"] <= 0:
+            ruin_year = str(p["year"])
+            break
 
     # portfolio breakdown
     segment_data = result.current_portfolio.segment_breakdown
@@ -200,6 +209,7 @@ def _build_alm_context(
         # flow summary
         "flow_summary": flow_summary,
         "first_deficit_year": flow_summary.get("first_deficit_year", "N/A"),
+        "ruin_year": ruin_year,
 
         # actuarial data from config
         "actuarial_data": engine.config.get("actuarial_data", {}),
@@ -224,6 +234,28 @@ def _build_alm_context(
             "patrimony": solvency_patrimony,
             "funding_ratio": solvency_fr,
         }),
+
+        # full tables for report
+        "cashflows_table": [
+            {
+                "year": cf.year,
+                "revenues": _format_brl(cf.total_revenues),
+                "expenditures": _format_brl(cf.total_expenditures),
+                "net_flow": _format_brl(cf.net_flow),
+                "is_deficit": cf.net_flow < 0
+            }
+            for cf in result.cashflows[:cf_horizon]
+        ],
+        "projection_table": [
+            {
+                "year": p["year"],
+                "net_flow": _format_brl(p["flow_without_investments"]),
+                "inv_return_eq": _format_brl(p["investment_result"]),
+                "patrimony_eq": _format_brl(p["projected_patrimony"]),
+                "patrimony_meta": _format_brl(pm["projected_patrimony"]),
+            }
+            for p, pm in zip(patrimony_projection, patrimony_projection_meta)
+        ],
 
         # tables
         "holdings": holdings_data,

@@ -3,28 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório ALM - {{ rpps_name }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Relatório Institucional ALM - {{ rpps_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --brand-color: #0b2545; /* LEMA-like dark blue */
+            --brand-color: #0b2545;
             --brand-light: #134074;
             --brand-accent: #8da9c4;
-            --text-color: #333;
-            --text-light: #666;
-            --bg-color: #fff;
-            --bg-alt: #f0f4f8;
+            --text-color: #1e293b;
+            --text-light: #64748b;
+            --bg-color: #ffffff;
+            --bg-alt: #f8fafc;
             --grid-border: #e2e8f0;
             --green: #10b981;
             --red: #ef4444;
+            --amber: #f59e0b;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Montserrat', sans-serif; color: var(--text-color); background: #eee; }
 
         .slide {
-            width: 297mm; /* A4 Landscape */
+            width: 297mm;
             height: 209mm;
             background: var(--bg-color);
             margin: 10mm auto;
@@ -39,18 +40,15 @@
         .slide-header {
             background: var(--brand-color);
             color: white;
-            padding: 15mm 20mm;
+            padding: 12mm 20mm;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .slide-header h1 { font-size: 28px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-        .slide-header .subtitle { font-size: 14px; font-weight: 400; color: var(--brand-accent); margin-top: 5px; }
+        .slide-header h1 { font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .slide-header .subtitle { font-size: 13px; font-weight: 400; color: var(--brand-accent); margin-top: 5px; }
         
-        .slide-body {
-            padding: 15mm 20mm;
-            flex: 1;
-        }
+        .slide-body { padding: 12mm 20mm; flex: 1; }
 
         .slide-footer {
             background: var(--bg-alt);
@@ -73,158 +71,283 @@
         }
         .cover-slide h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; }
         .cover-slide h2 { font-size: 24px; font-weight: 400; color: var(--brand-accent); margin-bottom: 50px; }
-        .cover-slide .date { font-size: 18px; font-weight: 600; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 50px; }
+        .cover-slide .date { font-size: 16px; font-weight: 600; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 50px; }
 
-        /* Content Blocks */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+        /* Typography & Blocks */
+        h2.section-title { font-size: 18px; color: var(--brand-color); margin-bottom: 15px; border-bottom: 2px solid var(--brand-accent); padding-bottom: 5px; }
+        p.text-block { font-size: 13px; line-height: 1.6; color: var(--text-light); margin-bottom: 12px; text-align: justify; }
         
-        .metric-box { background: var(--bg-alt); padding: 15px; border-left: 5px solid var(--brand-color); border-radius: 4px; margin-bottom: 15px; }
-        .metric-title { font-size: 12px; text-transform: uppercase; font-weight: 600; color: var(--text-light); }
-        .metric-value { font-size: 28px; font-weight: 800; color: var(--brand-color); margin-top: 5px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10mm; }
+        
+        .metric-box { background: var(--bg-alt); padding: 12px; border-left: 4px solid var(--brand-color); border-radius: 4px; margin-bottom: 12px; }
+        .metric-title { font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-light); }
+        .metric-value { font-size: 24px; font-weight: 800; color: var(--brand-color); margin-top: 4px; }
         .metric-value.red { color: var(--red); }
         .metric-value.green { color: var(--green); }
 
+        /* Tables */
         .data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
-        .data-table th { background: var(--brand-color); color: white; padding: 10px; text-align: left; font-weight: 600; }
-        .data-table td { padding: 8px 10px; border-bottom: 1px solid var(--grid-border); }
+        .data-table th { background: var(--brand-color); color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+        .data-table td { padding: 6px 10px; border-bottom: 1px solid var(--grid-border); }
         .data-table tr:nth-child(even) { background: var(--bg-alt); }
         .data-table .highlight { font-weight: 700; color: var(--brand-color); }
-        
-        .chart-container { width: 100%; height: 120mm; position: relative; }
-        .chart-container.small { height: 80mm; }
+        .data-table .negative { color: var(--red); }
+        .data-table .positive { color: var(--green); }
+
+        .table-scroll { max-height: 130mm; overflow-y: auto; }
+
+        .chart-container { width: 100%; position: relative; }
+        .chart-container.large { height: 120mm; }
+        .chart-container.medium { height: 80mm; }
+        .chart-container.small { height: 50mm; }
+
+        .alert-box { background: rgba(245,158,11,0.1); border-left: 4px solid var(--amber); padding: 12px; font-size: 12px; color: #92400e; margin-bottom: 15px; }
 
         @media print {
             body { background: white; margin: 0; padding: 0; }
-            .slide { margin: 0; box-shadow: none; width: 100%; height: 100%; }
-            @page { size: A4 landscape; margin: 0; }
+            .slide { height: auto !important; margin: 0; box-shadow: none; width: 100%; page-break-after: always; }
+            @page { size: A4 landscape; margin: 10mm; }
             .no-print { display: none !important; }
+            .table-scroll { max-height: none !important; overflow: visible !important; }
+            .chart-container.medium, .chart-container.small { break-inside: avoid; }
         }
 
-        .floating-button {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: var(--brand-color);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1000;
-            cursor: pointer;
-            border: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .floating-button { position: fixed; bottom: 30px; right: 30px; background: var(--brand-color); color: white; padding: 15px 30px; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; border: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .floating-button:hover { background: var(--brand-light); }
     </style>
 </head>
 <body>
 
-<button class="floating-button no-print" onclick="window.print()">
-    🖨️ Imprimir PDF
-</button>
+<button class="floating-button no-print" onclick="window.print()">🖨️ Imprimir PDF Oficial</button>
 
-<!-- SLIDE 1: COVER -->
+<!-- SLIDE 1: CAPA -->
 <div class="slide cover-slide">
     <h1>ESTUDO DE ALM</h1>
     <h2>ASSET LIABILITY MANAGEMENT</h2>
-    <div style="font-size:20px; font-weight:600; margin-bottom:40px;">{{ rpps_name }}</div>
+    <div style="font-size:22px; font-weight:600; margin-bottom:40px;">{{ rpps_name }}</div>
     <div class="date">DATA-BASE: {{ reference_date }}</div>
 </div>
 
-<!-- SLIDE 2: PREMISSAS -->
+<!-- SLIDE 2: DISCLAIMER JURÍDICO -->
 <div class="slide">
     <div class="slide-header">
-        <div>
-            <h1>PREMISSAS BÁSICAS</h1>
-            <div class="subtitle">Parâmetros Atuariais e Financeiros do Estudo</div>
-        </div>
+        <div><h1>Disclaimer Institucional e Jurídico</h1><div class="subtitle">Aviso de Limitação de Responsabilidade</div></div>
+    </div>
+    <div class="slide-body" style="padding: 20mm 30mm;">
+        <h2 class="section-title">Limitações do Estudo e Considerações Regulatórias</h2>
+        <p class="text-block">Este Estudo de Gerenciamento de Ativos e Passivos (ALM - Asset Liability Management) foi elaborado com o objetivo exclusivo de auxiliar o Comitê de Investimentos e a Diretoria Executiva do RPPS no processo de tomada de decisão, em atendimento à <strong>Resolução CMN nº 5.272/2025</strong> e portarias vigentes da Secretaria de Previdência (SPREV).</p>
+        
+        <p class="text-block"><strong>As projeções aqui apresentadas são estritamente estocásticas e matemáticas.</strong> Elas baseiam-se em premissas atuariais fornecidas no relatório de reavaliação atuarial (tábuas biométricas, crescimento salarial, etc.) e em expectativas macroeconômicas (taxas de juros, inflação e prêmios de risco) colhidas na data-base do estudo.</p>
+
+        <p class="text-block">Salienta-se que os resultados otimizados pela fronteira de Markowitz representam <strong>expectativas de longo prazo</strong> e não configuram garantia de rentabilidade futura. O mercado financeiro é suscetível a oscilações não totalmente previsíveis por modelos matemáticos baseados em covariância histórica.</p>
+
+        <p class="text-block">As recomendações de alocação (Plano de Movimentação) respeitam rigorosamente os limites previstos pela Resolução CMN, levando em conta a atual certificação Pró-Gestão da instituição. Alterações legislativas futuras podem exigir a revisão imediata deste estudo.</p>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 2</span></div>
+</div>
+
+<!-- SLIDE 3: OBJETIVO DO ESTUDO E INTRODUÇÃO -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Objetivo do Estudo de ALM</h1><div class="subtitle">Contextualização do Problema Previdenciário</div></div>
     </div>
     <div class="slide-body grid-2">
         <div>
+            <h2 class="section-title">O Desafio Previdenciário</h2>
+            <p class="text-block">Regimes Próprios de Previdência Social enfrentam um desafio estrutural: o descasamento temporal entre a arrecadação atual e o pagamento de benefícios futuros. Com o envelhecimento da massa de segurados e o crescimento vegetativo da folha, a reserva matemática precisa ser gerida de forma a maximizar o retorno sem incorrer em riscos de ruína.</p>
+            <p class="text-block">A insuficiência previdenciária gera déficits que devem ser cobertos pela rentabilidade dos investimentos (acima da inflação) ou por aportes adicionais do ente federativo.</p>
+        </div>
+        <div>
+            <h2 class="section-title">O Papel do ALM</h2>
+            <p class="text-block">O ALM (Gerenciamento de Ativos e Passivos) atua como a ponte entre o cálculo do Atuário e a execução do Gestor de Investimentos. Seu objetivo é responder a duas perguntas fundamentais:</p>
+            <ol style="font-size:13px; color:var(--text-light); margin-left:20px; line-height:1.6; margin-bottom:15px;">
+                <li>Qual a rentabilidade mínima que a carteira precisa gerar para evitar a descapitalização do fundo no longo prazo?</li>
+                <li>Qual a melhor combinação de ativos (Fronteira Eficiente) que alcança essa rentabilidade com o menor risco possível?</li>
+            </ol>
+            <div class="alert-box">A carteira de investimentos não existe para maximizar lucros indiscriminadamente, mas sim para <strong>garantir o pagamento das obrigações atuariais</strong> no tempo correto.</div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 3</span></div>
+</div>
+
+<!-- SLIDE 4: PREMISSAS MACROECONÔMICAS E ATUARIAIS -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Premissas do Estudo</h1><div class="subtitle">Parâmetros Atuariais, Base de Dados e Projeções Macro</div></div>
+    </div>
+    <div class="slide-body grid-2">
+        <div>
+            <h2 class="section-title">Base Atuarial</h2>
             <div class="metric-box">
-                <div class="metric-title">Patrimônio Líquido Avaliado</div>
+                <div class="metric-title">Patrimônio Líquido Base</div>
                 <div class="metric-value">{{ patrimony }}</div>
             </div>
-            <div class="metric-box">
-                <div class="metric-title">Rentabilidade Requerida (Taxa de Equilíbrio)</div>
-                <div class="metric-value {% if required_return > 6 %}red{% else %}green{% endif %}">{{ required_return }}% a.a.</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-title">Meta Atuarial</div>
-                <div class="metric-value">{{ meta_atuarial }}% a.a.</div>
-            </div>
-            <div class="metric-box">
-                <div class="metric-title">Valor Presente dos Fluxos (Déficit/Superávit)</div>
-                <div class="metric-value red">{{ npv_deficit }}</div>
-            </div>
-        </div>
-        <div>
-            <h3 style="margin-bottom:15px; color:var(--brand-color);">Dados Atuariais ({{ actuarial_data.active_members + actuarial_data.retirees + actuarial_data.pensioners }} Vidas)</h3>
             <table class="data-table">
                 <tr><td>Servidores Ativos</td><td class="highlight">{{ actuarial_data.active_members }}</td></tr>
-                <tr><td>Aposentados</td><td class="highlight">{{ actuarial_data.retirees }}</td></tr>
-                <tr><td>Pensionistas</td><td class="highlight">{{ actuarial_data.pensioners }}</td></tr>
+                <tr><td>Aposentados e Pensionistas</td><td class="highlight">{{ actuarial_data.retirees + actuarial_data.pensioners }}</td></tr>
                 <tr><td>Tábua Biométrica</td><td class="highlight">{{ actuarial_data.biometric_table }}</td></tr>
-                <tr><td>Crescimento Real de Salários</td><td class="highlight">{{ actuarial_data.salary_growth_real }}% a.a.</td></tr>
+                <tr><td>Cresc. Real de Salários</td><td class="highlight">{{ actuarial_data.salary_growth_real }}% a.a.</td></tr>
             </table>
 
-            <h3 style="margin-top:25px; margin-bottom:15px; color:var(--brand-color);">Parâmetros da Simulação</h3>
+            <h2 class="section-title" style="margin-top:20px;">Necessidade de Retorno (Equilíbrio)</h2>
+            <p class="text-block">Para zerar o déficit atuarial (VPL de <strong>{{ npv_deficit }}</strong>) considerando o patrimônio atual, a carteira de investimentos precisa atingir uma <strong>Rentabilidade Requerida de {{ required_return }}% a.a. + Inflação</strong>.</p>
+            <div class="alert-box">A Meta Atuarial legal é de <strong>{{ meta_atuarial }}% a.a.</strong> (IPCA + {{ actuarial_rate }}%), demonstrando um gap entre a meta legal e o retorno de equilíbrio necessário.</div>
+        </div>
+        <div>
+            <h2 class="section-title">Premissas Macroeconômicas</h2>
+            <p class="text-block">A projeção dos ativos de renda fixa foi estruturada sobre as curvas de juros (ETTJ Anbima) e prêmios de risco de longo prazo (CDI e inflação implícita).</p>
             <table class="data-table">
-                <tr><td>Método</td><td class="highlight">Monte Carlo Geométrica (GBM)</td></tr>
-                <tr><td>Horizonte</td><td class="highlight">{{ horizon }} Anos</td></tr>
-                <tr><td>Cenários Gerados</td><td class="highlight">{{ n_scenarios }}</td></tr>
-                <tr><td>Nível de Pró-Gestão</td><td class="highlight">{% if pro_gestao %}Nível {{ pro_gestao }}{% else %}Não Possui{% endif %}</td></tr>
+                <thead><tr><th>Benchmark</th><th>Retorno Real Projetado (a.a.)</th><th>Volatilidade</th></tr></thead>
+                <tbody>
+                {% for idx in indices %}
+                    {% if idx.segment != 'Renda Fixa' or loop.index <= 8 %}
+                    <tr>
+                        <td>{{ idx.name }}</td>
+                        <td class="positive">{{ idx.return }}</td>
+                        <td>{{ idx.volatility }}</td>
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
             </table>
+            <p style="font-size:10px; color:#999; margin-top:5px;">*Tabela amostral. Parâmetros extraídos dos modelos de covariância histórica (60 meses) e Estrutura a Termo da Taxa de Juros.</p>
         </div>
     </div>
-    <div class="slide-footer">
-        <span>{{ rpps_name }}</span>
-        <span>Página 2</span>
-    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 4</span></div>
 </div>
 
-<!-- SLIDE 3: FLUXO E PATRIMÔNIO -->
+<!-- SLIDE 5: FLUXO ATUARIAL COMPLETO -->
 <div class="slide">
     <div class="slide-header">
-        <div>
-            <h1>EVOLUÇÃO DO FLUXO E DO PATRIMÔNIO</h1>
-            <div class="subtitle">Projeção Atuarial Base</div>
+        <div><h1>Fluxo Atuarial Projetado</h1><div class="subtitle">Evolução Anual das Receitas, Despesas e Necessidade de Caixa</div></div>
+    </div>
+    <div class="slide-body grid-2">
+        <div class="table-scroll" style="max-height:140mm;">
+            <table class="data-table" style="margin-top:0;">
+                <thead><tr><th>Ano</th><th>Receitas</th><th>Despesas</th><th>Fluxo L.</th></tr></thead>
+                <tbody>
+                {% for row in cashflows_table %}
+                <tr>
+                    <td>{{ row.year }}</td>
+                    <td>{{ row.revenues }}</td>
+                    <td>{{ row.expenditures }}</td>
+                    <td class="{% if row.is_deficit %}negative{% else %}positive{% endif %} highlight">{{ row.net_flow }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
+        <div>
+            <h2 class="section-title">Comportamento do Passivo</h2>
+            <p class="text-block">A tabela demonstra a transição demográfica. O <strong>Ano do 1º Déficit ({{ first_deficit_year }})</strong> marca a descapitalização natural.</p>
+            <div class="chart-container small" style="margin-top:15px;"><canvas id="cfChart"></canvas></div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 5</span></div>
+</div>
+
+<!-- SLIDE 6: COMPARATIVO SEM INVESTIMENTOS VS COM INVESTIMENTOS -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Impacto dos Investimentos no Patrimônio</h1><div class="subtitle">Cenário Puramente Atuarial vs Cenário Capitalizado</div></div>
+    </div>
+    <div class="slide-body grid-2">
+        <div class="table-scroll" style="max-height:140mm;">
+            <table class="data-table" style="margin-top:0;">
+                <thead><tr><th>Ano</th><th>Patrimônio Final</th></tr></thead>
+                <tbody>
+                {% for row in projection_table %}
+                <tr>
+                    <td>{{ row.year }}</td>
+                    <td class="highlight">{{ row.patrimony_eq }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div>
+            <h2 class="section-title">A Força dos Juros Compostos</h2>
+            <p class="text-block">Sem a contribuição ativa da carteira de investimentos, o fluxo líquido negativo consumiria rapidamente a reserva do instituto. A coluna <strong>Retorno Inv.</strong> simula o ganho financeiro caso a carteira atinja exatamente a <strong>Taxa de Equilíbrio ({{ required_return }}% a.a.)</strong>, mantendo o Patrimônio solvável no longo prazo.</p>
+            
+            <div style="margin-top:10px; margin-bottom:15px; font-size:12px; background:rgba(239, 68, 68, 0.1); border-left:4px solid var(--red); padding:10px; border-radius:4px; font-weight:600; color:#991b1b;">
+                Ano de Ruína do Caixa (Rendendo apenas a Meta Atuarial): <span style="font-size:14px; font-weight:800; color:var(--red);">{{ ruin_year }}</span>
+            </div>
+            
+            <div class="chart-container small" style="margin-top:15px;"><canvas id="projChart"></canvas></div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 6</span></div>
+</div>
+
+<!-- SLIDE 7: METODOLOGIA E RESTRIÇÕES DO MODELO -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Metodologia e Restrições</h1><div class="subtitle">Bases Matemáticas e Regulatórias da Otimização</div></div>
     </div>
     <div class="slide-body grid-2">
         <div>
-            <h3 style="margin-bottom:15px; font-size:14px;">Fluxo de Receitas e Despesas</h3>
-            <div class="chart-container small"><canvas id="cfChart"></canvas></div>
-            <div style="margin-top:15px; font-size:12px; background:var(--bg-alt); padding:10px; border-radius:4px;">
-                <strong>Ano do 1º Déficit:</strong> {{ first_deficit_year }}
-            </div>
+            <h2 class="section-title">Metodologia Matemática</h2>
+            <p class="text-block"><strong>Otimização de Markowitz:</strong> Utilizamos a Teoria Moderna do Portfólio para construir a Fronteira Eficiente. O modelo avalia a covariância histórica entre os ativos para encontrar combinações que minimizam a volatilidade (risco) para cada nível de retorno esperado. O foco é a diversificação ótima.</p>
+            <p class="text-block"><strong>Índice Sharpe:</strong> Utilizado para ranquear os portfólios, medindo o prêmio de risco (excesso de retorno sobre a taxa livre de risco - CDI) dividido pela volatilidade. Quanto maior, mais eficiente é a carteira.</p>
+            <p class="text-block"><strong>Monte Carlo (Geométrica Mendel-Browniana):</strong> Para os testes de solvência, rodamos {{ n_scenarios }} simulações de trajetória de preços baseadas em passeios aleatórios com distribuição gaussiana, testando a resistência do patrimônio em cenários de estresse de mercado.</p>
         </div>
         <div>
-            <h3 style="margin-bottom:15px; font-size:14px;">Projeção do Patrimônio Líquido</h3>
-            <div class="chart-container small"><canvas id="projChart"></canvas></div>
-            <div style="margin-top:15px; font-size:12px; background:var(--bg-alt); padding:10px; border-radius:4px;">
-                Compara a evolução exigida (Rentabilidade Requerida) com a Meta Atuarial.
-            </div>
+            <h2 class="section-title">Restrições e Limitações Regulatórias</h2>
+            <p class="text-block">O modelo não propõe alocações soltas; ele é estritamente limitado pela <strong>Resolução CMN 5.272/2025</strong> e pelo <strong>Pró-Gestão (Nível {% if pro_gestao %}{{ pro_gestao }}{% else %}Sem Certificação{% endif %})</strong>.</p>
+            
+            <ul style="font-size:12px; color:var(--text-light); margin-left:15px; margin-bottom:15px; line-height:1.5;">
+                <li>Posições ilíquidas e "Fundos Vértice" (comprados para carrego até o vencimento) foram travados no modelo, pois não podem ser rebalanceados no curto prazo.</li>
+                <li>Ativos que exigem níveis superiores de Pró-Gestão (Ex: Renda Variável, Multimercados) foram matematicamente bloqueados com teto de 0%.</li>
+            </ul>
+
+            <h2 class="section-title">Marcação na Curva vs Mercado</h2>
+            <p class="text-block">Títulos mantidos até o vencimento (marcação na curva) não sofrem a volatilidade de curto prazo da marcação a mercado no balanço contábil, porém o modelo matemático imputou uma volatilidade teórica mínima de <i>duration</i> para garantir que o risco de liquidez não fosse mascarado no Índice Sharpe.</p>
         </div>
     </div>
-    <div class="slide-footer">
-        <span>{{ rpps_name }}</span>
-        <span>Página 3</span>
-    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 7</span></div>
 </div>
 
-<!-- SLIDE 4: OTIMIZAÇÃO MARKOWITZ -->
+<!-- SLIDE 8: DIAGNÓSTICO DA CARTEIRA ATUAL -->
 <div class="slide">
     <div class="slide-header">
-        <div>
-            <h1>OTIMIZAÇÃO DA CARTEIRA</h1>
-            <div class="subtitle">Fronteira Eficiente de Markowitz - 10 Portfólios</div>
+        <div><h1>Diagnóstico da Carteira Atual</h1><div class="subtitle">Avaliação do Inventário de Ativos na Data-Base</div></div>
+    </div>
+    <div class="slide-body">
+        <div class="table-scroll" style="max-height:110mm;">
+            <table class="data-table">
+                <thead><tr><th>Fundo de Investimento</th><th>Saldo (R$)</th><th>% PL</th><th>Benchmark</th><th>Enquadramento</th><th>Liq.</th></tr></thead>
+                <tbody>
+                {% for h in holdings %}
+                    <tr>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ h.name }}</td>
+                        <td>{{ h.balance }}</td>
+                        <td>{{ h.weight }}</td>
+                        <td>{{ h.benchmark }}</td>
+                        <td>Art. {{ h.article }}</td>
+                        <td>{{ h.liquidity }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
+        <div class="grid-2" style="margin-top:20px;">
+            <div class="metric-box">
+                <div class="metric-title">Quantidade de Ativos Diferentes</div>
+                <div class="metric-value">{{ holdings|length }} Fundos</div>
+            </div>
+            <div class="alert-box" style="margin:0;">
+                Este diagnóstico reflete a carteira de fato no momento do estudo. É possível observar concentrações pontuais e a presença de fundos fechados (vértice) que engessam parcialmente a capacidade de rebalanceamento imediato.
+            </div>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 8</span></div>
+</div>
+
+<!-- SLIDE 9: FRONTEIRA EFICIENTE -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Otimização de Portfólios</h1><div class="subtitle">Fronteira Eficiente de Markowitz (10 Carteiras Otimizadas)</div></div>
     </div>
     <div class="slide-body">
         {% if frontier %}
@@ -233,9 +356,9 @@
                 <tr>
                     <th>Portfólio</th>
                     <th>Retorno Real (a.a.)</th>
-                    <th>Volatilidade (a.a.)</th>
+                    <th>Volatilidade</th>
                     <th>Índice Sharpe</th>
-                    <th>Composição Sugerida (%)</th>
+                    <th>Composição Otimizada (Macro Alocação)</th>
                 </tr>
             </thead>
             <tbody>
@@ -245,89 +368,131 @@
                     <td class="highlight">{{ p.return }}%</td>
                     <td>{{ p.volatility }}%</td>
                     <td class="highlight">{{ p.sharpe }}</td>
-                    <td>{% for idx, w in p.weights.items() %}<strong>{{ idx }}</strong>: {{ w }}%{% if not loop.last %} | {% endif %}{% endfor %}</td>
+                    <td style="font-size:10px;">{% for idx, w in p.weights.items() %}<strong>{{ idx }}</strong>: {{ w }}%{% if not loop.last %} | {% endif %}{% endfor %}</td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-        <div style="margin-top:20px;">
-            <div class="chart-container small" style="height:50mm;"><canvas id="frontierChart"></canvas></div>
+        <div class="grid-2" style="margin-top:15px; align-items:center;">
+            <div class="chart-container small" style="height:60mm;"><canvas id="frontierChart"></canvas></div>
+            <p class="text-block">O gráfico demonstra o trade-off entre Risco e Retorno. O <strong>Portfólio Recomendado</strong> foi selecionado pelo algoritmo por possuir o maior Índice Sharpe tangenciando a fronteira, entregando a melhor proporção de retorno excedente por unidade de risco assumida, respeitando os limites regulatórios (Pró-Gestão) aplicáveis à instituição.</p>
         </div>
         {% else %}
         <p>Não foi possível gerar fronteira eficiente com as restrições atuais.</p>
         {% endif %}
     </div>
-    <div class="slide-footer">
-        <span>{{ rpps_name }}</span>
-        <span>Página 4</span>
-    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 9</span></div>
 </div>
 
-<!-- SLIDE 5: GAP ANALYSIS -->
+<!-- SLIDE 10: MONTE CARLO E SOLVÊNCIA -->
 <div class="slide">
     <div class="slide-header">
-        <div>
-            <h1>PLANO DE AÇÃO (GAP ANALYSIS)</h1>
-            <div class="subtitle">Transição da Carteira Atual para a Carteira Recomendada</div>
-        </div>
+        <div><h1>Simulação Estocástica e Solvência</h1><div class="subtitle">Teste de Ruína via Monte Carlo ({{ n_scenarios }} Cenários)</div></div>
     </div>
     <div class="slide-body grid-2">
         <div>
-            <h3 style="margin-bottom:15px; font-size:14px;">Comparativo de Alocação</h3>
+            <h2 class="section-title">Análise de Funding Ratio</h2>
+            <p class="text-block">O <strong>Funding Ratio (Razão de Solvência)</strong> é a razão entre os Ativos Projetados e os Passivos (VPL). Um ratio sustentadamente acima de 1.0 indica que o instituto tem total capacidade de honrar seus compromissos no longo prazo. Abaixo de 1.0, há risco estrutural.</p>
+            <div class="grid-2">
+                <div class="metric-box">
+                    <div class="metric-title">Probabilidade de Solvência</div>
+                    <div class="metric-value {% if solvency.pct_solvent > 70 %}green{% elif solvency.pct_solvent > 50 %}amber{% else %}red{% endif %}">{{ solvency.pct_solvent }}%</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-title">Funding Ratio (Mediana)</div>
+                    <div class="metric-value">{{ solvency.mean_fr }}</div>
+                </div>
+            </div>
+            <p class="text-block" style="font-size:11px;">*A tabela ao lado ilustra a estratégia direta de <strong>Matching com NTN-B</strong>, buscando travar taxas reais e casar durações para imunizar os fluxos passivos dos anos mais críticos.</p>
+        </div>
+        <div>
+            <h2 class="section-title">Estratégia de Matching (NTN-B Direta)</h2>
+            {% if bonds %}
             <table class="data-table">
-                <thead><tr><th>Benchmark</th><th>Atual</th><th>Recomendada</th><th>Gap (Ajuste)</th></tr></thead>
+                <thead><tr><th>Período Alvo</th><th>Título Referência</th><th>Taxa Travada</th><th>% da Carteira</th></tr></thead>
+                <tbody>
+                {% for b in bonds %}
+                    <tr><td>{{ b.period }}</td><td>{{ b.bond }}</td><td class="highlight">{{ b.rate }}</td><td>{{ b.weight_total }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="font-size:12px; color:var(--text-light);">Nenhum período elegível para matching.</p>
+            {% endif %}
+            <h2 class="section-title" style="margin-top:20px;">Estatísticas de Simulação da Carteira Alvo</h2>
+            <table class="data-table">
+                <tr><td>Retorno Médio Projetado (a.a.)</td><td class="highlight">{{ solvency.mean_return }}%</td></tr>
+                <tr><td>Pior Cenário Simulado (Min)</td><td class="negative">{{ solvency.min_return }}%</td></tr>
+                <tr><td>Melhor Cenário Simulado (Max)</td><td class="positive">{{ solvency.max_return }}%</td></tr>
+                <tr><td>Cenários com Retorno Positivo</td><td>{{ solvency.pct_positive }}%</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 10</span></div>
+</div>
+
+<!-- SLIDE 11: CONCLUSÃO TÉCNICA -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Conclusão Técnica</h1><div class="subtitle">Parecer Analítico e Considerações sobre o Risco Atuarial</div></div>
+    </div>
+    <div class="slide-body">
+        <h2 class="section-title">Parecer e Riscos Mapeados</h2>
+        
+        <p class="text-block">Diante da análise das premissas atuariais, da projeção dos fluxos de caixa previdenciários e do cenário macroeconômico base, concluímos que o instituto exige uma taxa de rentabilidade de <strong>{{ required_return }}% a.a. acima da inflação</strong> para alcançar o equilíbrio atuarial pleno de longo prazo.</p>
+
+        <p class="text-block">A otimização de portfólios identificou que, <strong>sob os atuais limites da Resolução CMN e do nível de certificação Pró-Gestão</strong>, a carteira com o risco-retorno mais eficiente (Portfólio {{ recommended.id }}) entrega uma expectativa de retorno real de <strong>{{ recommended.return }}% a.a.</strong> Esta rentabilidade supera a Meta Atuarial e atinge com margem de segurança o retorno de equilíbrio necessário, demonstrado pela probabilidade de solvência de <strong>{{ solvency.pct_solvent }}%</strong> nos testes de estresse.</p>
+
+        <p class="text-block">Contudo, mantemos uma <strong>postura institucional conservadora</strong>. A obtenção consistente de retornos reais superiores a 7% ao ano no longo prazo é estatisticamente desafiadora em ciclos de afrouxamento monetário global. O instituto está fortemente dependente do atual nível de prêmio de risco dos títulos públicos federais brasileiros (NTN-B). Quedas estruturais na taxa Selic no futuro poderão corroer esta capacidade de geração de retorno real sem a assunção de maiores riscos direcionais (Ações e Multimercados).</p>
+
+        <h2 class="section-title" style="margin-top:20px;">Recomendações ao Comitê</h2>
+        <ul style="font-size:13px; color:var(--text-light); margin-left:20px; line-height:1.6;">
+            <li><strong>Adequação Regulatória:</strong> Executar o Plano de Movimentação (Gap Analysis na próxima página) para alinhar a carteira ao Benchmark Recomendado.</li>
+            <li><strong>Trava de Taxas (ALM):</strong> Aproveitar janelas de oportunidade no mercado secundário para aquisição de Notas do Tesouro Nacional (NTN-B) com taxas superiores a 6% a.a., visando marcação na curva para imunizar os fluxos deficitários da década de 2040.</li>
+            {% if not pro_gestao %}
+            <li><strong>Certificação:</strong> Iniciar ou acelerar imediatamente o processo de certificação do <strong>Pró-Gestão (Nível II ou superior)</strong>. A falta de certificação restringe matematicamente a fronteira eficiente, engessando o instituto apenas em renda fixa primária e impossibilitando a diversificação caso os juros reais no Brasil caiam.</li>
+            {% endif %}
+        </ul>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 11</span></div>
+</div>
+
+<!-- SLIDE 12: PLANO DE MOVIMENTAÇÃO (GAP) -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Plano de Movimentação (Gap Analysis)</h1><div class="subtitle">Transição da Carteira Atual para a Alocação Alvo Otimizada</div></div>
+    </div>
+    <div class="slide-body grid-2">
+        <div>
+            <h2 class="section-title">Comparativo e Necessidade de Adequação</h2>
+            <table class="data-table">
+                <thead><tr><th>Benchmark (Índice Base)</th><th>Alocação Atual</th><th>Alocação Recomendada</th><th>Gap / Movimentação</th></tr></thead>
                 <tbody>
                 {% for g in gap %}
                     <tr>
                         <td>{{ g.benchmark }}</td>
                         <td>{{ g.current_pct }}</td>
                         <td class="highlight">{{ g.recommended_pct }}</td>
-                        <td class="{% if g.gap_pct.startswith('+') %}green{% elif g.gap_pct.startswith('-') %}red{% endif %}" style="font-weight:700;">{{ g.gap_pct }}</td>
+                        <td class="{% if g.gap_pct.startswith('+') %}positive{% elif g.gap_pct.startswith('-') %}negative{% endif %}" style="font-weight:700;">{{ g.gap_pct }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            <p class="text-block" style="margin-top:15px; font-size:11px;">*O "Gap" indica o esforço financeiro: percentuais positivos indicam necessidade de <strong>comprar/aportar</strong>; percentuais negativos exigem <strong>resgate/venda</strong> dos fundos vinculados a este benchmark.</p>
         </div>
         <div>
-            {% if recommended %}
-            <div style="background:var(--brand-color); color:white; padding:20px; border-radius:8px;">
-                <h2 style="font-size:18px; margin-bottom:15px;">CARTEIRA ALVO (Portfólio {{ recommended.id }})</h2>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px; margin-bottom:20px;">
-                    <div>
-                        <div style="font-size:11px; color:var(--brand-accent);">Retorno Esperado</div>
-                        <div style="font-size:24px; font-weight:800;">{{ recommended.return }}%</div>
-                    </div>
-                    <div>
-                        <div style="font-size:11px; color:var(--brand-accent);">Índice Sharpe</div>
-                        <div style="font-size:24px; font-weight:800;">{{ recommended.sharpe }}</div>
-                    </div>
+            <h2 class="section-title">Síntese da Execução</h2>
+            <div style="background:var(--brand-color); color:white; padding:15px; border-radius:6px; margin-bottom:15px;">
+                <div style="font-size:14px; font-weight:700; margin-bottom:10px;">META DE LONGO PRAZO: PORTFÓLIO {{ recommended.id }}</div>
+                <div class="grid-2" style="gap:10px;">
+                    <div><span style="font-size:10px;color:var(--brand-accent);">Retorno Alvo</span><br><span style="font-size:20px;font-weight:800;">{{ recommended.return }}%</span></div>
+                    <div><span style="font-size:10px;color:var(--brand-accent);">Volatilidade Esperada</span><br><span style="font-size:20px;font-weight:800;">{{ recommended.volatility }}%</span></div>
                 </div>
-                <p style="font-size:12px; line-height:1.5; color:var(--brand-accent);">
-                    A carteira recomendada maximiza a relação risco-retorno (Sharpe), garantindo uma rentabilidade esperada de <strong>{{ recommended.return }}% a.a.</strong> (acima da rentabilidade requerida de {{ required_return }}%), assegurando a solvência a longo prazo com {{ solvency.pct_solvent }}% de probabilidade de sucesso.
-                </p>
             </div>
-            {% endif %}
-            <div style="margin-top:20px;">
-                <h3 style="margin-bottom:15px; font-size:14px;">Matching de NTN-B (Aquisição Direta)</h3>
-                {% if bonds %}
-                <table class="data-table">
-                    <thead><tr><th>Ano</th><th>Título Base</th><th>Taxa Alvo</th><th>% TP</th></tr></thead>
-                    <tbody>
-                    {% for b in bonds %}
-                        <tr><td>{{ b.period }}</td><td>{{ b.bond }}</td><td>{{ b.rate }}</td><td>{{ b.weight_port }}</td></tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p style="font-size:12px; color:var(--text-light);">Nenhum período de déficit elegível para matching.</p>
-                {% endif %}
-            </div>
+            <p class="text-block">As movimentações devem ser executadas com prudência operacional. Fatores como cotização (D+30, D+60), carências de resgate, impactos de marcação a mercado e oscilações diárias de taxas das NTN-Bs podem exigir a divisão deste rebalanceamento em tranches mensais ao longo do semestre de adequação.</p>
         </div>
     </div>
-    <div class="slide-footer">
-        <span>{{ rpps_name }}</span>
-        <span>Página 5</span>
-    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 12</span></div>
 </div>
 
 <script>
@@ -342,9 +507,9 @@
     new Chart(document.getElementById('cfChart'), {
         type: 'bar', data: { labels: cfData.years,
             datasets: [
-                { label: 'Receitas', data: cfData.revenues, backgroundColor: '#10b981' },
-                { label: 'Despesas', data: cfData.expenditures, backgroundColor: '#ef4444' },
-                { label: 'Fluxo', data: cfData.net, type: 'line', borderColor: '#0b2545', borderWidth: 2, pointRadius:0 }
+                { label: 'Receitas', data: cfData.revenues, backgroundColor: '#10b981', order:2 },
+                { label: 'Despesas', data: cfData.expenditures, backgroundColor: '#ef4444', order:2 },
+                { label: 'Fluxo', data: cfData.net, type: 'line', borderColor: '#0b2545', borderWidth: 2, pointRadius:0, tension:0.2, order:1 }
             ]
         }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: fmtBRL } } } }
     });
@@ -353,8 +518,8 @@
     new Chart(document.getElementById('projChart'), {
         type: 'line', data: { labels: projData.years,
             datasets: [
-                { label: 'Evolução Requerida', data: projData.patrimony_eq, borderColor: '#10b981', borderWidth: 2, pointRadius:0, fill:true, backgroundColor:'rgba(16,185,129,0.1)' },
-                { label: 'Meta Atuarial', data: projData.patrimony_meta, borderColor: '#0b2545', borderWidth: 2, pointRadius:0, borderDash:[5,5] },
+                { label: 'Evolução (Taxa Equilíbrio)', data: projData.patrimony_eq, borderColor: '#10b981', borderWidth: 2, pointRadius:0, fill:true, backgroundColor:'rgba(16,185,129,0.1)' },
+                { label: 'Evolução (Meta Atuarial)', data: projData.patrimony_meta, borderColor: '#0b2545', borderWidth: 2, pointRadius:0, borderDash:[5,5] },
             ]
         }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: fmtBRL } } } }
     });
