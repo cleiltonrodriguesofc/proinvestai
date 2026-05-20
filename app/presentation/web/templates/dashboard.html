@@ -319,6 +319,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             }]
         },
         options: {
+            plugins: { legend: { position: 'right', labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 } } } },
+            cutout: '70%'
+        }
+    });
+
+    // 2. Monte Carlo Chart (Simplified visualization)
+    const mc = {{ analysis.monte_carlo | tojson }};
+    const p = mc.percentiles;
+    new Chart(document.getElementById('monteCarloChart'), {
+        type: 'line',
+        data: {
+            labels: Array.from({length: 61}, (_, i) => i),
+            datasets: [
+                { label: 'P90 (Otimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p90], borderColor: '#10b981', borderWidth: 1, fill: false, pointRadius: 0 },
+                { label: 'P50 (Médio)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p50], borderColor: '#00d4ff', borderWidth: 2, fill: false, pointRadius: 0 },
+                { label: 'P10 (Pessimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p10], borderColor: '#f43f5e', borderWidth: 1, fill: false, pointRadius: 0 }
+            ]
+        },
+        options: {
             responsive: true,
             maintainAspectRatio: false,
             scales: {

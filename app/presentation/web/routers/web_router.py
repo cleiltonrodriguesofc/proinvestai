@@ -67,6 +67,11 @@ PROFILE_MAP = {
 
 # ── service singletons ──
 
+from ....infrastructure.external.market_data_service import MarketDataService
+from ....application.services.risk_metrics_engine import RiskMetricsEngine
+from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
+from ....infrastructure.database.connection import get_session
+
 router = APIRouter()
 quiz_service = QuizService()
 market_data = MarketDataService()
