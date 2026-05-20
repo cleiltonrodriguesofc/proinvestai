@@ -324,18 +324,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // 2. Monte Carlo Chart (Simplified visualization)
-    const mc = {{ analysis.monte_carlo | tojson }};
-    const p = mc.percentiles;
-    new Chart(document.getElementById('monteCarloChart'), {
-        type: 'line',
+    // 2. projection chart (5 years)
+    const projections = {{ projections_json | safe }};
+    const projLabels = projections.map(p => `Ano ${p.year}`);
+    const projValues = projections.map(p => p.projected_value);
+    const projIncome = projections.map(p => p.projected_monthly_income);
+
+    new Chart(document.getElementById('projectionChart'), {
+        type: 'bar',
         data: {
-            labels: Array.from({length: 61}, (_, i) => i),
-            datasets: [
-                { label: 'P90 (Otimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p90], borderColor: '#10b981', borderWidth: 1, fill: false, pointRadius: 0 },
-                { label: 'P50 (Médio)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p50], borderColor: '#00d4ff', borderWidth: 2, fill: false, pointRadius: 0 },
-                { label: 'P10 (Pessimista)', data: [{{ total_value|replace(".","")|replace(",",".") }}, p.p10], borderColor: '#f43f5e', borderWidth: 1, fill: false, pointRadius: 0 }
-            ]
+            labels: projLabels,
+            datasets: [{
+                label: 'Patrimônio Projetado (R$)',
+                data: projValues,
+                backgroundColor: 'rgba(0, 212, 255, 0.3)',
+                borderColor: '#00d4ff',
+                borderWidth: 1.5,
+                borderRadius: 4,
+            }]
         },
         options: {
             responsive: true,

@@ -68,9 +68,38 @@ PROFILE_MAP = {
 # ── service singletons ──
 
 from ....infrastructure.external.market_data_service import MarketDataService
-from ....application.services.risk_metrics_engine import RiskMetricsEngine
+from ....infrastructure.external.macro_scenario_service import MacroScenarioService
 from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
+from ....infrastructure.repositories.user_asset_repository import SQLAlchemyUserAssetRepository
 from ....infrastructure.database.connection import get_session
+from ....infrastructure.database.models import InvestorProfile as ProfileModel
+from .auth import get_current_user
+
+logger = logging.getLogger(__name__)
+
+# ── shared constants ──
+
+PROFILE_LABELS = {
+    "conservative": "Conservador",
+    "moderate": "Moderado",
+    "aggressive": "Arrojado",
+    "ultraconservative": "Conservador",
+    "ultra_aggressive": "Arrojado",
+}
+
+# map quiz result names to engine profile keys
+PROFILE_MAP = {
+    "conservative": "conservative",
+    "moderate": "moderate",
+    "aggressive": "aggressive",
+    "ultraconservative": "conservative",
+    "ultra_aggressive": "aggressive",
+    "Conservador": "conservative",
+    "Moderado": "moderate",
+    "Arrojado": "aggressive",
+}
+
+# ── service singletons ──
 
 router = APIRouter()
 quiz_service = QuizService()
