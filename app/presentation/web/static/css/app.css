@@ -1,0 +1,501 @@
+/* ══════════════════════════════════════════════
+   app.css — sidebar layout + authenticated pages
+   mobile-first approach
+   ══════════════════════════════════════════════ */
+
+/* ──── App Body ──── */
+.app-body {
+    background: var(--bg-base);
+    min-height: 100vh;
+}
+
+/* ──── Mobile Header ──── */
+.app-mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: rgba(6, 6, 8, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    z-index: 1100;
+}
+
+.app-mobile-brand {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+}
+
+.app-mobile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--grad-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #000;
+}
+
+/* ──── Hamburger Toggle ──── */
+.sidebar-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    z-index: 1200;
+}
+
+.sidebar-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+/* ──── Sidebar Overlay (mobile) ──── */
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* ──── Sidebar ──── */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    background: #060608;
+    border-right: 1px solid var(--border);
+    z-index: 1300;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.sidebar.open {
+    transform: translateX(0);
+}
+
+/* ──── Sidebar Brand ──── */
+.sidebar-brand {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 1.25rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.sidebar-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--grad-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #000;
+}
+
+.sidebar-brand-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text-primary);
+}
+
+/* ──── Sidebar Navigation ──── */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar-section-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #333;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    padding: 1rem 0.75rem 0.5rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-primary);
+}
+
+.sidebar-link.active {
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--cyan);
+}
+
+.sidebar-link.active svg {
+    stroke: var(--cyan);
+}
+
+.sidebar-link svg {
+    flex-shrink: 0;
+    stroke: var(--text-tertiary);
+    transition: stroke 0.2s ease;
+}
+
+.sidebar-link:hover svg {
+    stroke: var(--text-primary);
+}
+
+/* ──── Sidebar Footer (User Info) ──── */
+.sidebar-footer {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem;
+    flex-shrink: 0;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.sidebar-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--grad-brand);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.sidebar-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.sidebar-user-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sidebar-user-plan {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.sidebar-logout {
+    color: var(--text-tertiary) !important;
+}
+
+.sidebar-logout:hover {
+    color: var(--rose) !important;
+    background: rgba(244, 63, 94, 0.06) !important;
+}
+
+.sidebar-logout:hover svg {
+    stroke: var(--rose) !important;
+}
+
+/* ──── Main Content ──── */
+.app-main {
+    padding: calc(56px + 1.25rem) 1rem 1.25rem;
+    min-height: 100vh;
+}
+
+/* ──── Dashboard Specific ──── */
+.dash-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid #111;
+    padding-bottom: 1.25rem;
+}
+
+.user-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.dash-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+}
+
+.total-value-box { text-align: left; }
+.total-label { font-size: 0.65rem; color: #444; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+.total-value { font-size: 1.75rem; font-weight: 800; color: #fff; }
+.profile-badge { font-size: 0.7rem; color: var(--emerald); font-weight: 700; margin-top: 0.25rem; display: block; }
+
+/* ──── Risk Metrics Table ──── */
+.risk-table-container {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 6px;
+    margin-bottom: 1.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-header {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid #111;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.table-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.risk-table {
+    width: 100%;
+    min-width: 420px;
+    border-collapse: collapse;
+}
+
+.risk-table th {
+    text-align: left;
+    padding: 0.65rem 1rem;
+    font-size: 0.6rem;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #111;
+    white-space: nowrap;
+}
+
+.risk-table td {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #0a0a0a;
+    white-space: nowrap;
+}
+
+.val-up { color: var(--emerald); }
+.val-down { color: var(--rose); }
+.col-label { font-weight: 600; color: #888; }
+.col-month, .col-12m { text-align: right; font-weight: 700; }
+
+/* ──── Charts Grid ──── */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.chart-card {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 6px;
+    padding: 1.25rem;
+}
+
+.chart-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+/* ──── Narration ──── */
+.narration-box {
+    background: linear-gradient(135deg, #0a0a0c, #000);
+    border: 1px solid #111;
+    border-radius: 6px;
+    padding: 1.5rem;
+    border-left: 3px solid var(--cyan);
+    margin-bottom: 1.25rem;
+}
+
+.narration-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.narration-text {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: #bbb;
+}
+
+/* ──── KPI Cards ──── */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.kpi-card {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.kpi-label {
+    font-size: 0.6rem;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.kpi-sub {
+    font-size: 0.65rem;
+    color: #555;
+    margin-top: 0.25rem;
+}
+
+/* ══════════════════════════════════════════════
+   Responsive — Tablet (≥ 768px)
+   ══════════════════════════════════════════════ */
+
+@media (min-width: 768px) {
+    .dash-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+
+    .total-value-box { text-align: right; }
+
+    .dash-title { font-size: 1.6rem; }
+
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+
+    .charts-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ══════════════════════════════════════════════
+   Responsive — Desktop (≥ 1024px)
+   ══════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+    /* hide mobile header */
+    .app-mobile-header { display: none; }
+
+    /* sidebar always visible */
+    .sidebar {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+        display: none;
+    }
+
+    /* main content offset */
+    .app-main {
+        margin-left: 260px;
+        padding: 2rem;
+    }
+
+    .dash-title { font-size: 1.75rem; }
+
+    .total-value { font-size: 2rem; }
+
+    .risk-table td { padding: 0.85rem 1.25rem; }
+    .risk-table th { padding: 0.75rem 1.25rem; }
+}
+
+/* ══════════════════════════════════════════════
+   Responsive — Wide (≥ 1440px)
+   ══════════════════════════════════════════════ */
+
+@media (min-width: 1440px) {
+    .app-main {
+        max-width: 1200px;
+    }
+}

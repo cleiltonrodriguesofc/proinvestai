@@ -29,11 +29,11 @@ class IProfileRepository(ABC):
         ...
 
     @abstractmethod
-    async def get_by_user(self, user_id: str) -> InvestorProfile | None:
+    async def get_by_user(self, user_id: UUID) -> InvestorProfile | None:
         ...
 
     @abstractmethod
-    async def get_latest_by_user(self, user_id: str) -> InvestorProfile | None:
+    async def get_latest_by_user(self, user_id: UUID) -> InvestorProfile | None:
         ...
 
 

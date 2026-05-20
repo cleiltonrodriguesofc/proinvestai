@@ -55,7 +55,7 @@ class BCBApiClient:
             try:
                 data = self._fetch_focus_annual("Selic", year)
                 if data:
-                    latest = data[-1]
+                    latest = data[0]
                     results.append({
                         "year": year,
                         "median": latest.get("Mediana", 0),
@@ -64,6 +64,24 @@ class BCBApiClient:
             except Exception as e:
                 logger.warning(f"failed to fetch focus selic for {year}: {e}")
         return results
+
+    def get_focus_ipca(self, years_ahead: int = 5) -> List[Dict]:
+        current_year = datetime.now().year
+        results = []
+        for year in range(current_year, current_year + years_ahead + 1):
+            try:
+                data = self._fetch_focus_annual("IPCA", year)
+                if data:
+                    latest = data[0]
+                    results.append({
+                        "year": year,
+                        "median": latest.get("Mediana", 0),
+                        "date": latest.get("Data", ""),
+                    })
+            except Exception as e:
+                logger.warning(f"failed to fetch focus ipca for {year}: {e}")
+        return results
+
 
     def _fetch_sgs_latest(self, series_id: int) -> Dict:
         cache_key = f"sgs_latest_{series_id}"

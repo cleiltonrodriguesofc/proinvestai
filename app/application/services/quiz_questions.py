@@ -322,5 +322,97 @@ QUIZ_QUESTIONS = [
             {"id": "o28c", "text": "Diversificação inteligente para crescer com segurança.", "score": 3},
             {"id": "o28d", "text": "Sorte favorece os audazes; foco em crescimento explosivo.", "score": 4}
         ]
+    },
+
+    # SEÇÃO 8: DIAGNÓSTICO FINANCEIRO (NOVA)
+    {
+        "id": "q29",
+        "text": "Qual a sua despesa mensal média (moradia + alimentação + transporte + saúde)?",
+        "section": "diagnostico",
+        "options": [
+            {"id": "o29a", "text": "Até R$ 3.000.", "score": 1},
+            {"id": "o29b", "text": "R$ 3.000 a R$ 8.000.", "score": 2},
+            {"id": "o29c", "text": "R$ 8.000 a R$ 15.000.", "score": 3},
+            {"id": "o29d", "text": "Mais de R$ 15.000.", "score": 4}
+        ]
+    },
+    {
+        "id": "q30",
+        "text": "Quantas pessoas dependem financeiramente de você?",
+        "section": "diagnostico",
+        "options": [
+            {"id": "o30a", "text": "5+ pessoas.", "score": 1},
+            {"id": "o30b", "text": "3-4 pessoas (família completa).", "score": 2},
+            {"id": "o30c", "text": "1-2 pessoas (cônjuge ou filho).", "score": 3},
+            {"id": "o30d", "text": "Nenhuma, sou responsável apenas por mim.", "score": 4}
+        ]
+    },
+    {
+        "id": "q31",
+        "text": "Possui financiamentos ativos (imóvel, veículo, etc.)?",
+        "section": "diagnostico",
+        "options": [
+            {"id": "o31a", "text": "Sim, com parcelas que comprometem > 30% da renda.", "score": 1},
+            {"id": "o31b", "text": "Sim, com parcelas controladas (< 30% da renda).", "score": 2},
+            {"id": "o31c", "text": "Sim, mas perto de quitar.", "score": 3},
+            {"id": "o31d", "text": "Não possuo financiamentos.", "score": 4}
+        ]
+    },
+    {
+        "id": "q32",
+        "text": "Possui imóveis ou bens de alto valor além dos investimentos?",
+        "section": "diagnostico",
+        "options": [
+            {"id": "o32a", "text": "Não possuo bens relevantes.", "score": 1},
+            {"id": "o32b", "text": "Sim, um imóvel onde moro.", "score": 2},
+            {"id": "o32c", "text": "Sim, imóvel + veículo.", "score": 3},
+            {"id": "o32d", "text": "Sim, patrimônio imobilizado relevante (> R$ 500k).", "score": 4}
+        ]
+    },
+
+    # SEÇÃO 9: OBJETIVOS DETALHADOS (NOVA)
+    {
+        "id": "q33",
+        "text": "Qual objetivo está mais próximo de acontecer?",
+        "section": "objetivos_detalhados",
+        "options": [
+            {"id": "o33a", "text": "Montar minha reserva de emergência.", "score": 1},
+            {"id": "o33b", "text": "Quitar uma dívida ou financiamento.", "score": 2},
+            {"id": "o33c", "text": "Comprar/trocar um bem (carro, imóvel).", "score": 3},
+            {"id": "o33d", "text": "Gerar renda passiva / aposentadoria.", "score": 4}
+        ]
+    },
+    {
+        "id": "q34",
+        "text": "Você busca renda mensal dos investimentos para uso corrente?",
+        "section": "objetivos_detalhados",
+        "options": [
+            {"id": "o34a", "text": "Sim, preciso de uma renda mensal fixa dos investimentos.", "score": 1},
+            {"id": "o34b", "text": "Gostaria, mas não dependo disso agora.", "score": 2},
+            {"id": "o34c", "text": "Não pensei nisso ainda.", "score": 3},
+            {"id": "o34d", "text": "Prefiro reinvestir tudo para crescer mais rápido.", "score": 4}
+        ]
+    },
+    {
+        "id": "q35",
+        "text": "Qual rendimento anual você consideraria satisfatório?",
+        "section": "objetivos_detalhados",
+        "options": [
+            {"id": "o35a", "text": "Acima da poupança já está bom (~7% a.a.).", "score": 1},
+            {"id": "o35b", "text": "Quero pelo menos acompanhar a inflação + um pouco mais (~10% a.a.).", "score": 2},
+            {"id": "o35c", "text": "Busco retornos de 15-20% ao ano, mesmo com mais risco.", "score": 3},
+            {"id": "o35d", "text": "Quero retornos acima de 20%, aceito alta volatilidade.", "score": 4}
+        ]
+    },
+    {
+        "id": "q36",
+        "text": "Prefere uma carteira simples (poucos ativos) ou mais sofisticada?",
+        "section": "objetivos_detalhados",
+        "options": [
+            {"id": "o36a", "text": "O mais simples possível — não quero acompanhar nada.", "score": 1},
+            {"id": "o36b", "text": "Simples, com revisão trimestral.", "score": 2},
+            {"id": "o36c", "text": "Intermediária, aceito 5-8 ativos e acompanhar mensalmente.", "score": 3},
+            {"id": "o36d", "text": "Complexa, quero diversificação máxima e acompanhar o mercado.", "score": 4}
+        ]
     }
 ]

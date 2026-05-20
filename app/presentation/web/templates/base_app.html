@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ProInvestAI — Painel de governança patrimonial com rigor institucional.">
+    <title>{% block title %}ProInvestAI{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/app.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    {% block head %}{% endblock %}
+</head>
+<body class="app-body">
+
+    <!-- Mobile Header -->
+    <header class="app-mobile-header" id="mobile-header">
+        <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </button>
+        <span class="app-mobile-brand">ProInvestAI</span>
+        <div class="app-mobile-avatar" id="mobile-avatar">
+            {{ user_name[0] | upper if user_name else "U" }}
+        </div>
+    </header>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="sidebar-logo">P</span>
+            <span class="sidebar-brand-text">ProInvestAI</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <span class="sidebar-section-label">Painel</span>
+            <a href="/dashboard" class="sidebar-link {% if active_page == 'dashboard' %}active{% endif %}" id="nav-dashboard">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                <span>Dashboard</span>
+            </a>
+            <a href="/quiz" class="sidebar-link {% if active_page == 'quiz' %}active{% endif %}" id="nav-quiz">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Análise de Perfil</span>
+            </a>
+            <a href="/my-portfolio" class="sidebar-link {% if active_page == 'my-portfolio' %}active{% endif %}" id="nav-my-portfolio">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <span>Carteira Atual</span>
+            </a>
+
+            <span class="sidebar-section-label">Análises</span>
+            <a href="/simulation" class="sidebar-link {% if active_page == 'simulation' %}active{% endif %}" id="nav-simulation">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                <span>Simulação</span>
+            </a>
+            <a href="/gap-analysis" class="sidebar-link {% if active_page == 'gap' %}active{% endif %}" id="nav-gap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Gap Analysis</span>
+            </a>
+
+            <span class="sidebar-section-label">Conta</span>
+            <a href="/pricing" class="sidebar-link {% if active_page == 'pricing' %}active{% endif %}" id="nav-pricing">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                <span>Planos</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar">{{ user_name[0] | upper if user_name else "U" }}</div>
+                <div class="sidebar-user-info">
+                    <span class="sidebar-user-name">{{ user_name | default("Usuário") }}</span>
+                    <span class="sidebar-user-plan">{{ user_plan | default("Free") }}</span>
+                </div>
+            </div>
+            <a href="/logout" class="sidebar-link sidebar-logout" id="nav-logout">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                <span>Sair</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="app-main" id="app-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+    // sidebar toggle
+    const toggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        document.body.style.overflow = '';
+    }
+
+    toggle.addEventListener('click', () => {
+        sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+
+    overlay.addEventListener('click', closeSidebar);
+
+    // close sidebar on navigation (mobile)
+    document.querySelectorAll('.sidebar-link').forEach(link => {
+        link.addEventListener('click', () => {
+            if (window.innerWidth < 1024) closeSidebar();
+        });
+    });
+
+    // close on resize to desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth >= 1024) closeSidebar();
+    });
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

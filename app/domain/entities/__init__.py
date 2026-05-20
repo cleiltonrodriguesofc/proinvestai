@@ -1,13 +1,14 @@
 from .investor_profile import InvestorProfile, RiskProfile
-from .asset import Asset, AssetClass
-from .portfolio import Portfolio, PortfolioAllocation
+from .asset import Asset, AssetType, AssetClass
+from .portfolio import Portfolio
 from .user import User, SubscriptionPlan
 from .user_asset import UserAsset
+from ..value_objects.allocation import Allocation
 
 __all__ = [
     "InvestorProfile", "RiskProfile",
-    "Asset", "AssetClass",
-    "Portfolio", "PortfolioAllocation",
+    "Asset", "AssetType", "AssetClass",
+    "Portfolio", "Allocation",
     "User", "SubscriptionPlan",
     "UserAsset",
 ]

@@ -1,110 +1,217 @@
-{% extends "base.html" %}
-
-{% block title %}Gap Analysis - ProInvestAI{% end block %}
+{% extends "base_app.html" %}
+{% block title %}Análise de Gap — ProInvestAI{% endblock %}
 
 {% block content %}
-<div class="glass-panel" style="max-width: 1200px; margin: 2rem auto; padding: 2rem;">
-    <h2 style="margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">
-        Gap Analysis: Realidade vs Ideal
-    </h2>
+<header class="dash-header">
+    <div>
+        <span class="user-badge">{{ user_name }} — Perfil {{ profile_type }}</span>
+        <h1 class="dash-title">Análise de Gap Patrimonial</h1>
+        <p style="color: #888; font-size: 0.95rem; margin-top: 0.5rem;">
+            Comparação entre o que você tem hoje e a carteira ideal construída com produtos reais do mercado brasileiro.
+        </p>
+    </div>
+</header>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
-        
-        <!-- Cost of Opportunity -->
-        <div class="glass-panel text-center" style="background: rgba(255, 99, 132, 0.1); border: 1px solid rgba(255, 99, 132, 0.3);">
-            <h3 style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 0.5rem;">Custo de Oportunidade Estimado (Ao Ano)</h3>
-            <div style="font-size: 3rem; font-weight: bold; color: #ff6b81;">
-                - R$ {{ potential_gain_lost | round(2) }}
-            </div>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-                Valor estimado que você deixa na mesa por não estar com a carteira otimizada.
-            </p>
-        </div>
-
-        <!-- AI Narration -->
-        <div class="glass-panel" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-left: 4px solid var(--primary-color);">
-            <h3 style="margin-bottom: 1rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span>🧠</span> Parecer do Consultor IA (Nível CEA)
-            </h3>
-            <p style="color: #e0e0e0; line-height: 1.6; font-style: italic;">
-                "{{ ai_narration }}"
-            </p>
+<!-- ──── Banner: Sem ativos cadastrados ──── -->
+{% if not has_real_assets %}
+<div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
+    <span style="font-size: 1.5rem;">⚠️</span>
+    <div>
+        <div style="color: #f59e0b; font-weight: 600; margin-bottom: 0.25rem;">Carteira atual estimada</div>
+        <div style="color: #888; font-size: 0.9rem;">Você ainda não cadastrou seus ativos. O gap abaixo usa uma carteira conservadora padrão (85% renda fixa) como referência.
+            <a href="/my-portfolio" style="color: #00d4ff; margin-left: 0.5rem;">Cadastrar ativos →</a>
         </div>
     </div>
+</div>
+{% endif %}
 
-    <!-- Charts Section -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 3rem;">
-        
-        <!-- Current -->
-        <div class="glass-panel text-center" style="background: rgba(0,0,0,0.3); padding: 1.5rem;">
-            <h3 style="margin-bottom: 1rem; color: var(--text-muted);">Sua Carteira Atual</h3>
-            <div style="max-width: 300px; margin: 0 auto;">
-                <canvas id="currentChart"></canvas>
-            </div>
+<!-- ──── KPI Opportunity Cost ──── -->
+<div class="kpi-grid" style="margin-bottom: 2rem;">
+    <div class="kpi-card" style="border-color: rgba(244, 63, 94, 0.3);">
+        <div class="kpi-label">Custo de Oportunidade (5 anos)</div>
+        <div class="kpi-value" style="color: #f43f5e;">
+            R$ {{ "{:,.2f}".format(gain_lost).replace(",", "X").replace(".", ",").replace("X", ".") }}
         </div>
-
-        <!-- Ideal -->
-        <div class="glass-panel text-center" style="background: rgba(54, 162, 235, 0.1); padding: 1.5rem; border: 1px solid rgba(54, 162, 235, 0.3);">
-            <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Carteira Ideal (Markowitz)</h3>
-            <div style="max-width: 300px; margin: 0 auto;">
-                <canvas id="idealChart"></canvas>
-            </div>
-        </div>
-
+        <div class="kpi-sub">O que você deixa de ganhar mantendo a alocação atual</div>
     </div>
-
-    <div class="text-center">
-        <button class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.2rem;" onclick="alert('Feature em desenvolvimento!')">
-            Executar Rebalanceamento Automático
-        </button>
+    <div class="kpi-card">
+        <div class="kpi-label">Retorno Atual (estimado)</div>
+        <div class="kpi-value">{{ "%.2f"|format(current_annual * 100) }}% a.a.</div>
+        <div class="kpi-sub">Bruto, antes de IR</div>
+    </div>
+    <div class="kpi-card kpi-highlight">
+        <div class="kpi-label">Retorno Ideal ({{ profile_type }})</div>
+        <div class="kpi-value" style="color: #10b981;">{{ "%.2f"|format(ideal_annual * 100) }}% a.a.</div>
+        <div class="kpi-sub">Carteira otimizada por Markowitz</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Gap de Retorno Anual</div>
+        <div class="kpi-value" style="color: {% if annual_gap > 0 %}#f43f5e{% else %}#10b981{% endif %};">
+            {{ "+" if annual_gap > 0 else "" }}{{ "%.2f"|format(annual_gap * 100) }}%
+        </div>
+        <div class="kpi-sub">Diferença líquida entre carteiras</div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- ──── Dual Doughnut Charts ──── -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="chart-card" style="padding: 1.5rem;">
+        <div class="chart-title" style="margin-bottom: 1rem;">📍 Sua Carteira Atual</div>
+        <div style="max-width: 260px; margin: 0 auto; position: relative; height: 260px;">
+            <canvas id="currentChart"></canvas>
+        </div>
+        <div style="margin-top: 1.5rem; border-top: 1px solid #111; padding-top: 1rem;">
+            {% for cls, weight in current_weights.items() %}
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; color: #aaa;">
+                <span>{{ cls | replace("_", " ") | title }}</span>
+                <strong style="color: #fff; font-variant-numeric: tabular-nums;">{{ "%.1f"|format(weight * 100) }}%</strong>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="chart-card" style="padding: 1.5rem; border-color: rgba(16, 185, 129, 0.25);">
+        <div class="chart-title" style="margin-bottom: 1rem;">✅ Carteira Recomendada ({{ profile_type }})</div>
+        <div style="max-width: 260px; margin: 0 auto; position: relative; height: 260px;">
+            <canvas id="idealChart"></canvas>
+        </div>
+        <div style="margin-top: 1.5rem; border-top: 1px solid #111; padding-top: 1rem;">
+            {% if ideal_allocations %}
+                {% for a in ideal_allocations %}
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem; color: #aaa;">
+                    <span>{{ a.asset_name }}</span>
+                    <strong style="color: #10b981; font-variant-numeric: tabular-nums;">{{ a.percentage_display }}</strong>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="color: #666; font-size: 0.875rem; font-style: italic;">Dados indisponíveis.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- ──── Product-level Ideal Allocation Table ──── -->
+{% if ideal_allocations %}
+<div class="chart-card" style="margin-bottom: 2rem; padding: 0;">
+    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid #111;">
+        <div class="chart-title">Composição Ideal — Produtos Reais</div>
+    </div>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid #111;">
+                    <th style="text-align:left; padding: 0.875rem 1.5rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Ativo</th>
+                    <th style="text-align:right; padding: 0.875rem 1rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Alocação</th>
+                    <th style="text-align:right; padding: 0.875rem 1rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Valor</th>
+                    <th style="text-align:right; padding: 0.875rem 1rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Retorno Líq.</th>
+                    <th style="text-align:center; padding: 0.875rem 1rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Risco</th>
+                    <th style="text-align:center; padding: 0.875rem 1.5rem; font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600;">Tributação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in ideal_allocations %}
+                <tr style="border-bottom: 1px solid #0d0d0d; transition: background 0.15s;"
+                    onmouseover="this.style.background='#0a0a0c'" onmouseout="this.style.background='transparent'">
+                    <td style="padding: 1rem 1.5rem;">
+                        <div style="color: #fff; font-weight: 600; font-size: 0.9rem;">{{ a.asset_name }}</div>
+                        <div style="color: #555; font-size: 0.75rem; margin-top: 0.2rem;">{{ a.liquidity }}</div>
+                    </td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <span style="color: #fff; font-weight: 700; font-variant-numeric: tabular-nums;">{{ a.percentage_display }}</span>
+                    </td>
+                    <td style="padding: 1rem; text-align: right; color: #aaa; font-size: 0.875rem; font-variant-numeric: tabular-nums;">{{ a.value_display }}</td>
+                    <td style="padding: 1rem; text-align: right;">
+                        <span style="color: #10b981; font-weight: 600; font-variant-numeric: tabular-nums;">{{ a.net_return_display }}</span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span class="badge-risk badge-risk-{{ a.risk | lower | replace(' ', '-') }}">{{ a.risk }}</span>
+                    </td>
+                    <td style="padding: 1rem 1.5rem; text-align: center; font-size: 0.8rem; color: {% if a.is_tax_exempt %}#10b981{% else %}#888{% endif %};">
+                        {{ a.tax_label }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- ──── AI Narration ──── -->
+{% if narration %}
+<div class="narration-box animate-fade-in delay-2" style="margin-bottom: 2rem;">
+    <div class="narration-title">🧠 Análise do Gap — Consultoria Automatizada</div>
+    <div class="narration-text">{{ narration | safe }}</div>
+</div>
+{% endif %}
+
+<!-- ──── CTA ──── -->
+<div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+    <a href="/my-portfolio" class="btn btn-ghost" style="padding: 0.9rem 2rem;">
+        {{ "📋 Ver Minha Carteira" if has_real_assets else "➕ Cadastrar Ativos" }}
+    </a>
+    <a href="/dashboard" class="btn btn-primary" style="padding: 0.9rem 2rem;">
+        Ver Dashboard Completo →
+    </a>
+</div>
+
+<style>
+.badge-risk { display: inline-block; font-size: 0.65rem; padding: 3px 8px; border-radius: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-risk-muito-baixo { background: rgba(16,185,129,0.12); color: #10b981; }
+.badge-risk-baixo       { background: rgba(0,212,255,0.12);  color: #00d4ff; }
+.badge-risk-moderado    { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.badge-risk-alto        { background: rgba(244,63,94,0.12);  color: #f43f5e; }
+.badge-risk-muito-alto  { background: rgba(168,85,247,0.12); color: #a855f7; }
+</style>
+{% endblock %}
+
+{% block scripts %}
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const commonOptions = {
-        responsive: true,
-        plugins: { legend: { position: 'bottom', labels: {color: 'white'} } }
-    };
-    const bgColors = [
-        'rgba(54, 162, 235, 0.8)',
-        'rgba(255, 99, 132, 0.8)',
-        'rgba(255, 206, 86, 0.8)',
-        'rgba(75, 192, 192, 0.8)'
-    ];
+document.addEventListener('DOMContentLoaded', () => {
+    const COLORS = ['#00d4ff','#10b981','#f59e0b','#f43f5e','#a855f7','#3b82f6'];
 
-    // Current Chart
-    const currCtx = document.getElementById('currentChart').getContext('2d');
-    new Chart(currCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ current_labels | safe }},
-            datasets: [{
-                data: {{ current_weights | safe }},
-                backgroundColor: bgColors,
-                borderColor: 'rgba(0,0,0,0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: commonOptions
-    });
+    function buildDoughnut(canvasId, jsonData) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        const d = JSON.parse(jsonData);
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: d.labels,
+                datasets: [{
+                    data: d.data,
+                    backgroundColor: COLORS.slice(0, d.data.length),
+                    borderColor: '#060608',
+                    borderWidth: 3,
+                    hoverOffset: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(10,10,12,0.95)',
+                        titleColor: '#fff',
+                        bodyColor: '#ccc',
+                        borderColor: '#222',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: ctx => ` ${ctx.label}: ${ctx.raw}%`
+                        }
+                    }
+                }
+            }
+        });
+    }
 
-    // Ideal Chart
-    const idealCtx = document.getElementById('idealChart').getContext('2d');
-    new Chart(idealCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ ideal_labels | safe }},
-            datasets: [{
-                data: {{ ideal_weights | safe }},
-                backgroundColor: bgColors,
-                borderColor: 'rgba(0,0,0,0.5)',
-                borderWidth: 1
-            }]
-        },
-        options: commonOptions
-    });
+    buildDoughnut('currentChart', '{{ current_chart_json | safe }}');
+    buildDoughnut('idealChart',   '{{ ideal_chart_json | safe }}');
 });
 </script>
-{% end block %}
+{% endblock %}

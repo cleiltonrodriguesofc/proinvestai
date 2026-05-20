@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     DATABASE_URL: str = "postgresql+asyncpg://postgres:password@db:5432/proinvestai"
     SECRET_KEY: str = "secret"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # External APIs
     OPENAI_API_KEY: str = ""

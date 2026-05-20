@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Institucional ALM - {{ rpps_name }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+    <style>
+        :root {
+            --brand-color: #0b2545; --brand-light: #134074; --brand-accent: #8da9c4;
+            --text-color: #1e293b; --text-light: #64748b; --bg-color: #ffffff;
+            --bg-alt: #f8fafc; --grid-border: #e2e8f0; --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; color: var(--text-color); background: #eee; }
+        .slide { width: 297mm; height: 209mm; background: var(--bg-color); margin: 10mm auto; box-shadow: 0 4px 15px rgba(0,0,0,0.1); position: relative; overflow: hidden; page-break-after: always; display: flex; flex-direction: column; }
+        .slide-header { background: var(--brand-color); color: white; padding: 12mm 20mm; display: flex; justify-content: space-between; align-items: center; }
+        .slide-header h1 { font-size: 26px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+        .slide-header .subtitle { font-size: 13px; font-weight: 400; color: var(--brand-accent); margin-top: 5px; }
+        .slide-body { padding: 12mm 20mm; flex: 1; }
+        .slide-footer { background: var(--bg-alt); padding: 5mm 20mm; font-size: 10px; color: var(--text-light); display: flex; justify-content: space-between; border-top: 1px solid var(--grid-border); }
+        .cover-slide { background: linear-gradient(135deg, var(--brand-color) 0%, var(--brand-light) 100%); color: white; justify-content: center; align-items: center; text-align: center; padding: 20mm; }
+        .cover-slide h1 { font-size: 48px; font-weight: 800; margin-bottom: 20px; }
+        .cover-slide h2 { font-size: 24px; font-weight: 400; color: var(--brand-accent); margin-bottom: 50px; }
+        .cover-slide .date { font-size: 16px; font-weight: 600; background: rgba(255,255,255,0.1); padding: 10px 30px; border-radius: 50px; }
+        h2.section-title { font-size: 18px; color: var(--brand-color); margin-bottom: 15px; border-bottom: 2px solid var(--brand-accent); padding-bottom: 5px; }
+        p.text-block { font-size: 13px; line-height: 1.6; color: var(--text-light); margin-bottom: 12px; text-align: justify; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15mm; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+        .data-table th { background: var(--brand-color); color: white; padding: 8px 10px; text-align: left; font-weight: 600; }
+        .data-table td { padding: 6px 10px; border-bottom: 1px solid var(--grid-border); }
+        .data-table tr:nth-child(even) { background: var(--bg-alt); }
+        .data-table .highlight { font-weight: 700; color: var(--brand-color); }
+        .chart-container { width: 100%; position: relative; }
+        .chart-container.full { height: 140mm; }
+        @media print { body { background: white; margin: 0; padding: 0; } .slide { height: auto !important; margin: 0; box-shadow: none; width: 100%; page-break-after: always; } @page { size: A4 landscape; margin: 10mm; } .no-print { display: none !important; } }
+        .floating-button { position: fixed; bottom: 30px; right: 30px; background: var(--brand-color); color: white; padding: 15px 30px; border-radius: 50px; font-size: 16px; font-weight: 600; cursor: pointer; border: none; z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .floating-button:hover { background: var(--brand-light); }
+    </style>
+</head>
+<body>
+
+<button class="floating-button no-print" onclick="window.print()">🖨️ Imprimir PDF Oficial</button>
+
+<!-- SLIDE 1: CAPA -->
+<div class="slide cover-slide">
+    <h1>ESTUDO DE ALM</h1>
+    <h2>ASSET LIABILITY MANAGEMENT</h2>
+    <div style="font-size:22px; font-weight:600; margin-bottom:40px;">{{ rpps_name }}</div>
+    <div class="date">DATA-BASE: {{ reference_date }}</div>
+</div>
+
+<!-- SLIDE 2: FRONTEIRA EFICIENTE (SCATTER PLOT) -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Otimização de Portfólios</h1><div class="subtitle">Fronteira Eficiente de Markowitz (Risco x Retorno)</div></div>
+    </div>
+    <div class="slide-body">
+        <h2 class="section-title">Gráfico de Dispersão dos Índices e Carteiras Otimizadas</h2>
+        <div class="chart-container full"><canvas id="scatterChart"></canvas></div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 2</span></div>
+</div>
+
+<!-- SLIDE 3: BARRAS EMPILHADAS (COMPOSIÇÃO) -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Alocação por Carteira</h1><div class="subtitle">Composição (%) dos 10 Portfólios da Fronteira Eficiente</div></div>
+    </div>
+    <div class="slide-body">
+        <h2 class="section-title">Distribuição de Ativos (Stacked Bar 100%)</h2>
+        <div class="chart-container full"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 3</span></div>
+</div>
+
+<!-- SLIDE 4: MATRIZ DE SOLVÊNCIA -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Teste de Solvência</h1><div class="subtitle">Simulação Estocástica de Monte Carlo ({{ n_scenarios }} Cenários)</div></div>
+    </div>
+    <div class="slide-body">
+        <h2 class="section-title">Indicadores de Ruína e Solvência por Portfólio</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Portfólio</th>
+                    <th>Probabilidade de Solvência (% >= 1)</th>
+                    <th>Razão de Solvência (Média)</th>
+                    <th>Razão de Solvência (Quantil 5%)</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for sr in solvency_results_table %}
+                <tr>
+                    <td><strong>Portfólio {{ sr.portfolio_id }}</strong></td>
+                    <td class="highlight">{{ sr.pct_solvent }}</td>
+                    <td>{{ sr.mean_funding_ratio }}</td>
+                    <td>{{ sr.quantile_5 }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        
+        <h2 class="section-title" style="margin-top:30px;">Estratégia de Matching (NTN-B)</h2>
+        {% if bonds %}
+        <table class="data-table">
+            <thead><tr><th>Período Alvo</th><th>Título Referência</th><th>Taxa Travada</th><th>% da Carteira</th></tr></thead>
+            <tbody>
+            {% for b in bonds %}
+                <tr><td>{{ b.period }}</td><td>{{ b.bond }}</td><td class="highlight">{{ b.rate }}</td><td>{{ b.weight_total }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 4</span></div>
+</div>
+
+<!-- SLIDE 5: FLUXO ATUARIAL -->
+<div class="slide">
+    <div class="slide-header">
+        <div><h1>Fluxo Atuarial</h1><div class="subtitle">Projeção Determinística de Receitas, Despesas e Retorno</div></div>
+    </div>
+    <div class="slide-body">
+        <h2 class="section-title">Evolução Projetada do Patrimônio</h2>
+        <div class="table-scroll" style="height:140mm; overflow-y:auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Ano</th>
+                        <th>Receitas Previdenciárias (I)</th>
+                        <th>Despesas Previdenciárias (II)</th>
+                        <th>Fluxo sem Investimentos (III = I + II)</th>
+                        <th>Resultado dos Investimentos (IV)</th>
+                        <th>Fluxo Anual Projetado (V = III + IV)</th>
+                        <th>Patrimônio Projetado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in projection_table %}
+                    <tr>
+                        <td style="font-weight:600;">{{ row.year }}</td>
+                        <td>{{ row.revenues }}</td>
+                        <td class="negative">{{ row.expenditures }}</td>
+                        <td class="{% if row.net_flow.startswith('-') %}negative{% else %}positive{% endif %}">{{ row.net_flow }}</td>
+                        <td class="positive">{{ row.inv_return_eq }}</td>
+                        <td class="{% if row.annual_flow_eq.startswith('-') %}negative{% else %}positive{% endif %}">{{ row.annual_flow_eq }}</td>
+                        <td class="highlight">{{ row.patrimony_eq }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="slide-footer"><span>{{ rpps_name }}</span><span>Página 5</span></div>
+</div>
+
+<script>
+    Chart.register(ChartDataLabels);
+    Chart.defaults.font.family = "'Montserrat', sans-serif";
+    
+    const scatterData = {{ scatter_json | safe }};
+    const barData = {{ stacked_bar_json | safe }};
+    
+    // Config Scatter Plot
+    const indices = scatterData.filter(d => d.type === 'index');
+    const portfolios = scatterData.filter(d => d.type === 'portfolio');
+    
+    new Chart(document.getElementById('scatterChart'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Índices',
+                    data: indices,
+                    backgroundColor: '#8da9c4',
+                    pointRadius: 6,
+                    pointStyle: 'triangle'
+                },
+                {
+                    label: 'Fronteira Eficiente (Portfólios)',
+                    data: portfolios,
+                    backgroundColor: '#10b981',
+                    borderColor: '#0b2545',
+                    pointRadius: 8,
+                    showLine: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                datalabels: {
+                    align: 'top', anchor: 'top', offset: 5,
+                    formatter: (value, context) => value.label,
+                    font: { size: 9, weight: '600' },
+                    color: '#1e293b'
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Volatilidade / Risco (% a.a.)' } },
+                y: { title: { display: true, text: 'Retorno Real Esperado (% a.a.)' } }
+            }
+        }
+    });
+
+    // Config Stacked Bar Chart
+    const labels = barData.map(d => d.label);
+    const assetNames = [...new Set(barData.flatMap(d => Object.keys(d.weights)))];
+    const colors = ['#0b2545', '#10b981', '#f59e0b', '#ef4444', '#8da9c4', '#64748b', '#3b82f6'];
+    
+    const datasets = assetNames.map((asset, i) => {
+        return {
+            label: asset,
+            data: barData.map(d => d.weights[asset] || 0),
+            backgroundColor: colors[i % colors.length]
+        };
+    });
+
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                stacked: true,
+                datalabels: {
+                    formatter: (value) => value > 2 ? value.toFixed(1) + '%' : '',
+                    color: '#fff', font: { size: 9, weight: 'bold' }
+                }
+            },
+            scales: {
+                x: { stacked: true },
+                y: { stacked: true, max: 100, title: { display: true, text: 'Alocação (%)' } }
+            }
+        }
+    });
+</script>
+</body>
+</html>

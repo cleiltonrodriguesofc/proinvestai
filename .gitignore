@@ -1,10 +1,9 @@
-# Python
+# python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
 build/
 develop-eggs/
 dist/
@@ -23,11 +22,12 @@ wheels/
 venv/
 .venv/
 
-# Database
+# database
 *.sqlite3
 db.sqlite3-journal
+proinvestai.db
 
-# Environments
+# environments
 .env
 .venv
 env/
@@ -36,13 +36,22 @@ ENV/
 env.bak/
 venv.bak/
 
-# IDEs
+# ides
 .vscode/
 .idea/
 
-# Docker
+# docker
 .dockerignore
 
-# OS
+# os
 .DS_Store
 Thumbs.db
+
+# reference projects — not part of the codebase
+INVESTIMENTO ANA/
+
+# client documents — confidential
+guia_anotacoes_reuniao_investimentos.docx
+
+# scratch / debug scripts
+scratch/

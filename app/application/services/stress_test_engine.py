@@ -1,3 +1,9 @@
+"""
+stress test engine — backtests the portfolio against historical crises.
+
+updated to use the new allocation model (alloc.percentage, alloc.asset.asset_class).
+"""
+
 import logging
 from typing import Dict, List
 import numpy as np
@@ -25,34 +31,41 @@ class StressTestEngine:
         if not asset_series:
             return {"error": "No historical data available"}
 
-        # Extract weights
-        weights = {
-            alloc.asset.asset_class.value: float(alloc.weight) 
-            for alloc in portfolio.allocations
-        }
+        # extract weights from the new allocation model
+        weights = {}
+        for alloc in portfolio.allocations:
+            a_class = alloc.asset.asset_class.value
+            weights[a_class] = weights.get(a_class, 0.0) + float(alloc.percentage)
 
-        # Get common months across all series
-        all_months = sorted(next(iter(asset_series.values())).keys())
+        # get common months across all series
+        first_series = next(iter(asset_series.values()), {})
+        if not first_series:
+            return {"error": "Empty historical series"}
+
+        all_months = sorted(first_series.keys())
         
         portfolio_returns = []
         for month in all_months:
             month_ret = 0.0
             for a_class, weight in weights.items():
-                # Map domain asset classes to BCB series keys
-                # Simplified mapping for now
+                # map domain asset classes to bcb series keys
                 series_key = "fixed_income_post"
-                if a_class == "equity":
+                if a_class in ("renda_variavel", "equity"):
                     series_key = "equity"
-                elif a_class == "fixed_income":
-                    series_key = "fixed_income_post"
+                elif a_class in ("fii",):
+                    series_key = "fii"
+                elif a_class in ("internacional",):
+                    series_key = "international"
                 
                 if series_key in asset_series and month in asset_series[series_key]:
                     month_ret += weight * asset_series[series_key][month]
             
             portfolio_returns.append(month_ret)
 
+        if not portfolio_returns:
+            return {"error": "No overlapping historical periods"}
+
         returns_arr = np.array(portfolio_returns)
-        # Use cumprod(1+r) to simulate growth
         growth_factors = np.cumprod(1 + returns_arr)
         equity_curve = initial_value * growth_factors
         
@@ -62,7 +75,7 @@ class StressTestEngine:
         return {
             "total_return": float(total_return),
             "max_drawdown": float(max_dd),
-            "annualized_return": float((1 + total_return) ** (12 / len(returns_arr)) - 1),
+            "annualized_return": float((1 + total_return) ** (12 / max(len(returns_arr), 1)) - 1),
             "volatility": float(np.std(returns_arr) * np.sqrt(12)),
             "negative_months_pct": float(np.mean(returns_arr < 0)),
             "final_value": float(equity_curve[-1])
@@ -75,30 +88,29 @@ class StressTestEngine:
         crises = self.bcb_service.get_crisis_periods()
         asset_series = self.bcb_service.build_asset_return_series()
         
-        weights = {
-            alloc.asset.asset_class.value: float(alloc.weight) 
-            for alloc in portfolio.allocations
-        }
+        weights = {}
+        for alloc in portfolio.allocations:
+            a_class = alloc.asset.asset_class.value
+            weights[a_class] = weights.get(a_class, 0.0) + float(alloc.percentage)
         
         results = []
         for crisis in crises:
-            crisis_rets = []
             start, end = crisis["start"], crisis["end"]
             
-            # Calculate cumulative impact during the period
             period_returns = []
             for a_class, weight in weights.items():
-                series_key = "fixed_income_post" # Fallback
-                if a_class == "equity": series_key = "equity"
+                series_key = "fixed_income_post"
+                if a_class in ("renda_variavel", "equity"):
+                    series_key = "equity"
+                elif a_class in ("fii",):
+                    series_key = "fii"
                 
                 if series_key in asset_series:
                     rets = [v for k, v in asset_series[series_key].items() if start <= k <= end]
                     if rets:
-                        # Weight the average or better yet, the cumulative
                         period_returns.append(np.array(rets) * weight)
             
             if period_returns:
-                # Sum the weighted returns per month
                 portfolio_crisis_rets = np.sum(period_returns, axis=0)
                 cumulative_impact = np.prod(1 + portfolio_crisis_rets) - 1
                 
@@ -112,6 +124,5 @@ class StressTestEngine:
 
     def _compute_max_drawdown(self, curve: np.ndarray) -> float:
         peak = np.maximum.accumulate(curve)
-        # Avoid division by zero
         drawdown = np.where(peak > 0, (peak - curve) / peak, 0)
         return np.max(drawdown)

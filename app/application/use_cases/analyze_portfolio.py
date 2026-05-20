@@ -1,3 +1,4 @@
+import numpy as np
 from typing import Dict, List
 from ...domain.entities.portfolio import Portfolio
 from ..services.markowitz_optimizer import MarkowitzOptimizer
@@ -22,46 +23,33 @@ class AnalyzePortfolioUseCase:
         self.stress_test = stress_test
         self.ai_service = ai_service
 
-    async def execute(self, current_portfolio: Portfolio, initial_amount: float):
+    async def execute(self, current_portfolio: Portfolio, initial_amount: float, target_weights: dict = None, risk_metrics = None, profile_type: str = "Moderado"):
         # 1. Backtest
         backtest_results = self.stress_test.run_backtest(current_portfolio, initial_amount)
         
         # 2. Monte Carlo Simulation
         monte_carlo_results = self.monte_carlo.simulate(current_portfolio, initial_amount)
         
-        # 3. Optimization (Ideal Portfolio)
-        # For simplicity, we assume we want to compare with a Max Sharpe portfolio
-        # We'd need historical returns for all candidate assets to run Markowitz properly
-        # In this step, we'll mock the 'ideal' weights for comparison
-        ideal_weights = {
-            "fixed_income": 0.60,
-            "equity": 0.25,
-            "real_estate": 0.10,
-            "international": 0.05
-        }
+        # Calculate percentile paths for the UI chart
+        p10_path = np.percentile(monte_carlo_results.paths, 10, axis=0).tolist()
+        p50_path = np.percentile(monte_carlo_results.paths, 50, axis=0).tolist()
+        p90_path = np.percentile(monte_carlo_results.paths, 90, axis=0).tolist()
         
-        current_weights = {}
-        for alloc in current_portfolio.allocations:
-            a_class = alloc.asset.asset_class.value
-            current_weights[a_class] = current_weights.get(a_class, 0) + float(alloc.weight)
-
-        # 4. Gap Analysis Calculation
-        # Estimate lost gain (example logic: 2% difference on misallocated capital)
-        misallocated_capital = initial_amount * 0.15 # 15% deviation
-        potential_gain_lost = misallocated_capital * 0.05 # 5% per year
+        mc_dict = monte_carlo_results.to_dict()
+        mc_dict["p10_path"] = p10_path
+        mc_dict["p50_path"] = p50_path
+        mc_dict["p90_path"] = p90_path
         
-        # 5. AI Narration
-        narration = await self.ai_service.explain_gap(
-            current_weights,
-            ideal_weights,
-            None # Optional profile
+        # 3. AI Narration based on Real Risk Metrics
+        narration = await self.ai_service.explain_committee_review(
+            target_weights or {},
+            risk_metrics,
+            profile_type
         )
 
         return {
             "backtest": backtest_results,
-            "monte_carlo": monte_carlo_results.to_dict(),
-            "ideal_weights": ideal_weights,
-            "current_weights": current_weights,
-            "potential_gain_lost": potential_gain_lost,
+            "monte_carlo": mc_dict,
+            "target_weights": target_weights,
             "narration": narration
         }

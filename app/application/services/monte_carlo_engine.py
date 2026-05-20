@@ -33,38 +33,15 @@ class MonteCarloEngine:
         n_assets = len(portfolio.allocations)
         dt = 1.0  # monthly time step
 
-        # Extract asset parameters
-        # In this new project, we need to handle the returns properly.
-        # We'll assume the portfolio already has expected_return and volatility calculated
-        # But for Monte Carlo, it's better to simulate asset by asset if we have correlations.
-        
-        # If we don't have per-asset expected returns in the entity yet, 
-        # we might need to compute them from historical_returns or pass them.
-        # For now, let's use the portfolio level metrics as a fallback or 
-        # assume assets have been populated with expected metrics.
-
-        # Let's assume we use the portfolio's expected_return and volatility for a aggregate GBM
-        # if we don't want to get into per-asset details right now, or if they are missing.
-        
-        # However, the old code did per-asset. Let's see if we can do that.
-        # Current Asset entity doesn't have expected_return field, but it has historical_returns.
-        
+        # extract per-asset monthly return and volatility from the new entity model
         mu_list = []
         sigma_list = []
         weights = []
         
         for alloc in portfolio.allocations:
-            # Simple estimation if historical_returns exist
-            if alloc.asset.historical_returns and len(alloc.asset.historical_returns) > 0:
-                rets = [float(r) for r in alloc.asset.historical_returns]
-                mu_list.append(np.mean(rets))
-                sigma_list.append(np.std(rets))
-            else:
-                # Fallbacks (should be replaced by real data service later)
-                mu_list.append(0.008) # 0.8% month
-                sigma_list.append(0.02) # 2% month
-            
-            weights.append(float(alloc.weight))
+            mu_list.append(float(alloc.asset.expected_monthly_return))
+            sigma_list.append(float(alloc.asset.monthly_volatility))
+            weights.append(float(alloc.percentage))
 
         mu = np.array(mu_list)
         sigma = np.array(sigma_list)

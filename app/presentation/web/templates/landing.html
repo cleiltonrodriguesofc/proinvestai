@@ -1,104 +1,546 @@
 {% extends "base.html" %}
-
-{% block title %}ProInvestAI - Inteligência Artificial para seus Investimentos{% end block %}
+{% block title %}ProInvestAI — A Ciência dos Grandes Gestores na sua mão{% endblock %}
 
 {% block content %}
-<div class="landing-container">
-    <!-- Hero Section -->
-    <section class="hero" style="text-align: center; padding: 5rem 1rem;">
-        <h1 style="font-size: 3rem; margin-bottom: 1.5rem; background: linear-gradient(90deg, var(--primary-color), #00d2ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            Otimize sua Carteira com IA e Matemática Avançada
-        </h1>
-        <p style="font-size: 1.2rem; color: var(--text-muted); max-width: 800px; margin: 0 auto 2.5rem;">
-            A ProInvestAI une o rigor do teste de adequação (Suitability) nível CEA, a teoria de portfólio de Markowitz e a inteligência artificial para criar a melhor estratégia de investimentos para você.
+<style>
+/* ──── Landing Page (Rich + Premium Skin) ──── */
+
+/* Hero */
+.hero-section {
+    position: relative;
+    padding: 120px 2rem 80px;
+    text-align: center;
+    background: #000;
+    overflow: hidden;
+}
+
+.hero-bg-img {
+    position: absolute;
+    inset: 0;
+    background: url('/static/images/login-banner.png') center/cover no-repeat;
+    opacity: 0.15;
+    filter: grayscale(1) brightness(0.5);
+    mask-image: linear-gradient(to bottom, black 50%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent);
+}
+
+.hero-glow {
+    position: absolute;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(0,212,255,0.06), transparent 70%);
+    top: -30%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.hero-content { position: relative; z-index: 2; }
+
+.hero-badge {
+    display: inline-block;
+    padding: 0.5rem 1.25rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 2rem;
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 6vw, 4.8rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-subtitle {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    max-width: 650px;
+    margin: 0 auto 3rem;
+    line-height: 1.6;
+}
+
+.hero-cta { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; }
+
+/* Trust Logos */
+.trust-strip {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3rem;
+    margin-top: 4rem;
+    opacity: 0.4;
+    font-size: 0.7rem;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    font-weight: 700;
+}
+
+/* Dashboard Mockup */
+.mockup-section {
+    padding: 0 2rem 6rem;
+    background: #000;
+}
+
+.mockup-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.mockup-frame {
+    background: #0a0a0c;
+    border: 1px solid #1a1a1a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+    transform: perspective(1200px) rotateX(4deg);
+    transition: transform 0.5s ease;
+}
+
+.mockup-frame:hover { transform: perspective(1200px) rotateX(0deg); }
+
+.mockup-dots {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #111;
+}
+
+.mockup-dot { width: 8px; height: 8px; background: #222; border-radius: 50%; }
+
+.mockup-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+.mockup-metric {
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 6px;
+    padding: 1.5rem;
+}
+
+.metric-label { font-size: 0.6rem; color: #333; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.metric-value { font-size: 1.8rem; font-weight: 800; }
+.metric-sub { font-size: 0.7rem; color: #444; margin-top: 0.25rem; }
+
+/* Stats Ticker */
+.ticker-section {
+    background: #000;
+    padding: 3rem 0;
+    border-top: 1px solid #111;
+    border-bottom: 1px solid #111;
+}
+
+.ticker-flex {
+    display: flex;
+    justify-content: center;
+    gap: 5rem;
+    flex-wrap: wrap;
+}
+
+.ticker-item { text-align: center; }
+.ticker-val { font-size: 1.8rem; font-weight: 800; display: block; }
+.ticker-lbl { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* Problem / Solution */
+.problem-section {
+    padding: 8rem 2rem;
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.problem-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 1.5rem;
+}
+
+.problem-text {
+    color: #666;
+    font-size: 1.15rem;
+    line-height: 1.8;
+    max-width: 700px;
+    margin: 0 auto 3rem;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    text-align: left;
+}
+
+.compare-card {
+    padding: 2.5rem;
+    border-radius: 4px;
+}
+
+.compare-bad {
+    background: rgba(244,63,94,0.03);
+    border: 1px solid rgba(244,63,94,0.15);
+}
+
+.compare-good {
+    background: rgba(0,212,255,0.03);
+    border: 1px solid rgba(0,212,255,0.15);
+}
+
+.compare-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 1.5rem;
+}
+
+.compare-bad .compare-label { color: var(--rose); }
+.compare-good .compare-label { color: var(--cyan); }
+
+.compare-list { list-style: none; }
+.compare-list li {
+    font-size: 0.95rem;
+    color: #888;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+}
+
+.compare-bad li::before { content: '✕'; color: var(--rose); font-weight: 900; }
+.compare-good li::before { content: '✓'; color: var(--cyan); font-weight: 900; }
+
+/* Features */
+.features-section {
+    padding: 6rem 2rem 8rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-label {
+    color: var(--cyan);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 4rem;
+}
+
+.feature-card {
+    padding: 2.5rem 2rem;
+    background: #060608;
+    border: 1px solid #111;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.feature-card:hover { border-color: #333; }
+
+.feature-icon { font-size: 1.5rem; margin-bottom: 1.5rem; display: block; }
+.feature-card h3 { font-size: 1.15rem; margin-bottom: 0.75rem; }
+.feature-card p { color: #555; font-size: 0.9rem; line-height: 1.6; }
+
+/* Steps */
+.steps-section {
+    padding: 6rem 2rem;
+    background: #030305;
+    border-top: 1px solid #111;
+}
+
+.steps-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.steps-header {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.steps-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3rem;
+}
+
+.step-item { text-align: center; }
+
+.step-num {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #111;
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.step-item h4 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+.step-item p { font-size: 0.85rem; color: #555; line-height: 1.5; }
+
+/* Testimonial / Social Proof */
+.proof-section {
+    padding: 6rem 2rem;
+    border-top: 1px solid #111;
+    text-align: center;
+}
+
+.proof-quote {
+    font-size: 1.5rem;
+    font-weight: 500;
+    font-style: italic;
+    color: #ccc;
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    line-height: 1.6;
+}
+
+.proof-author {
+    font-size: 0.8rem;
+    color: #444;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Final CTA */
+.final-cta {
+    padding: 8rem 2rem;
+    text-align: center;
+    background: #000;
+    position: relative;
+}
+
+.final-cta::before {
+    content: '';
+    position: absolute;
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(circle, rgba(124,58,237,0.04), transparent 70%);
+    top: -20%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.final-cta > * { position: relative; z-index: 1; }
+
+@media (max-width: 768px) {
+    .features-grid { grid-template-columns: 1fr; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .mockup-grid { grid-template-columns: 1fr; }
+    .comparison-grid { grid-template-columns: 1fr; }
+    .ticker-flex { gap: 2rem; }
+    .trust-strip { flex-wrap: wrap; gap: 1.5rem; }
+}
+</style>
+
+<!-- ──── Hero ──── -->
+<section class="hero-section">
+    <div class="hero-bg-img"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-content animate-fade-in">
+        <span class="hero-badge">Tecnologia de Grau Institucional</span>
+        <h1 class="hero-title">O padrão dos grandes<br><span class="gradient-text">gestores</span> na sua mão.</h1>
+        <p class="hero-subtitle">
+            Acesse a ciência e a governança que protege bilhões, agora aplicada à sua carteira pessoal. Sem conflito de interesse.
         </p>
-        <div style="display: flex; gap: 1rem; justify-content: center;">
-            <a href="/quiz" class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">Começar Quiz Gratuito</a>
-            <a href="/login" class="btn btn-outline" style="font-size: 1.2rem; padding: 1rem 2rem;">Já sou membro</a>
+        <div class="hero-cta">
+            <a href="/register" class="btn btn-primary" style="padding: 1.1rem 3rem; border-radius: 4px;">Começar Análise Gratuita</a>
+            <a href="/login" class="btn btn-ghost" style="padding: 1.1rem 2rem;">Acessar plataforma →</a>
         </div>
-    </section>
+        <div class="trust-strip">
+            <span>Dados BCB em tempo real</span>
+            <span>·</span>
+            <span>17 benchmarks ANBIMA</span>
+            <span>·</span>
+            <span>Engine de risco quantitativo</span>
+        </div>
+    </div>
+</section>
 
-    <!-- Features Section -->
-    <section class="features glass-panel" style="margin: 3rem auto; padding: 3rem; max-width: 1200px;">
-        <h2 class="text-center" style="margin-bottom: 3rem;">Como Funciona</h2>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
-                <h3>1. Análise de Perfil</h3>
-                <p style="color: var(--text-muted);">Questionário aprofundado com 28 perguntas nos padrões de certificação CEA.</p>
+<!-- ──── Dashboard Mockup ──── -->
+<section class="mockup-section animate-fade-in delay-1">
+    <div class="mockup-container">
+        <div class="mockup-frame">
+            <div class="mockup-dots">
+                <div class="mockup-dot"></div>
+                <div class="mockup-dot"></div>
+                <div class="mockup-dot"></div>
             </div>
-            
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">🧠</div>
-                <h3>2. Gap Analysis</h3>
-                <p style="color: var(--text-muted);">Nossa IA compara seus investimentos atuais com o portfólio ideal otimizado.</p>
-            </div>
-            
-            <div class="feature-card text-center">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
-                <h3>3. Otimização Contínua</h3>
-                <p style="color: var(--text-muted);">Ajustes baseados na fronteira eficiente de Markowitz e simulações de Monte Carlo.</p>
+            <div class="mockup-grid">
+                <div class="mockup-metric">
+                    <div class="metric-label">Rentabilidade 12M</div>
+                    <div class="metric-value" style="color: var(--emerald);">+14,8%</div>
+                    <div class="metric-sub">vs CDI: 12,4%</div>
+                </div>
+                <div class="mockup-metric">
+                    <div class="metric-label">VaR (95%)</div>
+                    <div class="metric-value" style="color: var(--rose);">2,4%</div>
+                    <div class="metric-sub">Risco máximo mensal</div>
+                </div>
+                <div class="mockup-metric">
+                    <div class="metric-label">Índice de Sharpe</div>
+                    <div class="metric-value" style="color: var(--cyan);">1.87</div>
+                    <div class="metric-sub">Eficiência risco-retorno</div>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Pricing Section -->
-    <section class="pricing text-center" style="padding: 5rem 1rem;">
-        <h2 style="margin-bottom: 3rem;">Planos e Preços</h2>
-        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-            
-            <div class="glass-panel" style="padding: 2rem; width: 300px;">
-                <h3>Free</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 0<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
-                    <li style="margin-bottom: 0.5rem;">✗ IA Gap Analysis</li>
-                    <li style="margin-bottom: 0.5rem;">✗ Monte Carlo</li>
-                </ul>
-                <a href="/register" class="btn btn-outline" style="width: 100%;">Criar Conta</a>
-            </div>
-
-            <div class="glass-panel" style="padding: 2rem; width: 300px; border: 1px solid var(--primary-color);">
-                <h3>Premium</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 9,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Suitability Completo</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Perfil de Risco</li>
-                    <li style="margin-bottom: 0.5rem;">✓ IA Gap Analysis</li>
-                    <li style="margin-bottom: 0.5rem;">✗ Relatórios PDF</li>
-                </ul>
-                <a href="/register" class="btn btn-primary" style="width: 100%;">Assinar Premium</a>
-            </div>
-
-            <div class="glass-panel" style="padding: 2rem; width: 300px;">
-                <h3>Pro</h3>
-                <div style="font-size: 2.5rem; margin: 1rem 0;">R$ 29,90<span style="font-size: 1rem; color: var(--text-muted);">/mês</span></div>
-                <ul style="list-style: none; padding: 0; text-align: left; margin-bottom: 2rem; color: var(--text-muted);">
-                    <li style="margin-bottom: 0.5rem;">✓ Todas as features</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Monte Carlo 5000 sims</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Stress Test Histórico</li>
-                    <li style="margin-bottom: 0.5rem;">✓ Relatórios em PDF</li>
-                </ul>
-                <a href="/register" class="btn btn-outline" style="width: 100%;">Assinar Pro</a>
-            </div>
-
+<!-- ──── Stats Ticker ──── -->
+<div class="ticker-section">
+    <div class="ticker-flex">
+        <div class="ticker-item">
+            <span class="ticker-val">17</span>
+            <span class="ticker-lbl">Benchmarks Reais</span>
         </div>
-    </section>
-
-    <!-- FAQ & Disclaimer -->
-    <section class="footer" style="padding: 3rem 1rem; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-        <div style="margin-bottom: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Dúvidas Frequentes</h3>
-            <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
-                A plataforma substitui um assessor de investimentos? <br>
-                R: Não. A ProInvestAI é uma ferramenta de apoio analítico (Micro-SaaS) desenhada para empoderar o investidor autônomo com dados quantitativos.
-            </p>
+        <div class="ticker-item">
+            <span class="ticker-val">VaR 95%</span>
+            <span class="ticker-lbl">Padrão de Risco</span>
         </div>
-        <div style="font-size: 0.8rem; color: #666;">
-            <p><strong>Disclaimer:</strong> Rentabilidade passada não é garantia de rentabilidade futura. Simulações são baseadas em modelos estatísticos (Monte Carlo, Markowitz) e não configuram recomendação de compra e venda de ativos segundo as regras da CVM.</p>
+        <div class="ticker-item">
+            <span class="ticker-val">5.000</span>
+            <span class="ticker-lbl">Cenários Monte Carlo</span>
         </div>
-    </section>
+        <div class="ticker-item">
+            <span class="ticker-val">28</span>
+            <span class="ticker-lbl">Diretrizes CEA</span>
+        </div>
+    </div>
 </div>
-{% end block %}
+
+<!-- ──── Problem vs Solution ──── -->
+<section class="problem-section animate-fade-in">
+    <h2 class="problem-title">Você sabe quanto risco<br>está correndo?</h2>
+    <p class="problem-text">
+        A maioria dos investidores toma decisões baseadas em "achismo". Poucos têm acesso à tecnologia que os maiores gestores do mundo usam para proteger e multiplicar patrimônios.
+    </p>
+    <div class="comparison-grid">
+        <div class="compare-card compare-bad">
+            <div class="compare-label">Investidor Comum</div>
+            <ul class="compare-list">
+                <li>Escolhe ativos por indicação</li>
+                <li>Não sabe seu VaR real</li>
+                <li>Zero diversificação científica</li>
+                <li>Decisões emocionais</li>
+            </ul>
+        </div>
+        <div class="compare-card compare-good">
+            <div class="compare-label">Com ProInvestAI</div>
+            <ul class="compare-list">
+                <li>Alocação por fronteira eficiente</li>
+                <li>VaR, Sharpe e Treynor calculados</li>
+                <li>Stress test em crises reais</li>
+                <li>Decisões baseadas em ciência</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<!-- ──── Features ──── -->
+<section class="features-section animate-fade-in delay-2">
+    <span class="section-label">O que você desbloqueia</span>
+    <h2 class="section-title">Ciência aplicada à<br>governança patrimonial.</h2>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <span class="feature-icon">📊</span>
+            <h3>Relatório de Risco</h3>
+            <p>VaR, Índice de Sharpe, Treynor e Drawdown. Saiba exatamente quanto risco você corre para cada centavo de retorno.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🎯</span>
+            <h3>Monte Carlo</h3>
+            <p>5.000 cenários de projeção futura baseados em dados históricos reais e correlações de ativos do mercado brasileiro.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🛡️</span>
+            <h3>Stress Test</h3>
+            <p>Como sua carteira reagiria se o Crash de 2008, a Pandemia de 2020 ou o Joesley Day acontecessem amanhã?</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">⚖️</span>
+            <h3>Sem Conflito de Interesse</h3>
+            <p>Não vendemos produtos financeiros. Nossa única função é entregar a verdade sobre seu patrimônio, com rigor matemático.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">🧠</span>
+            <h3>Parecer com IA</h3>
+            <p>Inteligência artificial que traduz métricas complexas em linguagem clara e acionável. Seu comitê digital privado.</p>
+        </div>
+        <div class="feature-card">
+            <span class="feature-icon">📈</span>
+            <h3>Análise de Markowitz</h3>
+            <p>Fronteira eficiente e otimização de carteira. A mesma ciência usada pelos maiores hedge funds do mundo.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ──── Steps ──── -->
+<section class="steps-section">
+    <div class="steps-container">
+        <div class="steps-header">
+            <span class="section-label">Como funciona</span>
+            <h2 class="section-title">3 minutos para seu<br>dossiê institucional.</h2>
+        </div>
+        <div class="steps-grid">
+            <div class="step-item">
+                <div class="step-num">01</div>
+                <h4>Análise de Perfil</h4>
+                <p>Responda 28 diretrizes de governança e mapeie seu perfil real.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-num">02</div>
+                <h4>Diagnóstico</h4>
+                <p>Receba VaR, Sharpe, Alocação Ideal e Gap Analysis da sua carteira.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-num">03</div>
+                <h4>Governança</h4>
+                <p>Acesse seu Comitê Digital com relatórios, simulações e parecer da IA.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ──── Social Proof ──── -->
+<section class="proof-section">
+    <p class="proof-quote">
+        "A diferença entre investir e especular é ter dados, método e disciplina. Sem isso, é apenas esperança."
+    </p>
+    <span class="proof-author">Filosofia ProInvestAI</span>
+</section>
+
+<!-- ──── Final CTA ──── -->
+<section class="final-cta">
+    <h2 style="font-size: 3rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 1rem;">Sua carteira está rendendo<br>o que deveria?</h2>
+    <p style="color: #555; margin-bottom: 3rem; font-size: 1.1rem;">Em 3 minutos você tem seu Dossiê Institucional completo. Gratuito.</p>
+    <a href="/register" class="btn btn-primary" style="padding: 1.2rem 4rem; border-radius: 4px;">Criar Conta e Começar Análise</a>
+</section>
+{% endblock %}
