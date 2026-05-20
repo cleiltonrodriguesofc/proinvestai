@@ -84,6 +84,8 @@ def build_indices_from_config(config: dict) -> list[AssetIndex]:
             projected_real_return=idx["projected_real_return"],
             volatility=idx["volatility"],
             projection_model=ProjectionModel(idx["projection_model"]),
+            min_weight=idx.get("min_weight", 0.0),
+            max_weight=idx.get("max_weight", 1.0),
         ))
     return indices
 
@@ -113,7 +115,8 @@ def calculate_npv(
     """
     p = patrimony
     for cf in cashflows:
-        investment_return = p * rate
+        # investment only yields if patrimony > 0
+        investment_return = max(0.0, p) * rate
         net_flow = cf.total_revenues - cf.total_expenditures
         p = p + investment_return + net_flow
 
@@ -197,7 +200,9 @@ def project_patrimony(
         revenues = cf.total_revenues
         expenditures = cf.total_expenditures
         flow_without_inv = revenues - expenditures
-        investment_result = p * annual_return
+        
+        # investment only yields if patrimony > 0
+        investment_result = max(0.0, p) * annual_return
         annual_flow = flow_without_inv + investment_result
         p = p + annual_flow
 
@@ -367,8 +372,10 @@ def simulate_solvency(
         p = patrimony
         for t in range(actual_years):
             cf = cashflows[t]
+            
+            # investment only yields if patrimony > 0
             real_return = return_scenarios[s, t]
-            inv_result = p * real_return
+            inv_result = max(0.0, p) * real_return
             net_flow = cf.total_revenues - cf.total_expenditures
             p = p + inv_result + net_flow
             patrimony_paths[s, t] = p
@@ -496,33 +503,12 @@ class ALMEngine:
 
         recommended = recommend_portfolio(efficient_frontier)
 
-        # step 5: solvency simulation for recommended portfolio
+        # step 5: solvency simulation for all portfolios
         benchmark_weights = self.portfolio.benchmark_breakdown
-        avg_return = 0.0
-        avg_vol = 0.0
-
-        if recommended:
-            # use recommended portfolio weights for simulation
-            for idx_name, w in recommended.weights.items():
-                if idx_name in index_map:
-                    idx = index_map[idx_name]
-                    avg_return += w * idx.projected_real_return / 100
-                    avg_vol += w * idx.volatility / 100
-        else:
-            # fallback to current portfolio weights
-            for bench, balance in benchmark_weights.items():
-                w = balance / total_inv if total_inv > 0 else 0
-                if bench in index_map:
-                    idx = index_map[bench]
-                    avg_return += w * idx.projected_real_return / 100
-                    avg_vol += w * idx.volatility / 100
-
+        solvency_results = []
         limited_cashflows = self.cashflows[:horizon_years]
-        return_scenarios = generate_return_scenarios(
-            avg_return, avg_vol,
-            n_scenarios=n_scenarios,
-            n_years=horizon_years,
-        )
+        
+        # We need inflation scenarios once
         inflation_scenarios = generate_return_scenarios(
             self.config.get("inflation_implicit_2268", 5.74) / 100,
             0.03,
@@ -530,27 +516,48 @@ class ALMEngine:
             n_years=horizon_years,
             seed=123,
         )
-
-        solvency = simulate_solvency(
-            limited_cashflows, patrimony,
-            return_scenarios, inflation_scenarios,
-            actuarial_rate,
-        )
-
-        solvency_result = SolvencyResult(
-            portfolio_id=recommended.portfolio_id if recommended else 0,
-            n_scenarios=solvency["n_scenarios"],
-            n_years=solvency["n_years"],
-            pct_positive_returns=solvency["pct_positive_returns"],
-            min_return=solvency["min_return"],
-            mean_return=solvency["mean_return"],
-            max_return=solvency["max_return"],
-            pct_solvent=solvency["pct_solvent"],
-            mean_funding_ratio=solvency["mean_funding_ratio"],
-            quantile_5_funding_ratio=solvency["quantile_5_funding_ratio"],
-            yearly_median_patrimony=solvency["yearly_median_patrimony"],
-            yearly_median_funding_ratio=solvency["yearly_median_funding_ratio"],
-        )
+        
+        # Pre-generate a list of portfolios to evaluate
+        portfolios_to_simulate = list(efficient_frontier)
+        if not portfolios_to_simulate and recommended:
+            portfolios_to_simulate = [recommended]
+            
+        for port in portfolios_to_simulate:
+            avg_return = 0.0
+            avg_vol = 0.0
+            
+            for idx_name, w in port.weights.items():
+                if idx_name in index_map:
+                    idx = index_map[idx_name]
+                    avg_return += w * idx.projected_real_return / 100
+                    avg_vol += w * idx.volatility / 100
+                    
+            return_scenarios = generate_return_scenarios(
+                avg_return, avg_vol,
+                n_scenarios=n_scenarios,
+                n_years=horizon_years,
+            )
+            
+            solvency = simulate_solvency(
+                limited_cashflows, patrimony,
+                return_scenarios, inflation_scenarios,
+                actuarial_rate,
+            )
+            
+            solvency_results.append(SolvencyResult(
+                portfolio_id=port.portfolio_id,
+                n_scenarios=solvency["n_scenarios"],
+                n_years=solvency["n_years"],
+                pct_positive_returns=solvency["pct_positive_returns"],
+                min_return=solvency["min_return"],
+                mean_return=solvency["mean_return"],
+                max_return=solvency["max_return"],
+                pct_solvent=solvency["pct_solvent"],
+                mean_funding_ratio=solvency["mean_funding_ratio"],
+                quantile_5_funding_ratio=solvency["quantile_5_funding_ratio"],
+                yearly_median_patrimony=solvency["yearly_median_patrimony"],
+                yearly_median_funding_ratio=solvency["yearly_median_funding_ratio"],
+            ))
 
         # step 6: gap analysis (current vs recommended)
         gap_table: dict[str, dict[str, float]] = {}
@@ -587,7 +594,7 @@ class ALMEngine:
             meta_atuarial=actuarial_rate,
             efficient_frontier=efficient_frontier,
             recommended_portfolio=recommended,
-            solvency_results=[solvency_result],
+            solvency_results=solvency_results,
             bond_allocations=bond_allocations,
             gap_table=gap_table,
         )

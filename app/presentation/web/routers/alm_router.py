@@ -12,6 +12,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from fastapi import APIRouter, Request, Query
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from ....application.services.alm_engine import (
@@ -234,6 +235,40 @@ def _build_alm_context(
             "patrimony": solvency_patrimony,
             "funding_ratio": solvency_fr,
         }),
+        
+        # new charts for LEMA format
+        "scatter_json": json.dumps([
+            {
+                "label": idx.name,
+                "x": idx.volatility,
+                "y": idx.projected_real_return,
+                "type": "index"
+            } for idx in result.indices
+        ] + [
+            {
+                "label": f"Portfólio {p.portfolio_id}",
+                "x": p.volatility,
+                "y": p.expected_return,
+                "type": "portfolio"
+            } for p in result.efficient_frontier
+        ]),
+        
+        "stacked_bar_json": json.dumps([
+            {
+                "label": f"Port. {p.portfolio_id}",
+                "weights": p.weights
+            } for p in result.efficient_frontier
+        ]),
+        
+        "solvency_results_table": [
+            {
+                "portfolio_id": sr.portfolio_id,
+                "pct_solvent": f"{sr.pct_solvent:.1f}%",
+                "mean_funding_ratio": f"{sr.mean_funding_ratio:.2f}",
+                "quantile_5": f"{sr.quantile_5_funding_ratio:.2f}"
+            }
+            for sr in result.solvency_results
+        ],
 
         # full tables for report
         "cashflows_table": [
@@ -249,12 +284,14 @@ def _build_alm_context(
         "projection_table": [
             {
                 "year": p["year"],
+                "revenues": _format_brl(p["revenues"]),
+                "expenditures": _format_brl(p["expenditures"]),
                 "net_flow": _format_brl(p["flow_without_investments"]),
                 "inv_return_eq": _format_brl(p["investment_result"]),
+                "annual_flow_eq": _format_brl(p["annual_flow"]),
                 "patrimony_eq": _format_brl(p["projected_patrimony"]),
-                "patrimony_meta": _format_brl(pm["projected_patrimony"]),
             }
-            for p, pm in zip(patrimony_projection, patrimony_projection_meta)
+            for p in patrimony_projection
         ],
 
         # tables
@@ -327,3 +364,25 @@ async def alm_report(
     if "error" in ctx and ctx["error"]:
         return templates.TemplateResponse("alm_dashboard.html", ctx)
     return templates.TemplateResponse("alm_report.html", ctx)
+
+
+@router.get("/lema-2025", response_class=HTMLResponse)
+async def alm_lema_2025(request: Request):
+    """dashboard for lema 2025 validation."""
+    ctx = _build_alm_context(request, "app/alm/config/ipsemb_2025_lema.json", 1000, 75)
+    if not isinstance(ctx, dict):
+        return ctx  # return the TemplateResponse with the error
+    if "error" in ctx and ctx["error"]:
+        return HTMLResponse(content=f"<h3>Erro: {ctx['error']}</h3>", status_code=500)
+    return templates.TemplateResponse("alm_dashboard.html", ctx)
+
+
+@router.get("/lema-2025/report", response_class=HTMLResponse)
+async def alm_lema_2025_report(request: Request):
+    """institutional report for lema 2025 validation."""
+    ctx = _build_alm_context(request, "app/alm/config/ipsemb_2025_lema.json", 1000, 75)
+    if not isinstance(ctx, dict):
+        return ctx  # return the TemplateResponse with the error
+    if "error" in ctx and ctx["error"]:
+        return HTMLResponse(content=f"<h3>Erro: {ctx['error']}</h3>", status_code=500)
+    return templates.TemplateResponse("alm_report_lema.html", ctx)
