@@ -32,11 +32,13 @@ from app.presentation.web.routers.web_router import router as web_router
 from app.presentation.api.routers.quiz_router import router as quiz_api_router
 from app.presentation.web.routers.auth import router as auth_router
 from app.presentation.api.routers.billing_router import router as billing_router
+from app.presentation.web.routers.alm_router import router as alm_router
 
 app.include_router(web_router)
 app.include_router(quiz_api_router)
 app.include_router(auth_router)
 app.include_router(billing_router)
+app.include_router(alm_router)
 
 @app.get("/health")
 async def health_check():

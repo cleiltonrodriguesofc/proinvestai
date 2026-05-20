@@ -1,0 +1,388 @@
+{
+  "rpps_name": "IPSEMB - Instituto de Previdência Social dos Servidores Municipais de Buriticupu",
+  "cnpj": "01.612.525/0001-40",
+  "reference_date": "2026-04-30",
+  "actuarial_rate": 5.69,
+  "inflation_implicit_252": 4.37,
+  "inflation_implicit_2268": 5.74,
+  "pro_gestao_level": null,
+  "patrimony": 188762996.05,
+  "cash_balance": 203059.53,
+  "actuarial_data": {
+    "active_members": 1798,
+    "retirees": 193,
+    "pensioners": 56,
+    "active_payroll_monthly": 4610668.13,
+    "avg_benefit_retirees": 6040.35,
+    "avg_benefit_pensioners": 2174.30,
+    "avg_age_active": 42.7,
+    "avg_age_retirees": 65.3,
+    "avg_age_pensioners": 41.4,
+    "surplus_with_amortization": 40096853.18,
+    "deficit_without_amortization": -50374444.73,
+    "biometric_table": "IBGE-2024",
+    "entry_into_disability_table": "Álvaro Vindas",
+    "salary_growth_real": 1.0,
+    "benefit_growth_real_magistery": 1.0,
+    "benefit_growth_real_others": 0.0,
+    "admin_expenses_pct": 3.0
+  },
+  "cashflow_csv_path": "avaliacao atuarial/2026/2026_FLX_CIVIL_PREV_GA_01612525000140.csv",
+  "portfolio": [
+    {
+      "fund_name": "CAIXA BRASIL GESTÃO ESTRATÉGICA FIC RF",
+      "balance": 8348308.61,
+      "weight": 4.43,
+      "benchmark": "IMA Geral ex-C",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.40,
+      "monthly_return": 1.24,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BB IRF-M 1 TP FIC RF PREVID",
+      "balance": 23584588.10,
+      "weight": 12.51,
+      "benchmark": "IRF-M 1",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.10,
+      "monthly_return": 0.99,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "CAIXA BRASIL IRF-M 1 TP FI RF",
+      "balance": 2157563.08,
+      "weight": 1.14,
+      "benchmark": "IRF-M 1",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.20,
+      "monthly_return": 1.02,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BRADESCO IRF-M 1 TP FI RF",
+      "balance": 13139630.13,
+      "weight": 6.97,
+      "benchmark": "IRF-M 1",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.19,
+      "monthly_return": 0.98,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BB PREVIDENCIÁRIO RENDA FIXA TÍTULO PÚBLICO VÉRTICE 2028",
+      "balance": 19099571.97,
+      "weight": 10.13,
+      "benchmark": "IPCA",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": "2028-08-15",
+      "admin_fee": 0.16,
+      "monthly_return": 1.21,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BRADESCO PODER PÚBLICO FIC RF CURTO PRAZO",
+      "balance": 63.98,
+      "weight": 0.00,
+      "benchmark": "CDI",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.06,
+      "monthly_return": 0.92,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BB IRF-M TP FI RF PREVID",
+      "balance": 22157929.24,
+      "weight": 11.75,
+      "benchmark": "IRF-M",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 1,
+      "maturity_date": null,
+      "admin_fee": 0.21,
+      "monthly_return": 1.24,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "CAIXA BRASIL ESPECIAL 2026 TP FIF RF - RESP LIMITADA",
+      "balance": 21405716.23,
+      "weight": 11.35,
+      "benchmark": "IPCA",
+      "regulatory_article": "7, I",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": "2026-08-17",
+      "admin_fee": 0.06,
+      "monthly_return": 1.45,
+      "is_legacy": false
+    },
+    {
+      "fund_name": "BB PERFIL FIC RF REF DI PREVIDENC",
+      "balance": 4328710.54,
+      "weight": 2.30,
+      "benchmark": "CDI",
+      "regulatory_article": "7, V",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.20,
+      "monthly_return": 1.08,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "BRADESCO PREMIUM FI RF REF DI",
+      "balance": 21167203.90,
+      "weight": 11.23,
+      "benchmark": "CDI",
+      "regulatory_article": "7, V",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.25,
+      "monthly_return": 1.08,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "BB IMA-B FI RF PREVID",
+      "balance": 8107991.10,
+      "weight": 4.30,
+      "benchmark": "IMA-B",
+      "regulatory_article": "7, V",
+      "segment": "renda_fixa",
+      "liquidity_days": 1,
+      "maturity_date": null,
+      "admin_fee": 0.31,
+      "monthly_return": 1.79,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "FI CAIXA BRASIL MATRIZ RF",
+      "balance": 25234677.98,
+      "weight": 13.38,
+      "benchmark": "CDI",
+      "regulatory_article": "7, V",
+      "segment": "renda_fixa",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.20,
+      "monthly_return": 1.11,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "BRADESCO MID SMALL CAPS FI AÇÕES",
+      "balance": 1463156.99,
+      "weight": 0.78,
+      "benchmark": "SMLL",
+      "regulatory_article": "8, I",
+      "segment": "renda_variavel",
+      "liquidity_days": 3,
+      "maturity_date": null,
+      "admin_fee": 1.55,
+      "monthly_return": -2.13,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "BB FATORIAL FIC AÇÕES",
+      "balance": 5417522.06,
+      "weight": 2.87,
+      "benchmark": "IBOVESPA",
+      "regulatory_article": "8, I",
+      "segment": "renda_variavel",
+      "liquidity_days": 3,
+      "maturity_date": null,
+      "admin_fee": 1.00,
+      "monthly_return": -2.67,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "BB AÇÕES DIVIDENDOS MIDCAPS FIC FIA",
+      "balance": 4727442.39,
+      "weight": 2.51,
+      "benchmark": "IDIV",
+      "regulatory_article": "8, I",
+      "segment": "renda_variavel",
+      "liquidity_days": 3,
+      "maturity_date": null,
+      "admin_fee": 1.00,
+      "monthly_return": 0.13,
+      "is_legacy": true
+    },
+    {
+      "fund_name": "CAIXA JUROS E MOEDAS FI MULTIMERCADO LP",
+      "balance": 8219860.22,
+      "weight": 4.36,
+      "benchmark": "CDI",
+      "regulatory_article": "10, I",
+      "segment": "estruturados",
+      "liquidity_days": 0,
+      "maturity_date": null,
+      "admin_fee": 0.70,
+      "monthly_return": 1.27,
+      "is_legacy": true
+    }
+  ],
+  "indices": [
+    {
+      "name": "CDI",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 9.50,
+      "volatility": 2.25,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IRF-M 1",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 9.94,
+      "volatility": 2.44,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IRF-M",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 9.23,
+      "volatility": 4.44,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IMA-B 5",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 8.66,
+      "volatility": 2.64,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IMA-B",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, V",
+      "projected_real_return": 7.97,
+      "volatility": 5.14,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IMA-B 5+",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 7.43,
+      "volatility": 8.01,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IMA Geral Ex-C",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 9.05,
+      "volatility": 3.16,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IDkA IPCA 2 Anos",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 8.46,
+      "volatility": 2.85,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IDkA Pré 2 Anos",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 8.74,
+      "volatility": 4.97,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "IRF-M 1+",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, I",
+      "projected_real_return": 8.84,
+      "volatility": 5.83,
+      "projection_model": "ettj_anbima"
+    },
+    {
+      "name": "Carteira Títulos Públicos ALM",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, II",
+      "projected_real_return": 7.30,
+      "volatility": 1.50,
+      "projection_model": "weighted_coupon"
+    },
+    {
+      "name": "Carteira Títulos Privados ALM",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, VII",
+      "projected_real_return": 8.03,
+      "volatility": 1.20,
+      "projection_model": "cdi_spread"
+    },
+    {
+      "name": "Fundos Crédito Privado - 105% CDI",
+      "segment": "renda_fixa",
+      "regulatory_article": "7, VII",
+      "projected_real_return": 9.98,
+      "volatility": 2.36,
+      "projection_model": "cdi_spread"
+    },
+    {
+      "name": "Fundos Multimercados - 100% CDI",
+      "segment": "estruturados",
+      "regulatory_article": "10, I",
+      "projected_real_return": 9.50,
+      "volatility": 2.36,
+      "projection_model": "cdi_spread"
+    },
+    {
+      "name": "IFIX",
+      "segment": "fundos_imobiliarios",
+      "regulatory_article": "11",
+      "projected_real_return": -1.40,
+      "volatility": 8.97,
+      "projection_model": "historical_60m"
+    },
+    {
+      "name": "Ibovespa",
+      "segment": "renda_variavel",
+      "regulatory_article": "8, I",
+      "projected_real_return": 3.66,
+      "volatility": 18.70,
+      "projection_model": "historical_60m"
+    },
+    {
+      "name": "S&P 500",
+      "segment": "exterior",
+      "regulatory_article": "9, III",
+      "projected_real_return": 7.51,
+      "volatility": 15.88,
+      "projection_model": "historical_60m"
+    },
+    {
+      "name": "MSCI World",
+      "segment": "exterior",
+      "regulatory_article": "9, III",
+      "projected_real_return": 5.63,
+      "volatility": 14.84,
+      "projection_model": "historical_60m"
+    }
+  ],
+  "_comment": "projeções de retorno e volatilidade replicadas da lema alm out/2025. devem ser atualizadas com dados mais recentes para o alm 2026."
+}

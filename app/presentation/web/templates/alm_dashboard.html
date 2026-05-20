@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALM — IPSEMB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0a0e17; --surface: #111827; --surface-2: #1a2332;
+            --border: #1e293b; --text: #e2e8f0; --text-muted: #94a3b8;
+            --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15);
+            --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+            --purple: #8b5cf6; --cyan: #06b6d4;
+            --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
+
+        /* header */
+        .alm-header { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem; }
+        .alm-header h1 { font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .alm-header p { color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; }
+        .alm-header-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+        .alm-badge { background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.8rem; font-size:0.75rem; color:var(--text-muted); }
+
+        /* main layout */
+        .alm-main { max-width:1400px; margin:0 auto; padding:1.5rem; }
+
+        /* cards */
+        .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem; }
+        .metric-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.25rem; position:relative; overflow:hidden; }
+        .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); }
+        .metric-card.green::before { background:var(--green); }
+        .metric-card.red::before { background:var(--red); }
+        .metric-card.amber::before { background:var(--amber); }
+        .metric-card.purple::before { background:var(--purple); }
+        .metric-card.cyan::before { background:var(--cyan); }
+        .metric-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.5rem; }
+        .metric-value { font-size:1.6rem; font-weight:800; }
+        .metric-sub { font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem; }
+
+        /* sections */
+        .section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:1.5rem; overflow:hidden; }
+        .section-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; }
+        .section-header h2 { font-size:1rem; font-weight:700; }
+        .section-num { background:var(--accent); color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; flex-shrink:0; }
+        .section-body { padding:1.25rem; }
+
+        /* chart containers */
+        .chart-container { position:relative; height:350px; width:100%; }
+        .chart-row { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+        @media(max-width:768px) { .chart-row { grid-template-columns:1fr; } }
+
+        /* tables */
+        .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+        .data-table th { text-align:left; padding:0.6rem 0.75rem; background:var(--surface-2); color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; font-size:0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .data-table td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); }
+        .data-table tr:hover td { background:var(--accent-glow); }
+        .data-table .positive { color:var(--green); }
+        .data-table .negative { color:var(--red); }
+        .legacy-badge { background:rgba(245,158,11,0.15); color:var(--amber); padding:0.15rem 0.5rem; border-radius:4px; font-size:0.65rem; font-weight:600; }
+
+        /* solvency gauge */
+        .solvency-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; }
+        .solvency-stat { text-align:center; padding:1rem; background:var(--surface-2); border-radius:10px; }
+        .solvency-stat .big { font-size:2rem; font-weight:800; }
+        .solvency-stat .label { font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem; }
+        @media(max-width:768px) { .solvency-grid { grid-template-columns:1fr; } }
+
+        /* scroll */
+        .table-scroll { overflow-x:auto; }
+
+        /* back link */
+        .back-link { display:inline-flex; align-items:center; gap:0.5rem; color:var(--text-muted); text-decoration:none; font-size:0.85rem; margin-bottom:1rem; transition:color 0.2s; }
+        .back-link:hover { color:var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="alm-header">
+    <div class="alm-header-row">
+        <div>
+            <h1>📊 Estudo ALM — Asset-Liability Management</h1>
+            <p>{{ rpps_name | default('RPPS') }} · Data-base: {{ reference_date | default('--') }}</p>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+            <span class="alm-badge">🎯 Meta: {{ actuarial_rate }}% a.a.</span>
+            <span class="alm-badge">🎲 {{ n_scenarios }} cenários</span>
+            <span class="alm-badge">📅 {{ horizon }} anos</span>
+            {% if pro_gestao %}<span class="alm-badge">🏛️ Pró-Gestão Nível {{ pro_gestao }}</span>
+            {% else %}<span class="alm-badge">⚠️ Sem Pró-Gestão</span>{% endif %}
+            
+            <a href="/alm/report{% if request.query_params %}?{{ request.query_params }}{% endif %}" target="_blank" class="alm-badge" style="background:var(--accent); color:white; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 1rem; border-color:transparent; margin-left:1rem;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Exportar Relatório PDF
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="alm-main">
+
+{% if error %}
+<div class="section" style="border-color:var(--red);">
+    <div class="section-body" style="color:var(--red);">
+        <strong>Erro:</strong> {{ error }}
+    </div>
+</div>
+{% else %}
+
+<!-- ═══ KPI CARDS ═══ -->
+<div class="metric-grid">
+    <div class="metric-card green">
+        <div class="metric-label">Patrimônio</div>
+        <div class="metric-value" style="font-size:1.3rem;">{{ patrimony }}</div>
+        <div class="metric-sub">Recursos garantidores</div>
+    </div>
+    <div class="metric-card {% if required_return > 8 %}red{% elif required_return > 6 %}amber{% else %}green{% endif %}">
+        <div class="metric-label">Rentab. Requerida</div>
+        <div class="metric-value">{{ required_return }}%</div>
+        <div class="metric-sub">Taxa de equilíbrio real a.a.</div>
+    </div>
+    <div class="metric-card purple">
+        <div class="metric-label">Meta Atuarial</div>
+        <div class="metric-value">{{ meta_atuarial }}%</div>
+        <div class="metric-sub">IPCA + {{ actuarial_rate }}%</div>
+    </div>
+    <div class="metric-card red">
+        <div class="metric-label">VPL Déficit</div>
+        <div class="metric-value" style="font-size:1.2rem;">{{ npv_deficit }}</div>
+        <div class="metric-sub">Valor presente dos fluxos</div>
+    </div>
+    <div class="metric-card {% if solvency.pct_solvent > 70 %}green{% elif solvency.pct_solvent > 50 %}amber{% else %}red{% endif %}">
+        <div class="metric-label">Solvência</div>
+        <div class="metric-value">{{ solvency.pct_solvent }}%</div>
+        <div class="metric-sub">Cenários com FR ≥ 1</div>
+    </div>
+    <div class="metric-card cyan">
+        <div class="metric-label">1º Déficit</div>
+        <div class="metric-value">{{ first_deficit_year }}</div>
+        <div class="metric-sub">Ano do 1º fluxo negativo</div>
+    </div>
+</div>
+
+<!-- ═══ 1. FLUXO ATUARIAL ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">1</span>
+        <h2>Fluxo Atuarial Projetado</h2>
+    </div>
+    <div class="section-body">
+        <div class="chart-container" style="height:400px;">
+            <canvas id="cfChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 2. PROJEÇÃO DE PATRIMÔNIO ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">2</span>
+        <h2>Projeção de Patrimônio</h2>
+    </div>
+    <div class="section-body">
+        <div class="chart-container" style="height:400px;">
+            <canvas id="projChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 3. CARTEIRA ATUAL ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">3</span>
+        <h2>Carteira Atual — {{ reference_date }}</h2>
+    </div>
+    <div class="section-body">
+        <div class="chart-row" style="margin-bottom:1.5rem;">
+            <div><canvas id="segChart" height="250"></canvas></div>
+            <div><canvas id="benchChart" height="250"></canvas></div>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Fundo</th><th>Saldo</th><th>%</th><th>Benchmark</th><th>Enq. 5.272</th><th>Liq.</th><th>Tx Adm</th><th>Ret. Mês</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                {% for h in holdings %}
+                    <tr>
+                        <td style="max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{{ h.name }}">{{ h.name }}</td>
+                        <td>{{ h.balance }}</td>
+                        <td>{{ h.weight }}</td>
+                        <td>{{ h.benchmark }}</td>
+                        <td>Art. {{ h.article }}</td>
+                        <td>{{ h.liquidity }}</td>
+                        <td>{{ h.admin_fee }}</td>
+                        <td class="{% if h.monthly_return.startswith('-') %}negative{% else %}positive{% endif %}">{{ h.monthly_return }}</td>
+                        <td>{% if h.is_legacy %}<span class="legacy-badge">LEGADO</span>{% else %}✅{% endif %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 4. CENÁRIO MACROECONÔMICO ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">4</span>
+        <h2>Cenário Macroeconômico — Índices de Referência</h2>
+    </div>
+    <div class="section-body">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Índice</th><th>Segmento</th><th>Retorno Real Proj.</th><th>Volatilidade</th><th>Modelo</th></tr></thead>
+                <tbody>
+                {% for idx in indices %}
+                    <tr><td>{{ idx.name }}</td><td>{{ idx.segment }}</td><td class="positive">{{ idx.return }}</td><td>{{ idx.volatility }}</td><td>{{ idx.model }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 5. FRONTEIRA EFICIENTE ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num" style="background:var(--purple);">5</span>
+        <h2>Otimização de Carteira — Fronteira Eficiente (Markowitz)</h2>
+    </div>
+    <div class="section-body">
+        {% if frontier %}
+        <div class="chart-row" style="margin-bottom:1.5rem;">
+            <div class="chart-container"><canvas id="frontierChart"></canvas></div>
+            <div>
+                {% if recommended %}
+                <div style="background:var(--surface-2);border-radius:10px;padding:1.25rem;border-left:3px solid var(--green);">
+                    <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--green);margin-bottom:0.5rem;">✦ Carteira Recomendada — Port. {{ recommended.id }}</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                        <div><div style="font-size:0.65rem;color:var(--text-muted);">Retorno</div><div style="font-size:1.3rem;font-weight:800;color:var(--green);">{{ recommended.return }}%</div></div>
+                        <div><div style="font-size:0.65rem;color:var(--text-muted);">Volatilidade</div><div style="font-size:1.3rem;font-weight:800;">{{ recommended.volatility }}%</div></div>
+                        <div><div style="font-size:0.65rem;color:var(--text-muted);">Sharpe</div><div style="font-size:1.3rem;font-weight:800;color:var(--cyan);">{{ recommended.sharpe }}</div></div>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Composição:</div>
+                    {% for idx_name, w in recommended.weights.items() %}
+                    <div style="display:flex;justify-content:space-between;padding:0.2rem 0;font-size:0.8rem;">
+                        <span>{{ idx_name }}</span><span style="font-weight:700;">{{ w }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Port.</th><th>Retorno (%)</th><th>Volatilidade (%)</th><th>Sharpe</th><th>Composição</th></tr></thead>
+                <tbody>
+                {% for p in frontier %}
+                    <tr {% if recommended and p.id == recommended.id %}style="background:rgba(16,185,129,0.08);"{% endif %}>
+                        <td><strong>{{ p.id }}</strong>{% if recommended and p.id == recommended.id %} ★{% endif %}</td>
+                        <td class="positive">{{ p.return }}</td>
+                        <td>{{ p.volatility }}</td>
+                        <td>{{ p.sharpe }}</td>
+                        <td style="font-size:0.7rem;">{% for idx, w in p.weights.items() %}{{ idx }}: {{ w }}% {% if not loop.last %}· {% endif %}{% endfor %}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:var(--text-muted);">Nenhum portfólio viável com as restrições regulatórias atuais.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══ 6. TÍTULOS PÚBLICOS ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">6</span>
+        <h2>Matching NTN-B — Aquisição Direta</h2>
+    </div>
+    <div class="section-body">
+        {% if bonds %}
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Período</th><th>Título</th><th>VP Fluxos</th><th>% Carteira TP</th><th>% Total PL</th><th>Taxa</th></tr></thead>
+                <tbody>
+                {% for b in bonds %}
+                    <tr><td>{{ b.period }}</td><td>{{ b.bond }}</td><td class="negative">{{ b.pv }}</td><td>{{ b.weight_port }}</td><td>{{ b.weight_total }}</td><td>{{ b.rate }}</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="color:var(--text-muted);">Nenhum período de déficit identificado no horizonte.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ═══ 7. ANÁLISE DE SOLVÊNCIA ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">7</span>
+        <h2>Análise de Solvência — Monte Carlo ({{ n_scenarios }} cenários)</h2>
+    </div>
+    <div class="section-body">
+        <div class="solvency-grid" style="margin-bottom:1.5rem;">
+            <div class="solvency-stat">
+                <div class="big" style="color:{% if solvency.pct_solvent > 70 %}var(--green){% elif solvency.pct_solvent > 50 %}var(--amber){% else %}var(--red){% endif %}">{{ solvency.pct_solvent }}%</div>
+                <div class="label">Cenários Solventes (FR ≥ 1)</div>
+            </div>
+            <div class="solvency-stat">
+                <div class="big" style="color:var(--cyan);">{{ solvency.mean_fr }}</div>
+                <div class="label">Funding Ratio Mediano</div>
+            </div>
+            <div class="solvency-stat">
+                <div class="big" style="color:var(--amber);">{{ solvency.q5_fr }}</div>
+                <div class="label">FR — Percentil 5%</div>
+            </div>
+            <div class="solvency-stat">
+                <div class="big" style="color:var(--purple);">{{ solvency.mean_return }}%</div>
+                <div class="label">Retorno Médio Simulado</div>
+            </div>
+        </div>
+        <div class="chart-row">
+            <div class="chart-container"><canvas id="solvPatrimonyChart"></canvas></div>
+            <div class="chart-container"><canvas id="solvFRChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ 8. GAP ANALYSIS ═══ -->
+<div class="section">
+    <div class="section-header">
+        <span class="section-num">8</span>
+        <h2>Gap Analysis — Atual vs. Recomendada</h2>
+    </div>
+    <div class="section-body">
+        <div class="table-scroll">
+            <table class="data-table">
+                <thead><tr><th>Benchmark</th><th>% Atual</th><th>Valor Atual</th><th>% Recomendada</th><th>Gap</th></tr></thead>
+                <tbody>
+                {% for g in gap %}
+                    <tr>
+                        <td>{{ g.benchmark }}</td>
+                        <td>{{ g.current_pct }}</td>
+                        <td>{{ g.current_value }}</td>
+                        <td>{{ g.recommended_pct }}</td>
+                        <td class="{% if g.gap_pct.startswith('+') %}positive{% elif g.gap_pct.startswith('-') %}negative{% endif %}">{{ g.gap_pct }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+</div>
+
+<script>
+const cfData = {{ cf_chart_json | safe }};
+const projData = {{ projection_chart_json | safe }};
+const solvData = {{ solvency_chart_json | safe }};
+const segData = {{ segment_json | safe }};
+const benchData = {{ benchmark_json | safe }};
+const frontierData = {{ frontier_chart_json | safe }};
+
+const chartFont = { family: "'Plus Jakarta Sans', sans-serif" };
+const gridColor = 'rgba(148,163,184,0.1)';
+const fmtBRL = v => 'R$ '+(v/1e6).toFixed(1)+'M';
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = chartFont.family;
+
+// 1. cashflow chart
+new Chart(document.getElementById('cfChart'), {
+    type:'bar', data:{ labels:cfData.years,
+        datasets:[
+            { label:'Receitas', data:cfData.revenues, backgroundColor:'rgba(16,185,129,0.6)', borderRadius:2, order:2 },
+            { label:'Despesas', data:cfData.expenditures, backgroundColor:'rgba(239,68,68,0.6)', borderRadius:2, order:2 },
+            { label:'Fluxo Líquido', data:cfData.net, type:'line', borderColor:'#f59e0b', borderWidth:2, pointRadius:0, tension:0.3, order:1 }
+        ]
+    }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{boxWidth:12,padding:16}}},
+        scales:{ x:{grid:{display:false},ticks:{maxTicksLimit:20}}, y:{grid:{color:gridColor},ticks:{callback:fmtBRL}} }
+    }
+});
+
+// 2. patrimony projection
+new Chart(document.getElementById('projChart'), {
+    type:'line', data:{ labels:projData.years,
+        datasets:[
+            { label:'Patrimônio (taxa equilíbrio)', data:projData.patrimony_eq, borderColor:'#10b981', backgroundColor:'rgba(16,185,129,0.1)', fill:true, borderWidth:2, pointRadius:0, tension:0.3 },
+            { label:'Patrimônio (meta atuarial)', data:projData.patrimony_meta, borderColor:'#3b82f6', borderWidth:2, borderDash:[5,5], pointRadius:0, tension:0.3 },
+        ]
+    }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'top',labels:{boxWidth:12,padding:16}}},
+        scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor},ticks:{callback:fmtBRL}} }
+    }
+});
+
+// 3. segment doughnut
+new Chart(document.getElementById('segChart'), {
+    type:'doughnut', data:{ labels:segData.labels,
+        datasets:[{ data:segData.values, backgroundColor:['#3b82f6','#ef4444','#f59e0b','#8b5cf6','#06b6d4','#10b981'], borderWidth:0 }]
+    }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+        plugins:{ legend:{position:'bottom',labels:{boxWidth:10,padding:12}},
+            title:{display:true,text:'Por Segmento',font:{size:13,weight:600}} }
+    }
+});
+
+// benchmark doughnut
+new Chart(document.getElementById('benchChart'), {
+    type:'doughnut', data:{ labels:benchData.labels,
+        datasets:[{ data:benchData.values, backgroundColor:['#6366f1','#ec4899','#14b8a6','#f97316','#8b5cf6','#06b6d4','#84cc16','#f43f5e','#a855f7'], borderWidth:0 }]
+    }, options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+        plugins:{ legend:{position:'bottom',labels:{boxWidth:10,padding:12}},
+            title:{display:true,text:'Por Benchmark',font:{size:13,weight:600}} }
+    }
+});
+
+// 5. frontier scatter
+if (document.getElementById('frontierChart') && frontierData.portfolios.length > 0) {
+    const fp = frontierData.portfolios;
+    const recId = frontierData.recommended_id;
+    new Chart(document.getElementById('frontierChart'), {
+        type:'scatter', data:{
+            datasets:[{
+                label:'Fronteira Eficiente',
+                data: fp.map(p => ({x:p.vol, y:p.ret, id:p.id})),
+                backgroundColor: fp.map(p => p.id===recId ? '#10b981' : '#3b82f6'),
+                pointRadius: fp.map(p => p.id===recId ? 10 : 6),
+                pointHoverRadius: 12,
+            }]
+        }, options:{ responsive:true, maintainAspectRatio:false,
+            plugins:{ legend:{display:false}, title:{display:true,text:'Fronteira Eficiente — Retorno vs. Risco',font:{size:13,weight:600}},
+                tooltip:{callbacks:{label:ctx=>'Port.'+fp[ctx.dataIndex].id+': '+ctx.parsed.y+'% ret, '+ctx.parsed.x+'% vol, Sharpe '+fp[ctx.dataIndex].sharpe}}
+            },
+            scales:{ x:{title:{display:true,text:'Volatilidade (%)'},grid:{color:gridColor}}, y:{title:{display:true,text:'Retorno Real (%)'},grid:{color:gridColor}} }
+        }
+    });
+}
+
+// 7. solvency patrimony
+new Chart(document.getElementById('solvPatrimonyChart'), {
+    type:'line', data:{ labels:solvData.years,
+        datasets:[{ label:'Patrimônio Mediano', data:solvData.patrimony, borderColor:'#8b5cf6', backgroundColor:'rgba(139,92,246,0.1)', fill:true, borderWidth:2, pointRadius:0, tension:0.3 }]
+    }, options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, title:{display:true,text:'Projeção de Patrimônio (mediana)',font:{size:13,weight:600}} },
+        scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor},ticks:{callback:fmtBRL}} }
+    }
+});
+
+// funding ratio
+new Chart(document.getElementById('solvFRChart'), {
+    type:'line', data:{ labels:solvData.years,
+        datasets:[
+            { label:'Funding Ratio Mediano', data:solvData.funding_ratio, borderColor:'#06b6d4', backgroundColor:'rgba(6,182,212,0.1)', fill:true, borderWidth:2, pointRadius:0, tension:0.3 },
+            { label:'Limiar Solvência (1.0)', data:Array(solvData.years.length).fill(1), borderColor:'#ef4444', borderWidth:1, borderDash:[5,5], pointRadius:0 }
+        ]
+    }, options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{position:'top',labels:{boxWidth:12}}, title:{display:true,text:'Funding Ratio (At/Lt)',font:{size:13,weight:600}} },
+        scales:{ x:{grid:{display:false}}, y:{grid:{color:gridColor}} }
+    }
+});
+</script>
+</body>
+</html>
