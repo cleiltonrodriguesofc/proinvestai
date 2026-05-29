@@ -50,8 +50,10 @@ Thumbs.db
 # reference projects — not part of the codebase
 INVESTIMENTO ANA/
 
-# client documents — confidential
-guia_anotacoes_reuniao_investimentos.docx
+# client documents — confidential (NEVER commit these)
+*.pdf
+*.docx
+avaliacao atuarial/
 
 # scratch / debug scripts
 scratch/
