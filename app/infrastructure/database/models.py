@@ -66,3 +66,60 @@ class Simulation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="simulations")
+
+class RppsInstitute(Base):
+    __tablename__ = "rpps_institutes"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cnpj = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    municipality = Column(String, nullable=False)
+    state = Column(String, nullable=False)
+    type_regime = Column(String, default="capitalization", nullable=False)
+    total_assets = Column(Numeric, default=0.0)
+    actuarial_target_index = Column(String, default="IPCA")
+    actuarial_target_rate = Column(Numeric, default=0.0)
+    pro_gestao_level = Column(Numeric, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    positions = relationship("FundPosition", back_populates="institute")
+    snapshots = relationship("PortfolioSnapshot", back_populates="institute")
+
+class FundPosition(Base):
+    __tablename__ = "fund_positions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rpps_id = Column(UUID(as_uuid=True), ForeignKey("rpps_institutes.id"), nullable=False)
+    cnpj_fund = Column(String, index=True, nullable=False)
+    name_fund = Column(String, nullable=False)
+    segment_cmn = Column(String, nullable=False)
+    current_balance = Column(Numeric, default=0.0)
+    date_entry = Column(Date, default=datetime.utcnow().date)
+    manager_name = Column(String, nullable=True)
+    admin_name = Column(String, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    institute = relationship("RppsInstitute", back_populates="positions")
+    
+class FundQuote(Base):
+    __tablename__ = "fund_quotes"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cnpj_fund = Column(String, index=True, nullable=False)
+    quote_date = Column(Date, nullable=False)
+    nav_per_share = Column(Numeric, nullable=False)
+    total_assets = Column(Numeric, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class PortfolioSnapshot(Base):
+    __tablename__ = "portfolio_snapshots"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rpps_id = Column(UUID(as_uuid=True), ForeignKey("rpps_institutes.id"), nullable=False)
+    snapshot_date = Column(Date, default=datetime.utcnow().date)
+    total_value = Column(Numeric, default=0.0)
+    compliance_status = Column(String, default="OK")
+    positions_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    institute = relationship("RppsInstitute", back_populates="snapshots")
