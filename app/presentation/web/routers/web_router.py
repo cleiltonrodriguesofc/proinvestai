@@ -37,6 +37,8 @@ from ....infrastructure.external.market_data_service import MarketDataService
 from ....infrastructure.external.macro_scenario_service import MacroScenarioService
 from ....infrastructure.repositories.profile_repository import SQLAlchemyProfileRepository
 from ....infrastructure.repositories.user_asset_repository import SQLAlchemyUserAssetRepository
+from ....infrastructure.repositories.rpps_repository import SQLAlchemyRppsRepository
+from ....domain.entities.rpps_entities import RppsInstitute
 from ....infrastructure.database.connection import get_session
 from ....infrastructure.database.models import InvestorProfile as ProfileModel
 from .auth import get_current_user
@@ -218,12 +220,12 @@ async def dashboard(
     if not user:
         return RedirectResponse(url="/login")
 
-    profile_repo = SQLAlchemyProfileRepository(session)
-    profile = await profile_repo.get_by_user(user.id)
+    rpps_repo = SQLAlchemyRppsRepository(session)
+    institute = await rpps_repo.get_institute_by_user(user.id)
     plan_display = str(getattr(user, "plan", "free")).split(".")[-1].capitalize()
 
-    if not profile:
-        return templates.TemplateResponse("dashboard.html", {
+    if not institute:
+        return templates.TemplateResponse("rpps_onboarding.html", {
             "request": request,
             "user_name": user.name,
             "user_plan": plan_display,
@@ -231,55 +233,7 @@ async def dashboard(
             "has_profile": False,
         })
 
-    profile_key = _normalize_profile(profile.risk_profile)
-    profile_label = PROFILE_LABELS.get(profile_key, profile_key.capitalize())
-    initial_amount = float(profile.initial_amount)
-    needs_patrimony = initial_amount <= 0
-
-    if needs_patrimony:
-        return templates.TemplateResponse("dashboard.html", {
-            "request": request,
-            "user_name": user.name,
-            "user_plan": plan_display,
-            "active_page": "dashboard",
-            "has_profile": True,
-            "needs_patrimony": True,
-            "profile_type": profile_label,
-        })
-
-    # build the real portfolio
-    portfolio, projections, macro = _build_portfolio_for_profile(profile)
-
-    if portfolio is None:
-        return templates.TemplateResponse("dashboard.html", {
-            "request": request,
-            "user_name": user.name,
-            "user_plan": plan_display,
-            "active_page": "dashboard",
-            "has_profile": True,
-            "needs_patrimony": False,
-            "profile_type": profile_label,
-            "total_value": _format_brl(initial_amount),
-            "error_message": "Dados de mercado indisponiveis no momento. Tente novamente em alguns minutos.",
-        })
-
-    # allocation data for frontend
-    allocation_summary = portfolio.get_allocation_summary()
-    class_breakdown = portfolio.get_class_breakdown()
-    validation_issues = portfolio.validate()
-
-    # generate ai narration
-    narration = await ai_service.explain_portfolio_recommendation(
-        allocation_summary=allocation_summary,
-        profile_label=profile_label,
-        total_value=initial_amount,
-        net_monthly_income=portfolio.expected_net_monthly_income(24),
-        gross_annual_return=portfolio.weighted_expected_annual_return,
-        net_annual_return=portfolio.expected_net_annual_return(24),
-        reserve_months=portfolio.reserve_coverage_months,
-        risk_category=portfolio.risk_category,
-    )
-
+    # if institute exists, show the RPPS dashboard (placeholder for now)
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user_name": user.name,
@@ -287,34 +241,41 @@ async def dashboard(
         "active_page": "dashboard",
         "has_profile": True,
         "needs_patrimony": False,
-        "profile_type": profile_label,
-        "total_value": _format_brl(initial_amount),
-        "initial_amount": initial_amount,
-        # portfolio data
-        "portfolio": portfolio,
-        "allocations": allocation_summary,
-        "allocations_json": json.dumps(allocation_summary, default=str),
-        "class_breakdown": class_breakdown,
-        "class_breakdown_json": json.dumps(class_breakdown),
-        "projections": projections,
-        "projections_json": json.dumps(projections),
-        # headline metrics
-        "gross_annual_return": portfolio.weighted_expected_annual_return,
-        "net_annual_return": portfolio.expected_net_annual_return(24),
-        "net_monthly_income": portfolio.expected_net_monthly_income(24),
-        "net_monthly_income_display": _format_brl(portfolio.expected_net_monthly_income(24)),
-        "liquid_pct": portfolio.liquid_percentage,
-        "liquid_value": portfolio.liquid_value,
-        "reserve_months_actual": portfolio.reserve_coverage_months,
-        "variable_income_pct": portfolio.variable_income_percentage,
-        "fgc_protected": portfolio.fgc_protected_value,
-        "tax_exempt_pct": portfolio.tax_exempt_percentage,
-        "risk_category": portfolio.risk_category,
-        "volatility": portfolio.weighted_volatility,
-        "validation_issues": validation_issues,
-        # ai
-        "narration": narration,
+        "institute": institute,
+        "total_value": _format_brl(float(institute.total_assets))
     })
+
+@router.post("/onboarding/rpps")
+async def onboarding_rpps(
+    request: Request,
+    cnpj: str = Form(...),
+    name: str = Form(...),
+    municipality: str = Form(...),
+    state: str = Form(...),
+    total_assets: float = Form(...),
+    actuarial_target_index: str = Form(...),
+    actuarial_target_rate: float = Form(...),
+    pro_gestao_level: int = Form(...),
+    user: DomainUser = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    rpps_repo = SQLAlchemyRppsRepository(session)
+    
+    new_institute = RppsInstitute(
+        cnpj=cnpj,
+        name=name,
+        municipality=municipality,
+        state=state,
+        total_assets=total_assets,
+        actuarial_target_index=actuarial_target_index,
+        actuarial_target_rate=actuarial_target_rate,
+        pro_gestao_level=pro_gestao_level
+    )
+    
+    await rpps_repo.create_institute(new_institute, user.id)
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+
 
 
 @router.post("/update-patrimony")

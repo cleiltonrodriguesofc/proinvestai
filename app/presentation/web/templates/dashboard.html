@@ -1,378 +1,57 @@
 {% extends "base_app.html" %}
-{% block title %}Dashboard — ProInvestAI{% endblock %}
+{% block title %}Painel do RPPS — ProInvestAI{% endblock %}
 
 {% block content %}
-
-{% if not has_profile %}
-<!-- onboarding state — no profile yet -->
-<div class="onboarding-state">
-    <div class="onboarding-icon">📊</div>
-    <h1 class="onboarding-title">Bem-vindo ao<br><span class="gradient-text">ProInvestAI.</span></h1>
-    <p class="onboarding-text">
-        Para montar sua carteira personalizada com produtos reais do mercado brasileiro, precisamos primeiro mapear seu perfil de investidor.
-    </p>
-    <div class="onboarding-features">
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">🏦</span>
-            <div>
-                <strong>Produtos Reais</strong>
-                <p>Tesouro Direto, CDB, LCI/LCA, FIIs, ETFs — produtos que você de fato compra.</p>
-            </div>
-        </div>
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">📈</span>
-            <div>
-                <strong>Retorno Líquido</strong>
-                <p>Calculamos IR regressivo, custódia B3 e isenções — você vê o rendimento real.</p>
-            </div>
-        </div>
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">🛡️</span>
-            <div>
-                <strong>Proteção</strong>
-                <p>Reserva de emergência e FGC calculados automaticamente para seu perfil.</p>
-            </div>
-        </div>
-    </div>
-    <a href="/quiz" class="btn btn-primary onboarding-cta" id="start-audit-btn">Iniciar Análise de Perfil</a>
-    <p class="onboarding-time">⏱ Leva apenas 3 minutos</p>
-</div>
-
-<style>
-.onboarding-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: calc(100vh - 120px); padding: 2rem 1rem; }
-.onboarding-icon { font-size: 3.5rem; margin-bottom: 1.5rem; }
-.onboarding-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1rem; }
-.onboarding-text { color: #666; font-size: 1rem; max-width: 500px; line-height: 1.6; margin-bottom: 2.5rem; }
-.onboarding-features { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; width: 100%; margin-bottom: 2.5rem; text-align: left; }
-.onboarding-feature { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #060608; border: 1px solid #111; border-radius: 6px; }
-.onboarding-feature-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
-.onboarding-feature strong { display: block; font-size: 0.85rem; margin-bottom: 0.25rem; }
-.onboarding-feature p { font-size: 0.78rem; color: #555; line-height: 1.4; margin: 0; }
-.onboarding-cta { padding: 1.1rem 3rem !important; border-radius: 4px !important; font-size: 1rem !important; }
-.onboarding-time { margin-top: 1rem; font-size: 0.75rem; color: #444; }
-@media (min-width: 768px) { .onboarding-features { flex-direction: row; max-width: 700px; } .onboarding-feature { flex-direction: column; text-align: center; align-items: center; } }
-</style>
-
-{% elif needs_patrimony %}
-<!-- patrimony onboarding -->
-<div class="onboarding-state" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-    <div class="onboarding-icon">💰</div>
-    <h1 class="onboarding-title">Qual o seu patrimônio<br><span class="gradient-text">atual?</span></h1>
-    <p class="onboarding-text">
-        Seu perfil ({{ profile_type }}) já foi mapeado! Agora informe o valor dos seus investimentos para montarmos a <strong>carteira ideal</strong> com produtos reais.
-    </p>
-    <form action="/update-patrimony" method="post" style="max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 1rem;">
-        <div style="text-align: left;">
-            <label style="color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Valor Total Investido (R$)</label>
-            <input type="number" name="patrimony" placeholder="Ex: 50000" required min="1" step="0.01" style="width: 100%; padding: 1rem; background: #060608; border: 1px solid #222; border-radius: 6px; color: #fff; font-size: 1.1rem; font-family: monospace;">
-        </div>
-        <button type="submit" class="btn btn-primary" style="padding: 1.1rem; border-radius: 6px; font-size: 1rem;">Montar Minha Carteira</button>
-    </form>
-</div>
-
-{% elif error_message is defined and error_message %}
-<!-- error state -->
-<div class="onboarding-state" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-    <div class="onboarding-icon">⚠️</div>
-    <h1 class="onboarding-title">Ops!</h1>
-    <p class="onboarding-text">{{ error_message }}</p>
-    <a href="/dashboard" class="btn btn-primary">Tentar Novamente</a>
-</div>
-
-{% else %}
-<!-- ══════════════════════════════════════════════
-     FULL DASHBOARD — Real Portfolio
-     ══════════════════════════════════════════════ -->
-
 <header class="dash-header">
     <div>
-        <span class="user-badge">{{ user_name }} — Perfil {{ profile_type }}</span>
-        <h1 class="dash-title">Sua Carteira Recomendada</h1>
+        <span class="user-badge">{{ institute.name }} — Nível Pró-Gestão: {{ institute.pro_gestao_level }}</span>
+        <h1 class="dash-title">Painel de Monitoramento (CMN 5.272)</h1>
     </div>
     <div class="total-value-box">
-        <span class="total-label">Patrimônio Investido</span>
+        <span class="total-label">Patrimônio Líquido Informado</span>
         <div class="total-value">{{ total_value }}</div>
     </div>
 </header>
 
 <!-- ──── Headline KPIs ──── -->
 <div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-label">Meta Atuarial</div>
+        <div class="kpi-value">{{ institute.actuarial_target_index }} + {{ "%.1f"|format(institute.actuarial_target_rate) }}%</div>
+        <div class="kpi-sub">Ao ano</div>
+    </div>
     <div class="kpi-card kpi-highlight">
-        <div class="kpi-label">Renda Mensal Líquida</div>
-        <div class="kpi-value val-up">{{ net_monthly_income_display }}</div>
-        <div class="kpi-sub">Após IR e custódia B3</div>
+        <div class="kpi-label">Status CMN 5.272</div>
+        <div class="kpi-value" style="color: var(--emerald);">Enquadrado</div>
+        <div class="kpi-sub">Sem violações detectadas</div>
     </div>
     <div class="kpi-card">
-        <div class="kpi-label">Retorno Líquido Anual</div>
-        <div class="kpi-value val-up">{{ "%.2f"|format(net_annual_return * 100) }}%</div>
-        <div class="kpi-sub">Bruto: {{ "%.2f"|format(gross_annual_return * 100) }}%</div>
+        <div class="kpi-label">Ativos Mapeados</div>
+        <div class="kpi-value" style="color: var(--cyan);">0 fundos</div>
+        <div class="kpi-sub">R$ 0,00 sincronizados</div>
     </div>
     <div class="kpi-card">
-        <div class="kpi-label">Reserva de Emergência</div>
-        {% if reserve_months_actual > 999 %}
-            <div class="kpi-value" style="color: var(--cyan); font-size: 1.2rem;">Sobra Coberta</div>
-        {% else %}
-            <div class="kpi-value" style="color: var(--cyan);">{{ "%.0f"|format(reserve_months_actual) }} meses</div>
-        {% endif %}
-        <div class="kpi-sub">{{ "%.1f"|format(liquid_pct * 100) }}% em ativos líquidos</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Risco da Carteira</div>
-        <div class="kpi-value">{{ risk_category|capitalize }}</div>
-        <div class="kpi-sub">Vol: {{ "%.2f"|format(volatility * 100) }}% a.a.</div>
+        <div class="kpi-label">Última Sincronização CVM</div>
+        <div class="kpi-value">Pendente</div>
+        <div class="kpi-sub">Aguardando carteira</div>
     </div>
 </div>
 
-<!-- ──── Allocation Table (Real Products) ──── -->
-<div class="risk-table-container">
-    <div class="table-header">
-        <span class="table-title">Composição da Carteira — Produtos Reais</span>
-    </div>
-    <div style="overflow-x: auto;">
-        <table class="risk-table" id="allocation-table">
-            <thead>
-                <tr>
-                    <th>Produto</th>
-                    <th style="text-align: right;">%</th>
-                    <th style="text-align: right;">Valor</th>
-                    <th style="text-align: right;">Rend. Bruto</th>
-                    <th style="text-align: right;">Rend. Líquido</th>
-                    <th style="text-align: right;">Renda/Mês</th>
-                    <th style="text-align: center;">IR</th>
-                    <th style="text-align: center;">Liquidez</th>
-                    <th style="text-align: center;">Risco</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for a in allocations %}
-                <tr>
-                    <td class="col-label">
-                        {{ a.asset_name }}
-                        {% if a.has_fgc %}<span class="badge-fgc" title="Protegido pelo FGC até R$250k">FGC</span>{% endif %}
-                    </td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.percentage_display }}</td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.value_display }}</td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.gross_return_display }}</td>
-                    <td style="text-align: right; font-family: monospace; color: var(--green);">{{ a.net_return_display }}</td>
-                    <td style="text-align: right; font-family: monospace; color: var(--cyan);">{{ a.net_income_display }}</td>
-                    <td style="text-align: center;">
-                        {% if a.is_tax_exempt %}
-                            <span class="badge-exempt">Isento</span>
-                        {% else %}
-                            <span class="badge-ir">IR</span>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center;">{{ a.liquidity }}</td>
-                    <td style="text-align: center;">
-                        <span class="badge-risk badge-risk-{{ a.risk|lower|replace(' ', '-') }}">{{ a.risk }}</span>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ──── Charts ──── -->
-<div class="charts-grid">
-    <div class="chart-card">
-        <div class="chart-title">Alocação por Classe de Ativo</div>
-        <div style="height: 260px; display: flex; align-items: center; justify-content: center;">
-            <canvas id="allocationChart"></canvas>
-        </div>
-    </div>
-    <div class="chart-card">
-        <div class="chart-title">Projeção de Patrimônio (5 Anos)</div>
-        <div style="height: 260px;">
-            <canvas id="projectionChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- ──── Protection Badges ──── -->
-<div class="kpi-grid" style="margin-top: 1rem;">
-    <div class="kpi-card">
-        <div class="kpi-label">Protegido pelo FGC</div>
-        <div class="kpi-value" style="color: var(--green); font-size: 1.2rem;">R$ {{ "{:,.2f}".format(fgc_protected).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
-        <div class="kpi-sub">Até R$ 250k por instituição</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Isento de IR</div>
-        <div class="kpi-value" style="color: var(--green); font-size: 1.2rem;">{{ "%.1f"|format(tax_exempt_pct * 100) }}%</div>
-        <div class="kpi-sub">LCI/LCA, Debêntures, FIIs</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Renda Variável</div>
-        <div class="kpi-value" style="font-size: 1.2rem;">{{ "%.1f"|format(variable_income_pct * 100) }}%</div>
-        <div class="kpi-sub">Limite por perfil {{ profile_type }}</div>
-    </div>
-</div>
-
-<!-- ──── AI Parecer ──── -->
-<div class="narration-box animate-fade-in delay-2">
-    <div class="narration-title">📋 Parecer sobre sua Carteira</div>
-    <div class="narration-text">
-        {{ narration | safe }}
-    </div>
-</div>
-
-<!-- ──── Product Explanations ──── -->
-<div class="narration-box" style="margin-top: 1rem;">
-    <div class="narration-title">📚 O que cada produto faz</div>
-    <div class="narration-text">
-        {% for a in allocations %}
-        <div style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #111;">
-            <strong>{{ a.asset_name }}</strong> ({{ a.percentage_display }})
-            <p style="margin: 0.3rem 0 0; color: #888; font-size: 0.82rem; line-height: 1.5;">{{ a.description }}</p>
-        </div>
-        {% endfor %}
+<!-- ──── Empty State: No Funds ──── -->
+<div class="onboarding-state" style="margin-top: 2rem; border: 1px dashed #333; padding: 4rem 2rem; border-radius: 8px;">
+    <div class="onboarding-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">💼</div>
+    <h2 style="font-size: 1.5rem; margin-bottom: 0.5rem; color: #fff;">Sua carteira está vazia</h2>
+    <p style="color: #888; margin-bottom: 2rem; max-width: 500px; line-height: 1.5;">
+        Para iniciarmos o monitoramento automático das cotas e o cálculo de enquadramento da Resolução CMN 5.272, você precisa adicionar os fundos investidos pelo {{ institute.name }}.
+    </p>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+        <a href="/portfolio/add" class="btn btn-primary" style="padding: 1rem 2rem; border-radius: 4px;">+ Adicionar Fundos (CNPJ)</a>
+        <a href="/portfolio/import" class="btn btn-secondary" style="padding: 1rem 2rem; border-radius: 4px;">Importar Planilha (CADPREV)</a>
     </div>
 </div>
 
 <style>
 .kpi-highlight { border: 1px solid rgba(16, 185, 129, 0.3); }
-.badge-fgc { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px; vertical-align: middle; font-weight: 700; }
-.badge-exempt { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-ir { display: inline-block; background: rgba(244, 63, 94, 0.15); color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-risk { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-risk-muito-baixo { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.badge-risk-baixo { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
-.badge-risk-moderado { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.badge-risk-alto { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
-.badge-risk-muito-alto { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.onboarding-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
 </style>
-
-<script>
-// pending quiz sync
-document.addEventListener('DOMContentLoaded', async () => {
-    const pendingAnswers = sessionStorage.getItem('pending_quiz_answers');
-    if (pendingAnswers) {
-        try {
-            const response = await fetch('/api/quiz/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: pendingAnswers });
-            if (response.ok) { sessionStorage.removeItem('pending_quiz_answers'); window.location.reload(); }
-        } catch (e) { console.error("Failed to sync pending quiz:", e); }
-    }
-});
-</script>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-{% if has_profile and not needs_patrimony and allocations is defined %}
-<script>
-    // 1. allocation pie chart (by class)
-    const classBreakdown = {{ class_breakdown_json | safe }};
-    const classLabels = {
-        'renda_fixa': 'Renda Fixa',
-        'fii': 'FIIs',
-        'renda_variavel': 'Renda Variável',
-        'internacional': 'Internacional',
-        'previdencia': 'Previdência',
-        'alternativo': 'Alternativo',
-    };
-    const chartColors = ['#00d4ff', '#10b981', '#7c3aed', '#f59e0b', '#f43f5e', '#a855f7', '#6366f1'];
-
-    new Chart(document.getElementById('allocationChart'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(classBreakdown).map(k => classLabels[k] || k),
-            datasets: [{
-                data: Object.values(classBreakdown).map(v => (v * 100).toFixed(1)),
-                backgroundColor: chartColors.slice(0, Object.keys(classBreakdown).length),
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: window.innerWidth < 768 ? 'bottom' : 'right',
-                    labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 12 }
-                },
-                tooltip: {
-                    callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed}%` }
-                }
-            },
-            cutout: '70%',
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // 2. projection chart (5 years)
-    const projections = {{ projections_json | safe }};
-    const projLabels = projections.map(p => `Ano ${p.year}`);
-    const projValues = projections.map(p => p.projected_value);
-    const projIncome = projections.map(p => p.projected_monthly_income);
-
-    new Chart(document.getElementById('projectionChart'), {
-        type: 'bar',
-        data: {
-            labels: projLabels,
-            datasets: [{
-                label: 'Patrimônio Projetado (R$)',
-                data: projValues,
-                backgroundColor: 'rgba(0, 212, 255, 0.3)',
-                borderColor: '#00d4ff',
-                borderWidth: 1.5,
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            plugins: { legend: { position: 'right', labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 } } } },
-            cutout: '70%'
-        }
-    });
-
-    // 2. projection chart (5 years)
-    const projections = {{ projections_json | safe }};
-    const projLabels = projections.map(p => `Ano ${p.year}`);
-    const projValues = projections.map(p => p.projected_value);
-    const projIncome = projections.map(p => p.projected_monthly_income);
-
-    new Chart(document.getElementById('projectionChart'), {
-        type: 'bar',
-        data: {
-            labels: projLabels,
-            datasets: [{
-                label: 'Patrimônio Projetado (R$)',
-                data: projValues,
-                backgroundColor: 'rgba(0, 212, 255, 0.3)',
-                borderColor: '#00d4ff',
-                borderWidth: 1.5,
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    grid: { color: '#111' },
-                    ticks: {
-                        color: '#444', font: { size: 10 },
-                        callback: (v) => `R$ ${(v/1000).toFixed(0)}k`
-                    }
-                },
-                x: { grid: { display: false }, ticks: { color: '#444', font: { size: 10 } } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const val = ctx.parsed.y;
-                            const income = projIncome[ctx.dataIndex];
-                            return [
-                                `Patrimônio: R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-                                `Renda/mês: R$ ${income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
-                            ];
-                        }
-                    }
-                }
-            }
-        }
-    });
-</script>
-{% endif %}
 {% endblock %}

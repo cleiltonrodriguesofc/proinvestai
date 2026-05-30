@@ -21,6 +21,7 @@ class User(Base):
     profiles = relationship("InvestorProfile", back_populates="user")
     assets = relationship("UserAsset", back_populates="user")
     simulations = relationship("Simulation", back_populates="user")
+    rpps_institutes = relationship("RppsInstitute", back_populates="user")
 
 class InvestorProfile(Base):
     __tablename__ = "investor_profiles"
@@ -71,6 +72,7 @@ class RppsInstitute(Base):
     __tablename__ = "rpps_institutes"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     cnpj = Column(String, unique=True, index=True, nullable=False)
     name = Column(String, nullable=False)
     municipality = Column(String, nullable=False)
@@ -82,6 +84,7 @@ class RppsInstitute(Base):
     pro_gestao_level = Column(Numeric, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     
+    user = relationship("User", back_populates="rpps_institutes")
     positions = relationship("FundPosition", back_populates="institute")
     snapshots = relationship("PortfolioSnapshot", back_populates="institute")
 

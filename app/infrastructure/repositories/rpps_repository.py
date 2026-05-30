@@ -12,9 +12,10 @@ class SQLAlchemyRppsRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def create_institute(self, institute: RppsInstitute) -> RppsInstituteModel:
+    async def create_institute(self, institute: RppsInstitute, user_id: uuid.UUID) -> RppsInstituteModel:
         db_institute = RppsInstituteModel(
             id=institute.id,
+            user_id=user_id,
             cnpj=institute.cnpj,
             name=institute.name,
             municipality=institute.municipality,
@@ -29,6 +30,12 @@ class SQLAlchemyRppsRepository:
         await self.session.commit()
         await self.session.refresh(db_institute)
         return db_institute
+
+    async def get_institute_by_user(self, user_id: uuid.UUID) -> Optional[RppsInstituteModel]:
+        result = await self.session.execute(
+            select(RppsInstituteModel).where(RppsInstituteModel.user_id == user_id)
+        )
+        return result.scalars().first()
 
     async def get_institute_by_id(self, rpps_id: uuid.UUID) -> Optional[RppsInstituteModel]:
         result = await self.session.execute(
