@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     They MUST be set via .env or environment variables.
     """
 
-    APP_NAME: str = "Quanta Prev"
+    APP_NAME: str = "ProInvestAI"
     DEBUG: bool = True
     DATABASE_URL: str = "sqlite+aiosqlite:///./proinvestai.db"
     SECRET_KEY: str = "CHANGE-ME-BEFORE-DEPLOY"
