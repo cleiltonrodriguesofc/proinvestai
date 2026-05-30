@@ -1,91 +1,88 @@
 # ProInvestAI
 
-Plataforma de investimentos inteligente que utiliza o modelo de Markowitz e IA para ajudar investidores brasileiros a montarem carteiras profissionais com **produtos reais investíveis** (Tesouro Direto, CDB, LCI/LCA, FIIs, ETFs, etc.).
+Plataforma de Governança Previdenciária e Investimentos Inteligentes para **RPPS (Regimes Próprios de Previdência Social)**. O ProInvestAI utiliza ciência de dados, modelos quantitativos (Markowitz, ALM) e Inteligência Artificial para monitorar, otimizar e garantir a conformidade (compliance) de carteiras bilionárias de institutos de previdência municipais e estaduais.
 
 ## O Que a Plataforma Faz
 
-1. **Análise de Perfil (Suitability)**: Quiz de 28 perguntas que classifica o investidor (Conservador, Moderado, Arrojado).
-2. **Montagem de Carteira Real**: Otimização Markowitz com 15 produtos reais do mercado brasileiro, constraints por perfil (reserva de emergência, limite de renda variável, diversificação).
-3. **Projeções Forward**: Projeção ano-a-ano usando dados do BCB Focus (Selic/IPCA), com IR regressivo e custódia B3.
-4. **Simulação Monte Carlo**: 5.000 cenários estocásticos para projetar patrimônio futuro.
-5. **Gap Analysis**: Comparação entre carteira atual e recomendada.
-6. **Parecer com IA**: Narração personalizada via GPT-4o sobre a composição e riscos.
+O ProInvestAI substitui o trabalho braçal e planilhas por uma automação de grau institucional:
 
-## Motor de Carteira
+1. **Monitoramento de Enquadramento CMN 5.272**: Acompanhamento diário da carteira do RPPS contra as resoluções do Conselho Monetário Nacional (limites por segmento, limites por fundo).
+2. **Atualização Diária via CVM**: Sincronização automática das posições do instituto usando os dados públicos e oficiais de cotas diárias da CVM e classificação ANBIMA.
+3. **Relatórios Regulatórios Automáticos**: Geração inteligente dos relatórios obrigatórios **DAIR** (Demonstrativo de Aplicações e Investimentos dos Recursos) e **DPIN** (Demonstrativo da Política de Investimentos).
+4. **Estudo ALM (Asset Liability Management)**: Projeções estocásticas (Monte Carlo) cruzando o passivo atuarial com o ativo financeiro para prever solvência de longo prazo.
+5. **Comitê de Investimentos com IA**: Geração automática de atas, pareceres e análise de risco (VaR, Sharpe) impulsionada por GPT-4 para o Comitê de Investimentos, facilitando as certificações do Pró-Gestão.
 
-O motor constrói carteiras com **produtos reais**:
+## A Solução (Problema x Produto)
 
-| Produto | Retorno | Imposto | Liquidez | Proteção |
-|---|---|---|---|---|
-| Tesouro Selic 2031 | Selic + 0,08% | IR Regressivo | D+1 | Governo Federal |
-| CDB Liquidez Diária | 100% CDI | IR Regressivo | D+0 | FGC R$250k |
-| LCI/LCA 93% CDI | 93% CDI | **Isento** | D+90 | FGC R$250k |
-| Tesouro IPCA+ 2032 | IPCA + 7,61% | IR Regressivo | D+1 | Governo Federal |
-| IPCA+ Juros Semestrais 2037 | IPCA + 7,38% | IR Regressivo | D+1 (cupons jan/jul) | Governo Federal |
-| Debênture Incentivada | IPCA + 7,0% | **Isento** | D+30 | Risco de crédito |
-| FII (IFIX) | IPCA + 5,5% | **Isento** (dividendos) | D+3 | Mercado |
-| ETF Ibovespa (BOVA11) | IPCA + 8,5% | IR 15% | D+3 | Mercado |
-| ETF S&P 500 (IVVB11) | ~10% USD | IR 15% | D+3 | Mercado |
-| Mais 6 produtos... | | | | |
-
-### Constraints por Perfil
-
-| Perfil | Max Renda Variável | Reserva Emergência | Min Líquido |
-|---|---|---|---|
-| Conservador | 5% | 12 meses | 35% |
-| Moderado | 20% | 6 meses | 20% |
-| Arrojado | 40% | 3 meses | 10% |
+| Gestão Tradicional (Planilhas) | Com ProInvestAI |
+|---|---|
+| Preenchimento manual de DAIR/DPIN | Relatórios gerados automaticamente com 1 clique |
+| Risco alto de desenquadramento da CMN | Alertas proativos e monitoramento em tempo real |
+| Estudos ALM caros e demorados (Consultorias) | ALM integrado no painel com simulações instantâneas |
+| Cotas e rentabilidade calculadas com atraso | Sincronização diária de cotas direto da fonte (CVM) |
+| Pareceres do comitê rasos e manuais | IA que redige pareceres técnicos com base matemática |
 
 ## Como Executar (Docker)
 
+A aplicação é containerizada e utiliza variáveis de ambiente para segurança. Nenhuma credencial está hardcoded no repositório.
+
 1. Clone o repositório
-2. Crie o arquivo `.env` baseado no `.env.example`
+2. Crie o arquivo `.env` baseado no `.env.example`:
+   ```bash
+   cp .env.example .env
+   ```
+   *Preencha o `SECRET_KEY` e as chaves de API (OpenAI).*
 3. Execute:
    ```bash
    docker-compose up --build
    ```
 4. Acesse: `http://localhost:8000`
 
-## Arquitetura
+## Arquitetura (Clean Architecture)
 
-O projeto segue **Clean Architecture**:
+O projeto segue rigorosamente o padrão **Clean Architecture**, isolando as regras de negócio previdenciário do framework web e banco de dados:
 
 ```
 app/
-├── domain/                    # entidades e regras de negócio
+├── domain/                    # Entidades puras e regras de negócio
 │   ├── entities/
-│   │   ├── asset.py           # 15 tipos de ativos (AssetType enum)
-│   │   ├── portfolio.py       # portfólio com lógica (retorno, risco, reserva)
-│   │   └── investor_profile.py
-│   └── value_objects/
-│       └── allocation.py      # alocação com IR regressivo e custódia B3
-├── application/               # casos de uso e serviços
+│   │   ├── rpps_entities.py   # RppsInstitute, FundPosition, FundQuote
+│   │   ├── portfolio.py       # Portfólio com lógica (retorno, VaR, limites CMN)
+│   │   └── alm_entities.py    # Entidades de passivo e teste de solvência
+├── application/               # Casos de uso e serviços
 │   └── services/
-│       ├── portfolio_builder.py   # motor principal (Markowitz + catálogo real)
-│       ├── markowitz_optimizer.py # otimização mean-variance
-│       ├── monte_carlo_engine.py  # simulação estocástica
-│       ├── risk_metrics_engine.py # VaR, Sharpe, Drawdown
-│       └── quiz_service.py        # suitability quiz (28 perguntas)
-├── infrastructure/            # implementações técnicas
-│   └── external/
-│       ├── bcb_api.py             # BCB SGS + Focus API
-│       ├── macro_scenario_service.py # cenário macro (Selic/IPCA/CDI)
-│       └── market_data_service.py    # dados históricos
-└── presentation/              # camada de entrega
+│       ├── cvm_sync_service.py    # Orquestrador de importação da CVM
+│       ├── compliance_engine.py   # Validação de regras da CMN 5.272
+│       ├── monte_carlo_engine.py  # Simulação estocástica (ALM)
+│       └── report_service.py      # Geração de DAIR e Atas
+├── infrastructure/            # Implementações técnicas e integrações
+│   ├── database/
+│   │   ├── models.py          # SQLAlchemy Models (RppsInstitute, etc)
+│   │   └── connection.py      # AsyncSession
+│   ├── external/
+│   │   ├── cvm_api.py         # Consumo dos dados abertos da CVM
+│   │   ├── bcb_api.py         # BCB SGS + Focus API
+│   │   └── openai_service.py  # GPT-4o para redação de pareceres
+│   └── repositories/          # Repositórios de persistência
+└── presentation/              # Camada de entrega (FastAPI)
     └── web/
-        ├── routers/web_router.py  # FastAPI routes
-        └── templates/             # Jinja2 templates
+        ├── routers/           # FastAPI routes
+        └── templates/         # Jinja2 templates (Dashboards e UI)
 ```
 
 ## Tecnologias
 
 - **Backend**: Python 3.12, FastAPI
-- **Database**: SQLite (dev) / PostgreSQL (prod), SQLAlchemy 2.0
-- **Math**: NumPy, SciPy (Markowitz Optimization)
-- **AI**: OpenAI GPT-4o-mini
-- **Data**: BCB SGS API, BCB Focus API (Olinda)
-- **Frontend**: Jinja2, Chart.js
-- **Infra**: Docker, Render
+- **Database**: PostgreSQL (Prod) / SQLite (Dev) com SQLAlchemy 2.0 (Async)
+- **Math/Quant**: NumPy, SciPy (VaR, Markowitz Optimization, Monte Carlo)
+- **AI**: OpenAI GPT-4o (Pareceres e Atas)
+- **Data Sources**: CVM Dados Abertos (Cotas), ANBIMA (Benchmarks), BCB SGS
+- **Frontend**: Jinja2, Vanilla CSS, Chart.js
+- **Infraestrutura**: Docker, Uvicorn, Deploy no Render
+
+## Histórico de Versão (Pivot)
+
+O projeto iniciou como uma ferramenta B2C focada no investidor pessoa física (Varejo). Para preservar esse trabalho, o código do varejo foi congelado na tag `v1.0-retail` e na branch `retail/v1`. Atualmente, a branch principal (`main`/`development`) é exclusivamente dedicada ao mercado B2B Institucional (RPPS).
 
 ## Licença
 
