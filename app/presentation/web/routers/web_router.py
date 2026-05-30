@@ -233,7 +233,10 @@ async def dashboard(
             "has_profile": False,
         })
 
-    # if institute exists, show the RPPS dashboard (placeholder for now)
+    positions = await rpps_repo.list_positions(institute.id)
+    mapped_assets_value = sum(float(p.current_balance or 0) for p in positions)
+    
+    # if institute exists, show the RPPS dashboard
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "user_name": user.name,
@@ -242,6 +245,8 @@ async def dashboard(
         "has_profile": True,
         "needs_patrimony": False,
         "institute": institute,
+        "positions": positions,
+        "mapped_assets_value": _format_brl(mapped_assets_value),
         "total_value": _format_brl(float(institute.total_assets))
     })
 

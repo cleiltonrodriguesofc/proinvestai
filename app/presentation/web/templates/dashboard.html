@@ -27,16 +27,51 @@
     </div>
     <div class="kpi-card">
         <div class="kpi-label">Ativos Mapeados</div>
-        <div class="kpi-value" style="color: var(--cyan);">0 fundos</div>
-        <div class="kpi-sub">R$ 0,00 sincronizados</div>
+        <div class="kpi-value" style="color: var(--cyan);">{{ positions|length }} fundos</div>
+        <div class="kpi-sub">{{ mapped_assets_value }} sincronizados</div>
     </div>
     <div class="kpi-card">
         <div class="kpi-label">Última Sincronização CVM</div>
-        <div class="kpi-value">Pendente</div>
-        <div class="kpi-sub">Aguardando carteira</div>
+        <div class="kpi-value">Hoje</div>
+        <div class="kpi-sub">Cotas de D-2</div>
     </div>
 </div>
 
+{% if positions %}
+<!-- ──── Allocation Table ──── -->
+<div class="risk-table-container" style="margin-top: 2rem;">
+    <div class="table-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="table-title">Carteira de Investimentos</span>
+        <div>
+            <a href="/portfolio/add" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">+ Adicionar</a>
+        </div>
+    </div>
+    <div style="overflow-x: auto;">
+        <table class="risk-table">
+            <thead>
+                <tr>
+                    <th>Fundo de Investimento</th>
+                    <th style="text-align: center;">CNPJ</th>
+                    <th style="text-align: center;">Segmento (CMN)</th>
+                    <th style="text-align: right;">Saldo Atual</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in positions %}
+                <tr>
+                    <td class="col-label" style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ p.name_fund }}">{{ p.name_fund }}</td>
+                    <td style="text-align: center; font-family: monospace;">{{ p.cnpj_fund }}</td>
+                    <td style="text-align: center;">
+                        <span class="badge-risk badge-risk-baixo">{{ p.segment_cmn|replace('_', ' ')|title }}</span>
+                    </td>
+                    <td style="text-align: right; font-family: monospace; color: var(--green);">R$ {{ "{:,.2f}".format(p.current_balance).replace(",", "X").replace(".", ",").replace("X", ".") }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
 <!-- ──── Empty State: No Funds ──── -->
 <div class="onboarding-state" style="margin-top: 2rem; border: 1px dashed #333; padding: 4rem 2rem; border-radius: 8px;">
     <div class="onboarding-icon" style="font-size: 2.5rem; margin-bottom: 1rem;">💼</div>
@@ -49,9 +84,12 @@
         <a href="/portfolio/import" class="btn btn-secondary" style="padding: 1rem 2rem; border-radius: 4px;">Importar Planilha (CADPREV)</a>
     </div>
 </div>
+{% endif %}
 
 <style>
 .kpi-highlight { border: 1px solid rgba(16, 185, 129, 0.3); }
 .onboarding-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.badge-risk { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
+.badge-risk-baixo { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
 </style>
 {% endblock %}
