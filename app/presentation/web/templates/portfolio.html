@@ -1,0 +1,124 @@
+{% extends "base_app.html" %}
+{% block title %}Ativos e Contas — {{ institute.name }} | ProInvestAI{% endblock %}
+{% block content %}
+
+<div class="d-header">
+  <div>
+    <p class="d-welcome">{{ institute.name }}</p>
+    <h1 class="d-title">Ativos e Contas</h1>
+  </div>
+  <div class="d-header-right">
+    <a href="/portfolio/add" class="d-btn-primary">+ Adicionar Fundo</a>
+  </div>
+</div>
+
+{% if positions %}
+<div class="d-card">
+  <div class="d-card-head">
+    <div>
+      <span class="d-card-title">Carteira de Fundos</span>
+      <span class="d-card-sub">{{ positions|length }} ativos &nbsp;·&nbsp; {{ total_value }}</span>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <span class="d-tab active">Consolidada</span>
+      <span class="d-tab">Previdenciária</span>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="d-table">
+      <thead>
+        <tr>
+          <th style="min-width:240px;">Ativo / Benchmark</th>
+          <th class="r">Saldo (R$)</th>
+          <th class="c">Particip.</th>
+          <th class="c">Dispon.</th>
+          <th class="c">Art. CMN</th>
+          <th class="r">Rent. Mês</th>
+          <th class="r">Tx. Adm.</th>
+          <th class="c">Vencimento</th>
+          <th class="c">Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in positions %}
+        <tr class="{% if p.is_legacy %}row-legacy{% endif %}">
+          <td class="td-fund">
+            <div class="fund-name">{{ p.name_fund }}</div>
+            <div class="fund-sub">
+              {% if p.cnpj_fund %}<span>{{ p.cnpj_fund }}</span>{% endif %}
+              {% if p.benchmark %}<span class="bench-pill">{{ p.benchmark }}</span>{% endif %}
+            </div>
+          </td>
+          <td class="r td-saldo">{{ "{:,.2f}".format(p.current_balance | float).replace(",","X").replace(".",",").replace("X",".") }}</td>
+          <td class="c"><span class="pct-label">{{ "%.2f"|format(p.weight_pct | float) }}%</span></td>
+          <td class="c"><span class="liq-badge liq-d{{ p.liquidity_days | int }}">D+{{ p.liquidity_days | int }}</span></td>
+          <td class="c"><span class="art-badge">Art. {{ p.regulatory_article }}</span></td>
+          <td class="r {% if p.monthly_return_pct is not none and p.monthly_return_pct | float >= 0 %}td-up{% else %}td-dn{% endif %}">
+            {% if p.monthly_return_pct is not none %}{{ "%.2f"|format(p.monthly_return_pct | float) }}%{% else %}—{% endif %}
+          </td>
+          <td class="r td-fee">{% if p.admin_fee_pct is not none %}{{ "%.2f"|format(p.admin_fee_pct | float) }}%{% else %}—{% endif %}</td>
+          <td class="c" style="font-size:0.75rem;color:#666;">{{ p.maturity_date or "—" }}</td>
+          <td class="c">
+            {% if p.is_legacy %}<span class="type-badge type-legacy">Legado</span>
+            {% else %}<span class="type-badge type-new">CMN 5.272</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="d-tfoot">
+          <td><strong>Total</strong></td>
+          <td class="r"><strong>{{ "{:,.2f}".format(positions | sum(attribute='current_balance') | float).replace(",","X").replace(".",",").replace("X",".") }}</strong></td>
+          <td class="c">100,00%</td>
+          <td colspan="6"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="d-empty"><p>Nenhum ativo cadastrado ainda.</p><a href="/portfolio/add" class="d-btn-primary" style="margin-top:1rem;display:inline-block;">+ Adicionar Fundo</a></div>
+{% endif %}
+
+<style>
+.d-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem;}
+.d-welcome{font-size:0.8rem;color:#777;margin:0 0 0.35rem;}
+.d-title{font-size:1.25rem;font-weight:700;color:#e8e8e8;margin:0;}
+.d-header-right{display:flex;align-items:center;gap:1rem;}
+.d-btn-primary{background:#00d4ff;color:#000;font-size:0.8rem;font-weight:700;padding:0.55rem 1.25rem;border-radius:5px;text-decoration:none;}
+.d-card{background:#07070a;border:1px solid #161618;border-radius:8px;overflow:hidden;margin-bottom:1.5rem;}
+.d-card-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #111;flex-wrap:wrap;gap:0.5rem;}
+.d-card-title{font-size:0.95rem;font-weight:700;color:#d0d0d0;}
+.d-card-sub{font-size:0.75rem;color:#555;margin-left:0.75rem;}
+.d-tab{font-size:0.75rem;padding:0.3rem 0.85rem;border-radius:4px;cursor:pointer;color:#555;}
+.d-tab.active{background:#131317;color:#ccc;border:1px solid #222;}
+.d-table{width:100%;border-collapse:collapse;font-size:0.875rem;}
+.d-table thead th{padding:0.75rem 1rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#555;border-bottom:1px solid #131317;white-space:nowrap;}
+.d-table tbody tr{border-bottom:1px solid #0e0e11;transition:background 0.1s;}
+.d-table tbody tr:hover{background:#0c0c0f;}
+.row-legacy{opacity:0.6;}
+.r{text-align:right;padding:0.875rem 1rem;}
+.c{text-align:center;padding:0.875rem 1rem;}
+.td-fund{padding:0.875rem 1rem;min-width:240px;}
+.fund-name{font-weight:600;color:#d0d0d0;font-size:0.85rem;margin-bottom:0.3rem;}
+.fund-sub{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+.fund-sub span{font-size:0.68rem;color:#4a4a4a;font-family:monospace;}
+.bench-pill{font-size:0.65rem;color:#555;background:#101013;padding:0.1rem 0.45rem;border-radius:3px;font-family:sans-serif!important;}
+.td-saldo{font-weight:700;color:#c8c8c8;font-family:monospace;}
+.td-up{color:#10b981;font-weight:600;}
+.td-dn{color:#f43f5e;font-weight:600;}
+.td-fee{color:#666;}
+.pct-label{font-size:0.82rem;color:#888;font-weight:600;}
+.liq-badge{font-size:0.7rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:4px;display:inline-block;}
+.liq-d0{background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+.liq-d1{background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.2);}
+.liq-d3{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+.art-badge{font-size:0.68rem;color:#666;background:#0d0d10;padding:0.2rem 0.5rem;border-radius:4px;font-family:monospace;border:1px solid #1a1a1f;}
+.type-badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:4px;}
+.type-legacy{background:rgba(245,158,11,0.1);color:#f59e0b;}
+.type-new{background:rgba(0,212,255,0.08);color:#00aacc;}
+.d-tfoot td{padding:0.875rem 1rem;border-top:1px solid #1a1a22;color:#aaa;font-size:0.875rem;}
+.d-tfoot .r strong{color:#00d4ff;}
+.d-empty{text-align:center;padding:5rem 2rem;border:1px dashed #1a1a22;border-radius:8px;}
+</style>
+{% endblock %}

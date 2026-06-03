@@ -41,23 +41,29 @@
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                 <span>Dashboard</span>
             </a>
-            <a href="/quiz" class="sidebar-link {% if active_page == 'quiz' %}active{% endif %}" id="nav-quiz">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                <span>Análise de Perfil</span>
-            </a>
-            <a href="/my-portfolio" class="sidebar-link {% if active_page == 'my-portfolio' %}active{% endif %}" id="nav-my-portfolio">
+            <a href="/portfolio" class="sidebar-link {% if active_page == 'portfolio' %}active{% endif %}" id="nav-portfolio">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <span>Carteira Atual</span>
+                <span>Ativos e Contas</span>
             </a>
 
             <span class="sidebar-section-label">Análises</span>
-            <a href="/simulation" class="sidebar-link {% if active_page == 'simulation' %}active{% endif %}" id="nav-simulation">
+            <a href="/compliance" class="sidebar-link {% if active_page == 'compliance' %}active{% endif %}" id="nav-compliance">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>Enquadramento CMN</span>
+            </a>
+            <a href="/alm" class="sidebar-link {% if active_page == 'alm' %}active{% endif %}" id="nav-alm">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                <span>Simulação</span>
+                <span>Estudo ALM</span>
             </a>
             <a href="/gap-analysis" class="sidebar-link {% if active_page == 'gap' %}active{% endif %}" id="nav-gap">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 <span>Gap Analysis</span>
+            </a>
+
+            <span class="sidebar-section-label">Relatórios</span>
+            <a href="/reports" class="sidebar-link {% if active_page == 'reports' %}active{% endif %}" id="nav-reports">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                <span>DAIR / DPIN</span>
             </a>
 
             <span class="sidebar-section-label">Conta</span>

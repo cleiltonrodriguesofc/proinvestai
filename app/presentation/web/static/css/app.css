@@ -9,6 +9,26 @@
     min-height: 100vh;
 }
 
+/* ──── Custom Scrollbars ──── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #1a1a22;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #333;
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #1a1a22 transparent;
+}
+
 /* ──── Mobile Header ──── */
 .app-mobile-header {
     position: fixed;
@@ -101,6 +121,13 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
     overscroll-behavior: contain;
+    /* Hide scrollbar */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.sidebar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
 }
 
 .sidebar.open {
