@@ -25,15 +25,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /install /usr/local
 COPY . .
+RUN chmod +x entrypoint.sh
 
 # Run as non-root user
 RUN adduser --disabled-password --gecos '' appuser
+RUN chown -R appuser:appuser /app
 USER appuser
 
 EXPOSE 8000
-
-# Copy and set entrypoint (runs migrations then starts server)
-COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
 
 CMD ["/bin/bash", "/app/entrypoint.sh"]
