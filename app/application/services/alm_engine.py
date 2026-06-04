@@ -117,7 +117,9 @@ def calculate_npv(
     for cf in cashflows:
         # investment only yields if patrimony > 0
         investment_return = max(0.0, p) * rate
-        net_flow = cf.total_revenues - cf.total_expenditures
+        # use pre-computed financial_result to avoid sign convention mismatch
+        # (embedded JSON stores expenditures as negative; CSV stores them as positive)
+        net_flow = cf.financial_result
         p = p + investment_return + net_flow
 
     return p
@@ -173,8 +175,9 @@ def calculate_npv_deficit_flows(
     """
     total_pv = 0.0
     for cf in cashflows:
-        net_flow = cf.total_revenues - cf.total_expenditures
-        total_pv += net_flow * cf.discount_factor
+        # use pre-computed financial_result to avoid sign convention mismatch
+        # (embedded JSON stores expenditures as negative; CSV stores them as positive)
+        total_pv += cf.financial_result * cf.discount_factor
 
     return total_pv
 
@@ -458,15 +461,20 @@ class ALMEngine:
             _logger.info("Loading cashflows embedded in config JSON.")
             self.cashflows = []
             for cf in self.config["cashflows"]:
+                rev = cf.get("total_revenues", 0.0)
+                exp = cf.get("total_expenditures", 0.0)
+                # net_flow in embedded JSON is authoritative (pre-computed with correct sign)
+                # financial_result fallback: use net_flow field, then compute from rev/exp
+                net = cf.get("net_flow", cf.get("financial_result", rev + exp))
                 self.cashflows.append(CashFlowYear(
                     instant=cf.get("instant", 0),
                     year=cf.get("year", 0),
                     discount_rate=cf.get("discount_rate", 0.0),
                     discount_factor=cf.get("discount_factor", 0.0),
                     contribution_base=cf.get("contribution_base", 0.0),
-                    total_revenues=cf.get("total_revenues", 0.0),
-                    total_expenditures=cf.get("total_expenditures", 0.0),
-                    financial_result=cf.get("financial_result", 0.0),
+                    total_revenues=rev,
+                    total_expenditures=exp,
+                    financial_result=net,   # authoritative net flow
                     accumulated_balance_pv=cf.get("accumulated_balance_pv", 0.0),
                     expected_return_pct=cf.get("expected_return_pct", 0.0),
                     asset_return=cf.get("asset_return", 0.0),
