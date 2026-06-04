@@ -7,7 +7,10 @@ settings = get_settings()
 engine = create_async_engine(
     settings.DATABASE_URL,
     echo=settings.DEBUG,
-    future=True
+    future=True,
+    # Required for Supabase/PgBouncer pooler: disables asyncpg's prepared
+    # statement cache, which is incompatible with connection poolers.
+    connect_args={"statement_cache_size": 0},
 )
 
 AsyncSessionLocal = async_sessionmaker(

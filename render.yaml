@@ -2,16 +2,16 @@ services:
   - type: web
     name: proinvestai-api
     env: docker
-    region: oregon # Pode alterar a região se desejar
-    plan: free # Pode ser alterado para starter, standard, etc.
+    region: oregon
+    plan: free
     branch: main
     envVars:
       - key: PORT
         value: "8000"
       - key: DATABASE_URL
-        fromDatabase:
-          name: proinvestai-db
-          property: connectionString
+        # Set this manually in Render Dashboard:
+        # postgresql+asyncpg://postgres.yfgwxtpcivpccnzpzmcn:<PASSWORD>@aws-1-us-west-2.pooler.supabase.com:5433/postgres
+        sync: false
       - key: APP_NAME
         value: "ProInvestAI"
       - key: DEBUG
@@ -27,9 +27,6 @@ services:
       - key: BCB_API_URL
         value: "https://api.bcb.gov.br/dados/serie/bcdata.sgs"
 
-databases:
-  - name: proinvestai-db
-    databaseName: proinvestai
-    user: postgres
-    region: oregon
-    plan: free
+# NOTE: Database is hosted on Supabase (external).
+# No Render-managed database needed.
+# Set DATABASE_URL manually in the Render Dashboard Environment tab.
