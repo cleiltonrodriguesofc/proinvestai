@@ -445,8 +445,35 @@ class ALMEngine:
         the CSV file is not present (allows demo mode without the real file).
         """
         import logging
+        from app.domain.entities.alm_entities import CashFlowYear
         _logger = logging.getLogger(__name__)
 
+        # 1. Try to load pre-parsed cashflows embedded directly in the JSON config
+        if "cashflows" in self.config and self.config["cashflows"]:
+            _logger.info("Loading cashflows embedded in config JSON.")
+            self.cashflows = []
+            for cf in self.config["cashflows"]:
+                self.cashflows.append(CashFlowYear(
+                    instant=cf.get("instant", 0),
+                    year=cf.get("year", 0),
+                    discount_rate=cf.get("discount_rate", 0.0),
+                    discount_factor=cf.get("discount_factor", 0.0),
+                    contribution_base=cf.get("contribution_base", 0.0),
+                    total_revenues=cf.get("total_revenues", 0.0),
+                    total_expenditures=cf.get("total_expenditures", 0.0),
+                    financial_result=cf.get("financial_result", 0.0),
+                    accumulated_balance_pv=cf.get("accumulated_balance_pv", 0.0),
+                    expected_return_pct=cf.get("expected_return_pct", 0.0),
+                    asset_return=cf.get("asset_return", 0.0),
+                    guaranteed_resources=cf.get("guaranteed_resources", 0.0),
+                ))
+            self.metadata = {
+                "initial_patrimony": self.config.get("patrimony", 0.0),
+                "actuarial_rate": self.config.get("actuarial_rate", 0.0),
+            }
+            return
+
+        # 2. Fallback to external CSV file
         if csv_path is None:
             csv_path = self.config.get("cashflow_csv_path", "")
             
