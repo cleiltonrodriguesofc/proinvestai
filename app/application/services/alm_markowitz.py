@@ -100,16 +100,18 @@ def build_covariance_matrix(
 def get_regulatory_bounds(
     indices: list[AssetIndex],
     pro_gestao_level: int | None = None,
+    cmn_resolution: str = "5272",
 ) -> list[tuple[float, float]]:
     """
-    compute min/max bounds per index based on cmn 5.272/2025.
+    compute min/max bounds per index based on cmn resolution.
 
     pro_gestao_level: None (sem), 1, 2, 3, or 4
+    cmn_resolution: '5272' (default) or '4963'
     """
     bounds = []
 
-    # mapping of regulatory articles to minimum certification level
-    article_min_level = {
+    # mapping of regulatory articles to minimum certification level (for 5.272)
+    article_min_level_5272 = {
         RegulatoryArticle.ART_7_I: None,   # all rpps
         RegulatoryArticle.ART_7_II: None,
         RegulatoryArticle.ART_7_III: 1,
@@ -135,13 +137,13 @@ def get_regulatory_bounds(
     }
 
     for idx in indices:
-        min_level = article_min_level.get(idx.regulatory_article)
-
-        if min_level is not None:
-            if pro_gestao_level is None or pro_gestao_level < min_level:
-                # rpps does not meet certification level — 0% max
-                bounds.append((0.0, 0.0))
-                continue
+        if cmn_resolution == "5272":
+            min_level = article_min_level_5272.get(idx.regulatory_article)
+            if min_level is not None:
+                if pro_gestao_level is None or pro_gestao_level < min_level:
+                    # rpps does not meet certification level — 0% max
+                    bounds.append((0.0, 0.0))
+                    continue
 
         # apply per-index max from the resolution
         max_weight = idx.max_weight if idx.max_weight < 1.0 else 1.0
@@ -166,6 +168,7 @@ def get_regulatory_bounds(
 def get_group_constraints(
     indices: list[AssetIndex],
     pro_gestao_level: int | None = None,
+    cmn_resolution: str = "5272",
 ) -> list[dict]:
     """build scipy constraint dicts for group limits."""
     constraints = []
@@ -223,14 +226,18 @@ def get_group_constraints(
     # global rv + estruturados + fii (art. 14)
     combined_mask = rv_mask + est_mask + fii_mask
     if combined_mask.sum() > 0:
-        if pro_gestao_level is None or pro_gestao_level < 2:
-            max_combined = 0.0
-        elif pro_gestao_level == 2:
-            max_combined = 0.40
-        elif pro_gestao_level == 3:
-            max_combined = 0.50
+        if cmn_resolution == "5272":
+            if pro_gestao_level is None or pro_gestao_level < 2:
+                max_combined = 0.0
+            elif pro_gestao_level == 2:
+                max_combined = 0.40
+            elif pro_gestao_level == 3:
+                max_combined = 0.50
+            else:
+                max_combined = 0.60
         else:
-            max_combined = 0.60
+            # 4963 fallback (generous limit)
+            max_combined = 1.0
 
         constraints.append({
             "type": "ineq",
@@ -292,6 +299,7 @@ def build_efficient_frontier(
     pro_gestao_level: int | None = None,
     locked_positions: dict[str, float] | None = None,
     risk_free_rate: float = 0.0,
+    cmn_resolution: str = "5272",
 ) -> list[OptimizedPortfolio]:
     """
     build the efficient frontier with n portfolios.
@@ -344,7 +352,7 @@ def build_efficient_frontier(
     cov = build_covariance_matrix(opt_indices, mapped_corr)
 
     # bounds (scaled to available weight)
-    raw_bounds = get_regulatory_bounds(opt_indices, pro_gestao_level)
+    raw_bounds = get_regulatory_bounds(opt_indices, pro_gestao_level, cmn_resolution)
     bounds = [(lo, min(hi, available_weight)) for lo, hi in raw_bounds]
 
     # constraints (sum to available_weight instead of 1.0)
@@ -354,7 +362,7 @@ def build_efficient_frontier(
     }]
 
     # group constraints
-    group_cons = get_group_constraints(opt_indices, pro_gestao_level)
+    group_cons = get_group_constraints(opt_indices, pro_gestao_level, cmn_resolution)
     # skip the first one (sum=1) since we already added our own
     constraints.extend(group_cons[1:])
 

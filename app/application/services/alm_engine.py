@@ -161,17 +161,20 @@ def calculate_npv_deficit_flows(
     actuarial_rate: float,
 ) -> float:
     """
-    calculate present value of all future deficit flows.
+    calculate present value of all actuarial flows ("vpl do fluxo sem investimentos").
 
-    replicates lema's "vpl do fluxo sem investimentos":
-    only flows where expenditures > revenues (net_flow < 0) are discounted.
-    surplus years are excluded — matching the lema 2025 report methodology.
+    replicates lema's methodology: ALL flows (surplus + deficit) are discounted
+    at the actuarial rate using the pre-computed discount_factor from the csv.
+    this matches the lema 2025 report value of -156.886.278,63.
+
+    note: surplus years (positive net_flow) reduce the magnitude of the vpl,
+    which is the correct actuarial interpretation — the fund's own contributions
+    partially offset future obligations.
     """
     total_pv = 0.0
     for cf in cashflows:
         net_flow = cf.total_revenues - cf.total_expenditures
-        if net_flow < 0:  # only deficit years, matching LEMA convention
-            total_pv += net_flow * cf.discount_factor
+        total_pv += net_flow * cf.discount_factor
 
     return total_pv
 
@@ -623,6 +626,7 @@ class ALMEngine:
                 )
 
         pro_gestao = self.config.get("pro_gestao_level")
+        cmn_res = self.config.get("cmn_resolution", "5272")
 
         efficient_frontier = build_efficient_frontier(
             self.indices,
@@ -630,6 +634,7 @@ class ALMEngine:
             pro_gestao_level=pro_gestao,
             locked_positions=locked_positions,
             risk_free_rate=0.0,
+            cmn_resolution=cmn_res,
         )
 
         recommended = recommend_portfolio(efficient_frontier)

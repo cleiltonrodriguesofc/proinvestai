@@ -5,7 +5,7 @@
   "actuarial_rate": 5.69,
   "inflation_implicit_252": 4.37,
   "inflation_implicit_2268": 5.74,
-  "pro_gestao_level": 2,
+  "pro_gestao_level": null,
   "patrimony": 175092865.72,
   "cash_balance": 0.0,
   "actuarial_data": {
@@ -47,7 +47,8 @@
       "segment": "renda_fixa",
       "liquidity_days": 0,
       "maturity_date": "2026-12-31",
-      "weight": 11.44
+      "weight": 11.44,
+      "is_legacy": true
     },
     {
       "fund_name": "BB IRF-M 1 TP FIC RF PREVID",
@@ -67,7 +68,8 @@
       "segment": "renda_fixa",
       "liquidity_days": 0,
       "maturity_date": "2028-12-31",
-      "weight": 10.33
+      "weight": 10.33,
+      "is_legacy": true
     },
     {
       "fund_name": "BRADESCO IRF-M 1 TP FI RF",
@@ -348,8 +350,8 @@
       "projected_real_return": 3.66,
       "volatility": 18.7,
       "projection_model": "historical_60m",
-      "min_weight": 0.0562,
-      "max_weight": 0.3
+      "max_weight": 0.3,
+      "min_weight": 0.0562
     },
     {
       "name": "S&P 500",
@@ -372,5 +374,512 @@
       "max_weight": 1.0
     }
   ],
-  "_comment": "projeções de retorno e volatilidade replicadas da lema alm out/2025. devem ser atualizadas com dados mais recentes para o alm 2026."
+  "_comment": "projeções de retorno e volatilidade replicadas da lema alm out/2025. devem ser atualizadas com dados mais recentes para o alm 2026.",
+  "cashflows": [
+    {
+      "year": 2025,
+      "total_revenues": 11460240.33,
+      "total_expenditures": -5758070.67,
+      "net_flow": 5702169.66,
+      "discount_factor": 0.90847892
+    },
+    {
+      "year": 2026,
+      "total_revenues": 34454278.0,
+      "total_expenditures": -18646515.0,
+      "net_flow": 15807763.0,
+      "discount_factor": 0.82533396
+    },
+    {
+      "year": 2027,
+      "total_revenues": 32125785.0,
+      "total_expenditures": -26836605.0,
+      "net_flow": 5289180.0,
+      "discount_factor": 0.74979851
+    },
+    {
+      "year": 2028,
+      "total_revenues": 31551638.0,
+      "total_expenditures": -29714092.0,
+      "net_flow": 1837546.0,
+      "discount_factor": 0.68117614
+    },
+    {
+      "year": 2029,
+      "total_revenues": 30632705.0,
+      "total_expenditures": -33509981.0,
+      "net_flow": -2877276.0,
+      "discount_factor": 0.61883417
+    },
+    {
+      "year": 2030,
+      "total_revenues": 28469753.0,
+      "total_expenditures": -36399978.0,
+      "net_flow": -7930225.0,
+      "discount_factor": 0.5621978
+    },
+    {
+      "year": 2031,
+      "total_revenues": 28774437.0,
+      "total_expenditures": -36529229.0,
+      "net_flow": -7754792.0,
+      "discount_factor": 0.51074485
+    },
+    {
+      "year": 2032,
+      "total_revenues": 28371140.0,
+      "total_expenditures": -38939936.0,
+      "net_flow": -10568796.0,
+      "discount_factor": 0.46400093
+    },
+    {
+      "year": 2033,
+      "total_revenues": 28606342.0,
+      "total_expenditures": -39269370.0,
+      "net_flow": -10663028.0,
+      "discount_factor": 0.42153507
+    },
+    {
+      "year": 2034,
+      "total_revenues": 28082992.0,
+      "total_expenditures": -42065013.0,
+      "net_flow": -13982021.0,
+      "discount_factor": 0.38295573
+    },
+    {
+      "year": 2035,
+      "total_revenues": 28337511.0,
+      "total_expenditures": -42250736.0,
+      "net_flow": -13913225.0,
+      "discount_factor": 0.34790721
+    },
+    {
+      "year": 2036,
+      "total_revenues": 27389190.0,
+      "total_expenditures": -46381920.0,
+      "net_flow": -18992730.0,
+      "discount_factor": 0.31606636
+    },
+    {
+      "year": 2037,
+      "total_revenues": 27436727.0,
+      "total_expenditures": -47252043.0,
+      "net_flow": -19815316.0,
+      "discount_factor": 0.28713963
+    },
+    {
+      "year": 2038,
+      "total_revenues": 26720602.0,
+      "total_expenditures": -50393033.0,
+      "net_flow": -23672431.0,
+      "discount_factor": 0.2608603
+    },
+    {
+      "year": 2039,
+      "total_revenues": 26691217.0,
+      "total_expenditures": -51517336.0,
+      "net_flow": -24826119.0,
+      "discount_factor": 0.23698609
+    },
+    {
+      "year": 2040,
+      "total_revenues": 25429555.0,
+      "total_expenditures": -56498654.0,
+      "net_flow": -31069099.0,
+      "discount_factor": 0.21529687
+    },
+    {
+      "year": 2041,
+      "total_revenues": 24480124.0,
+      "total_expenditures": -60071773.0,
+      "net_flow": -35591649.0,
+      "discount_factor": 0.19559267
+    },
+    {
+      "year": 2042,
+      "total_revenues": 23226484.0,
+      "total_expenditures": -64518513.0,
+      "net_flow": -41292029.0,
+      "discount_factor": 0.17769181
+    },
+    {
+      "year": 2043,
+      "total_revenues": 22143360.0,
+      "total_expenditures": -68430288.0,
+      "net_flow": -46286928.0,
+      "discount_factor": 0.16142927
+    },
+    {
+      "year": 2044,
+      "total_revenues": 21024826.0,
+      "total_expenditures": -71184404.0,
+      "net_flow": -50159578.0,
+      "discount_factor": 0.14665509
+    },
+    {
+      "year": 2045,
+      "total_revenues": 19033412.0,
+      "total_expenditures": -73893337.0,
+      "net_flow": -54859925.0,
+      "discount_factor": 0.13323306
+    },
+    {
+      "year": 2046,
+      "total_revenues": 18105093.0,
+      "total_expenditures": -76857031.0,
+      "net_flow": -58751938.0,
+      "discount_factor": 0.12103942
+    },
+    {
+      "year": 2047,
+      "total_revenues": 17023691.0,
+      "total_expenditures": -79482432.0,
+      "net_flow": -62458741.0,
+      "discount_factor": 0.10996177
+    },
+    {
+      "year": 2048,
+      "total_revenues": 16361997.0,
+      "total_expenditures": -81740997.0,
+      "net_flow": -65379000.0,
+      "discount_factor": 0.09989795
+    },
+    {
+      "year": 2049,
+      "total_revenues": 15879789.0,
+      "total_expenditures": -82477578.0,
+      "net_flow": -66597789.0,
+      "discount_factor": 0.09075518
+    },
+    {
+      "year": 2050,
+      "total_revenues": 15165839.0,
+      "total_expenditures": -84559430.0,
+      "net_flow": -69393591.0,
+      "discount_factor": 0.08244917
+    },
+    {
+      "year": 2051,
+      "total_revenues": 14498999.0,
+      "total_expenditures": -85340032.0,
+      "net_flow": -70841033.0,
+      "discount_factor": 0.07490333
+    },
+    {
+      "year": 2052,
+      "total_revenues": 13988533.0,
+      "total_expenditures": -86075756.0,
+      "net_flow": -72087223.0,
+      "discount_factor": 0.0680481
+    },
+    {
+      "year": 2053,
+      "total_revenues": 13435710.0,
+      "total_expenditures": -86865021.0,
+      "net_flow": -73429311.0,
+      "discount_factor": 0.06182026
+    },
+    {
+      "year": 2054,
+      "total_revenues": 13021021.0,
+      "total_expenditures": -86783631.0,
+      "net_flow": -73762610.0,
+      "discount_factor": 0.05616241
+    },
+    {
+      "year": 2055,
+      "total_revenues": 4288411.0,
+      "total_expenditures": -82925213.0,
+      "net_flow": -78636802.0,
+      "discount_factor": 0.05102236
+    },
+    {
+      "year": 2056,
+      "total_revenues": 3780374.0,
+      "total_expenditures": -83258578.0,
+      "net_flow": -79478204.0,
+      "discount_factor": 0.04635274
+    },
+    {
+      "year": 2057,
+      "total_revenues": 3376225.0,
+      "total_expenditures": -82658757.0,
+      "net_flow": -79282532.0,
+      "discount_factor": 0.04211049
+    },
+    {
+      "year": 2058,
+      "total_revenues": 3034593.0,
+      "total_expenditures": -80896819.0,
+      "net_flow": -77862226.0,
+      "discount_factor": 0.03825649
+    },
+    {
+      "year": 2059,
+      "total_revenues": 2684420.0,
+      "total_expenditures": -78717054.0,
+      "net_flow": -76032634.0,
+      "discount_factor": 0.03475522
+    },
+    {
+      "year": 2060,
+      "total_revenues": 1392847.0,
+      "total_expenditures": -76092482.0,
+      "net_flow": -74699635.0,
+      "discount_factor": 0.03157438
+    },
+    {
+      "year": 2061,
+      "total_revenues": 1051801.0,
+      "total_expenditures": -73973272.0,
+      "net_flow": -72921471.0,
+      "discount_factor": 0.02868466
+    },
+    {
+      "year": 2062,
+      "total_revenues": 891704.0,
+      "total_expenditures": -71862541.0,
+      "net_flow": -70970837.0,
+      "discount_factor": 0.02605941
+    },
+    {
+      "year": 2063,
+      "total_revenues": 698066.0,
+      "total_expenditures": -68161573.0,
+      "net_flow": -67463507.0,
+      "discount_factor": 0.02367442
+    },
+    {
+      "year": 2064,
+      "total_revenues": 521357.0,
+      "total_expenditures": -62901273.0,
+      "net_flow": -62379916.0,
+      "discount_factor": 0.02150771
+    },
+    {
+      "year": 2065,
+      "total_revenues": 450321.0,
+      "total_expenditures": -59586079.0,
+      "net_flow": -59135758.0,
+      "discount_factor": 0.01953931
+    },
+    {
+      "year": 2066,
+      "total_revenues": 352141.0,
+      "total_expenditures": -53865164.0,
+      "net_flow": -53513023.0,
+      "discount_factor": 0.01775105
+    },
+    {
+      "year": 2067,
+      "total_revenues": 277880.0,
+      "total_expenditures": -49312754.0,
+      "net_flow": -49034874.0,
+      "discount_factor": 0.01612645
+    },
+    {
+      "year": 2068,
+      "total_revenues": 156737.0,
+      "total_expenditures": -46803261.0,
+      "net_flow": -46646524.0,
+      "discount_factor": 0.01465054
+    },
+    {
+      "year": 2069,
+      "total_revenues": 105407.0,
+      "total_expenditures": -42637736.0,
+      "net_flow": -42532329.0,
+      "discount_factor": 0.01330971
+    },
+    {
+      "year": 2070,
+      "total_revenues": 56988.0,
+      "total_expenditures": -39306975.0,
+      "net_flow": -39249987.0,
+      "discount_factor": 0.01209159
+    },
+    {
+      "year": 2071,
+      "total_revenues": 8993.0,
+      "total_expenditures": -36081414.0,
+      "net_flow": -36072421.0,
+      "discount_factor": 0.01098495
+    },
+    {
+      "year": 2072,
+      "total_revenues": 0.0,
+      "total_expenditures": -31820803.0,
+      "net_flow": -31820803.0,
+      "discount_factor": 0.0099796
+    },
+    {
+      "year": 2073,
+      "total_revenues": 0.0,
+      "total_expenditures": -28068157.0,
+      "net_flow": -28068157.0,
+      "discount_factor": 0.00906626
+    },
+    {
+      "year": 2074,
+      "total_revenues": 0.0,
+      "total_expenditures": -24657337.0,
+      "net_flow": -24657337.0,
+      "discount_factor": 0.0082365
+    },
+    {
+      "year": 2075,
+      "total_revenues": 0.0,
+      "total_expenditures": -22491176.0,
+      "net_flow": -22491176.0,
+      "discount_factor": 0.00748269
+    },
+    {
+      "year": 2076,
+      "total_revenues": 0.0,
+      "total_expenditures": -19972599.0,
+      "net_flow": -19972599.0,
+      "discount_factor": 0.00679787
+    },
+    {
+      "year": 2077,
+      "total_revenues": 0.0,
+      "total_expenditures": -17750668.0,
+      "net_flow": -17750668.0,
+      "discount_factor": 0.00617572
+    },
+    {
+      "year": 2078,
+      "total_revenues": 0.0,
+      "total_expenditures": -15787938.0,
+      "net_flow": -15787938.0,
+      "discount_factor": 0.00561051
+    },
+    {
+      "year": 2079,
+      "total_revenues": 0.0,
+      "total_expenditures": -14100562.0,
+      "net_flow": -14100562.0,
+      "discount_factor": 0.00509703
+    },
+    {
+      "year": 2080,
+      "total_revenues": 0.0,
+      "total_expenditures": -12472741.0,
+      "net_flow": -12472741.0,
+      "discount_factor": 0.00463054
+    },
+    {
+      "year": 2081,
+      "total_revenues": 0.0,
+      "total_expenditures": -10444752.0,
+      "net_flow": -10444752.0,
+      "discount_factor": 0.00420675
+    },
+    {
+      "year": 2082,
+      "total_revenues": 0.0,
+      "total_expenditures": -9050917.0,
+      "net_flow": -9050917.0,
+      "discount_factor": 0.00382174
+    },
+    {
+      "year": 2083,
+      "total_revenues": 0.0,
+      "total_expenditures": -7488118.0,
+      "net_flow": -7488118.0,
+      "discount_factor": 0.00347197
+    },
+    {
+      "year": 2084,
+      "total_revenues": 0.0,
+      "total_expenditures": -6237386.0,
+      "net_flow": -6237386.0,
+      "discount_factor": 0.00315422
+    },
+    {
+      "year": 2085,
+      "total_revenues": 0.0,
+      "total_expenditures": -5403910.0,
+      "net_flow": -5403910.0,
+      "discount_factor": 0.00286554
+    },
+    {
+      "year": 2086,
+      "total_revenues": 0.0,
+      "total_expenditures": -4255107.0,
+      "net_flow": -4255107.0,
+      "discount_factor": 0.00260328
+    },
+    {
+      "year": 2087,
+      "total_revenues": 0.0,
+      "total_expenditures": -3205692.0,
+      "net_flow": -3205692.0,
+      "discount_factor": 0.00236503
+    },
+    {
+      "year": 2088,
+      "total_revenues": 0.0,
+      "total_expenditures": -2664252.0,
+      "net_flow": -2664252.0,
+      "discount_factor": 0.00214858
+    },
+    {
+      "year": 2089,
+      "total_revenues": 0.0,
+      "total_expenditures": -2100398.0,
+      "net_flow": -2100398.0,
+      "discount_factor": 0.00195194
+    },
+    {
+      "year": 2090,
+      "total_revenues": 0.0,
+      "total_expenditures": -1682985.0,
+      "net_flow": -1682985.0,
+      "discount_factor": 0.00177329
+    },
+    {
+      "year": 2091,
+      "total_revenues": 0.0,
+      "total_expenditures": -1220093.0,
+      "net_flow": -1220093.0,
+      "discount_factor": 0.001611
+    },
+    {
+      "year": 2092,
+      "total_revenues": 0.0,
+      "total_expenditures": -397818.0,
+      "net_flow": -397818.0,
+      "discount_factor": 0.00146356
+    },
+    {
+      "year": 2093,
+      "total_revenues": 0.0,
+      "total_expenditures": -264844.0,
+      "net_flow": -264844.0,
+      "discount_factor": 0.00132961
+    },
+    {
+      "year": 2094,
+      "total_revenues": 0.0,
+      "total_expenditures": -80177.0,
+      "net_flow": -80177.0,
+      "discount_factor": 0.00120793
+    },
+    {
+      "year": 2095,
+      "total_revenues": 0.0,
+      "total_expenditures": -38467.0,
+      "net_flow": -38467.0,
+      "discount_factor": 0.00109737
+    },
+    {
+      "year": 2096,
+      "total_revenues": 0.0,
+      "total_expenditures": -1089.0,
+      "net_flow": -1089.0,
+      "discount_factor": 0.00099694
+    }
+  ],
+  "cmn_resolution": "4963"
 }
