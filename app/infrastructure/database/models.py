@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Boolean, Numeric, JSON, ForeignKey, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -96,8 +96,16 @@ class FundPosition(Base):
     cnpj_fund = Column(String, index=True, nullable=False)
     name_fund = Column(String, nullable=False)
     segment_cmn = Column(String, nullable=False)
+    regulatory_article = Column(String, nullable=True)  # e.g. "7, I"
+    benchmark = Column(String, nullable=True)            # e.g. "IMA-B"
     current_balance = Column(Numeric, default=0.0)
-    date_entry = Column(Date, default=datetime.utcnow().date)
+    weight_pct = Column(Numeric, default=0.0)            # participation %
+    liquidity_days = Column(Numeric, default=0)          # D+0, D+1, D+3
+    monthly_return_pct = Column(Numeric, nullable=True)  # latest month return %
+    admin_fee_pct = Column(Numeric, nullable=True)       # taxa de administração %
+    is_legacy = Column(Boolean, default=False)           # fundos legados
+    maturity_date = Column(Date, nullable=True)          # vencimento (se aplicável)
+    date_entry = Column(Date, nullable=True)
     manager_name = Column(String, nullable=True)
     admin_name = Column(String, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -119,7 +127,7 @@ class PortfolioSnapshot(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     rpps_id = Column(UUID(as_uuid=True), ForeignKey("rpps_institutes.id"), nullable=False)
-    snapshot_date = Column(Date, default=datetime.utcnow().date)
+    snapshot_date = Column(Date, default=lambda: datetime.now(timezone.utc).date())
     total_value = Column(Numeric, default=0.0)
     compliance_status = Column(String, default="OK")
     positions_json = Column(JSON, nullable=True)
