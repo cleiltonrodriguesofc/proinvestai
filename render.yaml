@@ -18,7 +18,7 @@ services:
         value: "False"
       - key: SECRET_KEY
         generateValue: true
-      - key: OPENAI_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       - key: MERCADOPAGO_ACCESS_TOKEN
         sync: false

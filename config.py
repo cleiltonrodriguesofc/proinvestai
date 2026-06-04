@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # External APIs
-    OPENAI_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
     MERCADOPAGO_ACCESS_TOKEN: str = ""
     BRAPI_TOKEN: str = ""
     BCB_API_URL: str = "https://api.bcb.gov.br/dados/serie/bcdata.sgs"

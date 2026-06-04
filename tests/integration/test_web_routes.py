@@ -9,7 +9,7 @@ from unittest.mock import patch, AsyncMock
 # patch settings before importing app so it doesn't try to connect to a real db
 with patch.dict("os.environ", {
     "DATABASE_URL": "sqlite+aiosqlite:///test.db",
-    "OPENAI_API_KEY": "",
+    "GEMINI_API_KEY": "",
     "SECRET_KEY": "test-secret",
 }):
     from main import app

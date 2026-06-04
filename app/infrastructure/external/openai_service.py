@@ -1,5 +1,4 @@
 import logging
-import openai
 from typing import Dict, List
 from config import get_settings
 from ...domain.interfaces.services import IAIService
@@ -9,23 +8,25 @@ from ...domain.entities.investor_profile import InvestorProfile
 settings = get_settings()
 logger = logging.getLogger(__name__)
 
+
 class AIService(IAIService):
     """
-    Service to generate financial insights and narrations using AI.
+    Service to generate financial insights and narrations using Google Gemini AI.
+
+    Uses the google-generativeai SDK with the gemini-1.5-flash model,
+    which provides a good balance of speed, cost, and quality for
+    financial narration tasks.
     """
 
     def __init__(self, api_key: str = None):
-        self.api_key = api_key or settings.OPENAI_API_KEY
-        if self.api_key:
-            openai.api_key = self.api_key
+        self.api_key = api_key or settings.GEMINI_API_KEY
 
     async def explain_portfolio(self, portfolio: Portfolio, profile: InvestorProfile) -> str:
         if not self.api_key:
             return "Integração com IA não configurada."
-            
+
         prompt = f"Explique de forma simples uma carteira com retorno esperado de {portfolio.expected_return * 100:.1f}% e volatilidade de {portfolio.volatility * 100:.1f}% para um perfil {profile.risk_profile.value}."
-        
-        return await self._call_openai(prompt)
+        return await self._call_gemini(prompt)
 
     async def explain_committee_review(self, target_weights: dict, risk_metrics, profile_type: str) -> str:
         """
@@ -35,8 +36,7 @@ class AIService(IAIService):
             return "Integração com IA não configurada. Configure a API Key para receber insights personalizados."
 
         weights_str = str({k: float(v) for k, v in target_weights.items()})
-        
-        # Format the risk metrics
+
         risk_str = (
             f"Rentabilidade 12M: {risk_metrics.return_12m * 100:.2f}% | "
             f"VaR 95%: {risk_metrics.var_12m * 100:.2f}% | "
@@ -60,13 +60,9 @@ REGRAS DE ANÁLISE TÉCNICA (Nível Institucional):
 5. NUNCA mencione ativos que não estão na lista.
 6. Seja conciso, denso tecnicamente e institucional. Use no máximo 150 palavras.
 """
-        
         logger.info(f"--- AI PROMPT SENDING ---\n{prompt}\n-------------------------")
-        
-        response_text = await self._call_openai(prompt)
-        
+        response_text = await self._call_gemini(prompt)
         logger.info(f"--- AI RESPONSE RECEIVED ---\n{response_text}\n----------------------------")
-        
         return response_text
 
     async def explain_stress_test(self, results: dict, profile: InvestorProfile) -> str:
@@ -74,7 +70,7 @@ REGRAS DE ANÁLISE TÉCNICA (Nível Institucional):
             return "Integracao com IA nao configurada."
 
         prompt = f"Explique o resultado de um teste de estresse financeiro onde a carteira do cliente sofreu impacto em cenarios de crise: {results}. Perfil: {profile.risk_profile.value}."
-        return await self._call_openai(prompt)
+        return await self._call_gemini(prompt)
 
     async def explain_portfolio_recommendation(
         self,
@@ -87,7 +83,7 @@ REGRAS DE ANÁLISE TÉCNICA (Nível Institucional):
         reserve_months: float,
         risk_category: str,
     ) -> str:
-        """generate a plain-language explanation of the recommended portfolio."""
+        """Generate a plain-language explanation of the recommended portfolio."""
         if not self.api_key:
             return "Integracao com IA nao configurada. Configure a API Key para receber insights personalizados."
 
@@ -123,7 +119,7 @@ INSTRUCOES:
 7. NAO use jargao tecnico (nada de "fronteira eficiente", "MPT", "VaR").
 8. Responda em portugues do Brasil.
 """
-        return await self._call_openai(prompt)
+        return await self._call_gemini(prompt)
 
     async def explain_gap_analysis(
         self,
@@ -133,7 +129,7 @@ INSTRUCOES:
         gain_lost: float,
         profile_label: str,
     ) -> str:
-        """generate a narration comparing current vs ideal portfolio."""
+        """Generate a narration comparing current vs ideal portfolio."""
         if not self.api_key:
             return "Integracao com IA nao configurada."
 
@@ -162,7 +158,7 @@ INSTRUCOES:
 3. NAO critique o investidor — seja construtivo.
 4. Use no maximo 150 palavras. Portugues do Brasil.
 """
-        return await self._call_openai(prompt)
+        return await self._call_gemini(prompt)
 
     async def explain_simulation(
         self,
@@ -174,7 +170,7 @@ INSTRUCOES:
         stress_tests: list,
         risk_metrics: dict,
     ) -> str:
-        """generate a narration explaining the simulation results."""
+        """Generate a narration explaining the simulation results."""
         if not self.api_key:
             return "Integracao com IA nao configurada."
 
@@ -211,24 +207,27 @@ INSTRUCOES:
 5. Use no maximo 200 palavras. Portugues do Brasil.
 6. NAO use jargao tecnico excessivo.
 """
-        return await self._call_openai(prompt)
+        return await self._call_gemini(prompt)
 
-
-    async def _call_openai(self, prompt: str) -> str:
+    async def _call_gemini(self, prompt: str) -> str:
+        """Call the Google Gemini API with the given prompt."""
         try:
-            from openai import AsyncOpenAI
-            client = AsyncOpenAI(api_key=self.api_key)
-            
-            response = await client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "Você é um consultor financeiro especialista com foco em alocação de ativos e gestão de risco institucional."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=300,
-                temperature=0.7
+            import google.generativeai as genai
+
+            genai.configure(api_key=self.api_key)
+            model = genai.GenerativeModel(
+                model_name="gemini-1.5-flash",
+                system_instruction="Você é um consultor financeiro especialista com foco em alocação de ativos e gestão de risco institucional.",
             )
-            return response.choices[0].message.content.strip()
+            # GenerativeModel.generate_content_async for non-blocking call
+            response = await model.generate_content_async(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    max_output_tokens=400,
+                    temperature=0.7,
+                ),
+            )
+            return response.text.strip()
         except Exception as e:
-            logger.error(f"Error generating AI narration: {e}")
+            logger.error(f"Error generating AI narration via Gemini: {e}")
             return f"Não foi possível gerar a narração agora: {str(e)}"
