@@ -41,40 +41,52 @@
 <!-- ═══ KPI STRIP ══════════════════════════════════════════ -->
 <div class="kpi-row">
 
-  <div class="kpi-box kpi-patrimony">
+  <!-- ① Patrimônio — destaque principal -->
+  <div class="kpi-box kpi-patrimony kpi-hero">
     <div class="kpi-box-label">Patrimônio Líquido</div>
-    <div class="kpi-box-val">
-      R$ {{ "{:,.2f}".format(patrimony / 1000000).replace(",","X").replace(".",",").replace("X",".") }} M
+    <div class="kpi-hero-val">
+      <span class="kpi-currency">R$</span>
+      <span class="kpi-amount">{{ "{:,.2f}".format(patrimony / 1000000).replace(",","X").replace(".",",").replace("X",".") }}</span>
+      <span class="kpi-unit">Mi</span>
     </div>
     <div class="kpi-box-sub">CNPJ {{ institute.cnpj }}</div>
   </div>
 
+  <!-- ② Rentabilidade Mês -->
   <div class="kpi-box {% if weighted_ret.val >= 0 %}kpi-return-pos{% else %}kpi-return-neg{% endif %}">
     <div class="kpi-box-label">Rentabilidade — Mês</div>
     <div class="kpi-box-val {% if weighted_ret.val >= 0 %}kpi-green{% else %}kpi-red{% endif %}">
-      {{ "%.4f"|format(weighted_ret.val) }}%
+      {% if weighted_ret.val >= 0 %}▲{% else %}▼{% endif %}
+      {{ "%.2f"|format(weighted_ret.val) }}%
     </div>
     <div class="kpi-box-sub">Retorno ponderado da carteira</div>
   </div>
 
+  <!-- ③ Meta Atuarial -->
   <div class="kpi-box kpi-meta">
     <div class="kpi-box-label">Meta Atuarial</div>
     <div class="kpi-box-val kpi-cyan">{{ institute.actuarial_target_index }} + {{ "%.2f"|format(meta_rate) }}% a.a.</div>
-    <div class="kpi-box-sub">Resolução CMN 5.272</div>
+    <div class="kpi-box-sub">Resolução CMN 5.272/2025</div>
   </div>
 
+  <!-- ④ Enquadramento -->
   <div class="kpi-box kpi-status">
     <div class="kpi-box-label">Enquadramento CMN</div>
-    <div class="kpi-box-val kpi-green" style="font-size:1.1rem;">✓ Enquadrado</div>
+    <div class="kpi-box-val kpi-green">✓ Enquadrado</div>
     <div class="kpi-box-sub">{{ positions|length }} ativos mapeados</div>
   </div>
 
+  <!-- ⑤ Pró-Gestão -->
   <div class="kpi-box kpi-pro">
-    <div class="kpi-box-label">Pró-Gestão</div>
-    <div class="kpi-box-val" style="color:#888; font-size:1rem;">
-      {% if institute.pro_gestao_level and institute.pro_gestao_level > 0 %}Nível {{ institute.pro_gestao_level }}{% else %}Sem certificação{% endif %}
+    <div class="kpi-box-label">Pró-Gestão IPCA</div>
+    <div class="kpi-box-val {% if institute.pro_gestao_level and institute.pro_gestao_level > 0 %}kpi-gold{% else %}kpi-muted{% endif %}">
+      {% if institute.pro_gestao_level and institute.pro_gestao_level > 0 %}
+        Nível {{ institute.pro_gestao_level }}
+      {% else %}
+        Não certificado
+      {% endif %}
     </div>
-    <div class="kpi-box-sub">Status IPCA</div>
+    <div class="kpi-box-sub">Ministério da Previdência</div>
   </div>
 
 </div><!-- /kpi-row -->
@@ -239,24 +251,32 @@
 .d-btn-ghost:hover{color:#aaa;border-color:#444;}
 
 /* ── KPI Row ── */
-.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0.875rem;margin-bottom:1.5rem;}
-@media(max-width:1200px){.kpi-row{grid-template-columns:repeat(3,1fr);}}
+.kpi-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:0.875rem;margin-bottom:1.5rem;align-items:stretch;}
+@media(max-width:1300px){.kpi-row{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:700px){.kpi-row{grid-template-columns:1fr 1fr;}}
-.kpi-box{background:#07070a;border:1px solid #161618;border-radius:8px;padding:1.1rem 1.25rem;position:relative;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:transform 0.2s ease, border-color 0.2s ease;}
+.kpi-box{background:#07070a;border:1px solid #161618;border-radius:8px;padding:1.1rem 1.25rem;position:relative;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:transform 0.2s ease,border-color 0.2s ease;display:flex;flex-direction:column;justify-content:space-between;}
 .kpi-box:hover{transform:translateY(-2px);border-color:#2a2a35;}
 .kpi-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#333;}
-.kpi-patrimony::before{background:linear-gradient(90deg, #3b82f6, #60a5fa);}
-.kpi-return-pos::before{background:linear-gradient(90deg, #10b981, #34d399);}
-.kpi-return-neg::before{background:linear-gradient(90deg, #f43f5e, #fb7185);}
-.kpi-meta::before{background:linear-gradient(90deg, #00d4ff, #67e8f9);}
-.kpi-status::before{background:linear-gradient(90deg, #8b5cf6, #a78bfa);}
-.kpi-pro::before{background:linear-gradient(90deg, #f59e0b, #fbbf24);}
-.kpi-box-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:0.5rem;}
-.kpi-box-val{font-size:clamp(0.85rem, 1.4vw, 1.2rem);font-weight:800;color:#f8fafc;line-height:1.2;word-break:break-all;overflow-wrap:anywhere;}
-.kpi-box-sub{font-size:0.7rem;color:#555;margin-top:0.4rem;}
+/* ── Hero KPI (patrimônio) ── */
+.kpi-hero{padding:1.25rem 1.5rem;}
+.kpi-hero-val{display:flex;align-items:baseline;gap:0.35rem;white-space:nowrap;margin:0.5rem 0;}
+.kpi-currency{font-size:1rem;font-weight:700;color:#94b4e0;}
+.kpi-amount{font-size:2rem;font-weight:900;color:#f8fafc;letter-spacing:-0.02em;line-height:1;}
+.kpi-unit{font-size:1rem;font-weight:700;color:#94b4e0;}
+.kpi-patrimony::before{background:linear-gradient(90deg,#3b82f6,#60a5fa);box-shadow:0 0 20px rgba(59,130,246,0.4);}
+.kpi-return-pos::before{background:linear-gradient(90deg,#10b981,#34d399);}
+.kpi-return-neg::before{background:linear-gradient(90deg,#f43f5e,#fb7185);}
+.kpi-meta::before{background:linear-gradient(90deg,#00d4ff,#67e8f9);}
+.kpi-status::before{background:linear-gradient(90deg,#8b5cf6,#a78bfa);}
+.kpi-pro::before{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.kpi-box-label{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;color:#666;margin-bottom:0.4rem;}
+.kpi-box-val{font-size:1.15rem;font-weight:800;color:#f8fafc;line-height:1.25;white-space:nowrap;}
+.kpi-box-sub{font-size:0.68rem;color:#444;margin-top:0.5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .kpi-green{color:#10b981!important;}
 .kpi-red{color:#f43f5e!important;}
-.kpi-cyan{color:#00d4ff!important;font-size:0.95rem!important;}
+.kpi-cyan{color:#00d4ff!important;font-size:0.95rem!important;white-space:nowrap;}
+.kpi-gold{color:#f59e0b!important;}
+.kpi-muted{color:#555!important;font-size:0.95rem!important;}
 
 /* ── Card ── */
 .d-card{background:#07070a;border:1px solid #161618;border-radius:8px;overflow:hidden;}
