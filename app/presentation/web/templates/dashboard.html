@@ -44,7 +44,7 @@
   <div class="kpi-box kpi-patrimony">
     <div class="kpi-box-label">Patrimônio Líquido</div>
     <div class="kpi-box-val">
-      R$ {{ "{:,.2f}".format(patrimony).replace(",","X").replace(".",",").replace("X",".") }}
+      R$ {{ "{:,.2f}".format(patrimony / 1000000).replace(",","X").replace(".",",").replace("X",".") }} M
     </div>
     <div class="kpi-box-sub">CNPJ {{ institute.cnpj }}</div>
   </div>
@@ -252,7 +252,7 @@
 .kpi-status::before{background:linear-gradient(90deg, #8b5cf6, #a78bfa);}
 .kpi-pro::before{background:linear-gradient(90deg, #f59e0b, #fbbf24);}
 .kpi-box-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:0.5rem;}
-.kpi-box-val{font-size:clamp(1.05rem, 1.8vw, 1.4rem);font-weight:800;color:#f8fafc;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi-box-val{font-size:clamp(0.85rem, 1.4vw, 1.2rem);font-weight:800;color:#f8fafc;line-height:1.2;word-break:break-all;overflow-wrap:anywhere;}
 .kpi-box-sub{font-size:0.7rem;color:#555;margin-top:0.4rem;}
 .kpi-green{color:#10b981!important;}
 .kpi-red{color:#f43f5e!important;}
