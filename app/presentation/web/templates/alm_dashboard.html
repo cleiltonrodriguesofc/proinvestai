@@ -81,16 +81,21 @@
             <h1>📊 Estudo ALM — Asset-Liability Management</h1>
             <p>{{ rpps_name | default('RPPS') }} · Data-base: {{ reference_date | default('--') }}</p>
         </div>
-        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center;">
+            <select onchange="window.location.href=this.value" style="background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:0.4rem 0.8rem; font-size:0.85rem; color:var(--text); font-weight:600; outline:none; cursor:pointer;">
+                <option value="/alm" {% if 'lema-2025' not in request.url.path %}selected{% endif %}>📅 Ano Base: 2026 (Atual)</option>
+                <option value="/alm/lema-2025" {% if 'lema-2025' in request.url.path %}selected{% endif %}>📅 Ano Base: 2025 (Validação LEMA)</option>
+            </select>
+            
             <span class="alm-badge">🎯 Meta: {{ actuarial_rate }}% a.a.</span>
             <span class="alm-badge">🎲 {{ n_scenarios }} cenários</span>
             <span class="alm-badge">📅 {{ horizon }} anos</span>
             {% if pro_gestao %}<span class="alm-badge">🏛️ Pró-Gestão Nível {{ pro_gestao }}</span>
             {% else %}<span class="alm-badge">⚠️ Sem Pró-Gestão</span>{% endif %}
             
-            <a href="/alm/report{% if request.query_params %}?{{ request.query_params }}{% endif %}" target="_blank" class="alm-badge" style="background:var(--accent); color:white; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 1rem; border-color:transparent; margin-left:1rem;">
+            <a href="{{ request.url.path }}/report{% if request.query_params %}?{{ request.query_params }}{% endif %}" target="_blank" class="alm-badge" style="background:var(--accent); color:white; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 1rem; border-color:transparent; margin-left:0.5rem;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Exportar Relatório PDF
+                Exportar PDF
             </a>
         </div>
     </div>
