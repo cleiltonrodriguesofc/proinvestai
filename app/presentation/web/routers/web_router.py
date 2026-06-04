@@ -262,7 +262,7 @@ async def portfolio(
     rpps_repo = SQLAlchemyRppsRepository(session)
     institute = await rpps_repo.get_institute_by_user(user.id)
     positions = await rpps_repo.list_positions(institute.id) if institute else []
-    plan_display = getattr(user, "plan", "free").upper()
+    plan_display = str(getattr(user, "plan", "free")).split(".")[-1].upper()
     mapped_value = sum(float(p.current_balance or 0) for p in positions)
     return templates.TemplateResponse("portfolio.html", {
         "request": request,
@@ -287,7 +287,7 @@ async def add_portfolio_item(
         
     rpps_repo = SQLAlchemyRppsRepository(session)
     institute = await rpps_repo.get_institute_by_user(user.id)
-    plan_display = getattr(user, "plan", "free").upper()
+    plan_display = str(getattr(user, "plan", "free")).split(".")[-1].upper()
     return templates.TemplateResponse("add_fund.html", {
         "request": request,
         "user_name": user.name,
@@ -309,7 +309,7 @@ async def compliance(
     rpps_repo = SQLAlchemyRppsRepository(session)
     institute = await rpps_repo.get_institute_by_user(user.id)
     positions = await rpps_repo.list_positions(institute.id) if institute else []
-    plan_display = getattr(user, "plan", "free").upper()
+    plan_display = str(getattr(user, "plan", "free")).split(".")[-1].upper()
     return templates.TemplateResponse("compliance.html", {
         "request": request,
         "user_name": user.name,
@@ -331,7 +331,7 @@ async def reports(
         return RedirectResponse(url="/login")
     rpps_repo = SQLAlchemyRppsRepository(session)
     institute = await rpps_repo.get_institute_by_user(user.id)
-    plan_display = getattr(user, "plan", "free").upper()
+    plan_display = str(getattr(user, "plan", "free")).split(".")[-1].upper()
     return templates.TemplateResponse("reports.html", {
         "request": request,
         "user_name": user.name,
@@ -582,7 +582,7 @@ async def gap_analysis(
     return templates.TemplateResponse("gap_analysis.html", {
         "request": request,
         "user_name": user.name,
-        "user_plan": getattr(user, "plan", "free").upper(),
+        "user_plan": str(getattr(user, "plan", "free")).split(".")[-1].upper(),
         "active_page": "gap",
         "institute": institute,
         "gap_data": gap_data,

@@ -32,4 +32,8 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Copy and set entrypoint (runs migrations then starts server)
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+CMD ["/bin/bash", "/app/entrypoint.sh"]

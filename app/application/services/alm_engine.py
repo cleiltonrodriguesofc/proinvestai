@@ -161,15 +161,17 @@ def calculate_npv_deficit_flows(
     actuarial_rate: float,
 ) -> float:
     """
-    calculate present value of all future net flows (deficit).
+    calculate present value of all future deficit flows.
 
-    uses the actuarial discount rate to bring flows to present value.
-    this is the "vpl do fluxo sem investimentos" from lema.
+    replicates lema's "vpl do fluxo sem investimentos":
+    only flows where expenditures > revenues (net_flow < 0) are discounted.
+    surplus years are excluded — matching the lema 2025 report methodology.
     """
     total_pv = 0.0
     for cf in cashflows:
         net_flow = cf.total_revenues - cf.total_expenditures
-        total_pv += net_flow * cf.discount_factor
+        if net_flow < 0:  # only deficit years, matching LEMA convention
+            total_pv += net_flow * cf.discount_factor
 
     return total_pv
 
