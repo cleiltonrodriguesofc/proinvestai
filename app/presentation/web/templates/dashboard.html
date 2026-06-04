@@ -1,353 +1,342 @@
 {% extends "base_app.html" %}
-{% block title %}Dashboard — ProInvestAI{% endblock %}
+{% block title %}Dashboard — {{ institute.name }} | ProInvestAI{% endblock %}
 
 {% block content %}
 
-{% if not has_profile %}
-<!-- onboarding state — no profile yet -->
-<div class="onboarding-state">
-    <div class="onboarding-icon">📊</div>
-    <h1 class="onboarding-title">Bem-vindo ao<br><span class="gradient-text">ProInvestAI.</span></h1>
-    <p class="onboarding-text">
-        Para montar sua carteira personalizada com produtos reais do mercado brasileiro, precisamos primeiro mapear seu perfil de investidor.
-    </p>
-    <div class="onboarding-features">
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">🏦</span>
-            <div>
-                <strong>Produtos Reais</strong>
-                <p>Tesouro Direto, CDB, LCI/LCA, FIIs, ETFs — produtos que você de fato compra.</p>
-            </div>
-        </div>
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">📈</span>
-            <div>
-                <strong>Retorno Líquido</strong>
-                <p>Calculamos IR regressivo, custódia B3 e isenções — você vê o rendimento real.</p>
-            </div>
-        </div>
-        <div class="onboarding-feature">
-            <span class="onboarding-feature-icon">🛡️</span>
-            <div>
-                <strong>Proteção</strong>
-                <p>Reserva de emergência e FGC calculados automaticamente para seu perfil.</p>
-            </div>
-        </div>
+{# ── Pre-compute totals ── #}
+{% set patrimony = institute.total_assets | float %}
+{% set meta_rate = institute.actuarial_target_rate | float %}
+
+{# Weighted monthly return #}
+{% set weighted_ret = namespace(val=0.0) %}
+{% for p in positions %}
+  {% if p.monthly_return_pct is not none and p.weight_pct is not none %}
+    {% set weighted_ret.val = weighted_ret.val + (p.monthly_return_pct | float) * (p.weight_pct | float) / 100 %}
+  {% endif %}
+{% endfor %}
+
+{# Segment totals #}
+{% set seg = namespace(rf=0.0, rv=0.0, est=0.0, fi=0.0) %}
+{% for p in positions %}
+  {% if   p.segment_cmn == 'renda_fixa'      %}{% set seg.rf  = seg.rf  + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'renda_variavel'  %}{% set seg.rv  = seg.rv  + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'estruturados'    %}{% set seg.est = seg.est + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'fundos_imobiliarios' %}{% set seg.fi = seg.fi + (p.current_balance | float) %}
+  {% endif %}
+{% endfor %}
+{% set seg_total = seg.rf + seg.rv + seg.est + seg.fi %}
+
+<!-- ═══ PAGE HEADER ═══════════════════════════════════════ -->
+<div class="d-header">
+  <div>
+    <p class="d-welcome">Bem-vindo, <strong>{{ user_name }}</strong> &nbsp;·&nbsp; {{ institute.municipality }} — {{ institute.state }}</p>
+    <h1 class="d-title">{{ institute.name }}</h1>
+  </div>
+  <div class="d-header-right">
+    <span class="d-ref-badge">Ref.: Abril / 2026</span>
+    <a href="/portfolio/add" class="d-btn-primary">+ Adicionar Fundo</a>
+  </div>
+</div>
+
+<!-- ═══ KPI STRIP ══════════════════════════════════════════ -->
+<div class="kpi-row">
+
+  <div class="kpi-box kpi-patrimony">
+    <div class="kpi-box-label">Patrimônio Líquido</div>
+    <div class="kpi-box-val">
+      R$ {{ "{:,.2f}".format(patrimony).replace(",","X").replace(".",",").replace("X",".") }}
     </div>
-    <a href="/quiz" class="btn btn-primary onboarding-cta" id="start-audit-btn">Iniciar Análise de Perfil</a>
-    <p class="onboarding-time">⏱ Leva apenas 3 minutos</p>
-</div>
+    <div class="kpi-box-sub">CNPJ {{ institute.cnpj }}</div>
+  </div>
 
-<style>
-.onboarding-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: calc(100vh - 120px); padding: 2rem 1rem; }
-.onboarding-icon { font-size: 3.5rem; margin-bottom: 1.5rem; }
-.onboarding-title { font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1rem; }
-.onboarding-text { color: #666; font-size: 1rem; max-width: 500px; line-height: 1.6; margin-bottom: 2.5rem; }
-.onboarding-features { display: flex; flex-direction: column; gap: 1rem; max-width: 400px; width: 100%; margin-bottom: 2.5rem; text-align: left; }
-.onboarding-feature { display: flex; gap: 1rem; align-items: flex-start; padding: 1rem; background: #060608; border: 1px solid #111; border-radius: 6px; }
-.onboarding-feature-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
-.onboarding-feature strong { display: block; font-size: 0.85rem; margin-bottom: 0.25rem; }
-.onboarding-feature p { font-size: 0.78rem; color: #555; line-height: 1.4; margin: 0; }
-.onboarding-cta { padding: 1.1rem 3rem !important; border-radius: 4px !important; font-size: 1rem !important; }
-.onboarding-time { margin-top: 1rem; font-size: 0.75rem; color: #444; }
-@media (min-width: 768px) { .onboarding-features { flex-direction: row; max-width: 700px; } .onboarding-feature { flex-direction: column; text-align: center; align-items: center; } }
-</style>
+  <div class="kpi-box {% if weighted_ret.val >= 0 %}kpi-return-pos{% else %}kpi-return-neg{% endif %}">
+    <div class="kpi-box-label">Rentabilidade — Mês</div>
+    <div class="kpi-box-val {% if weighted_ret.val >= 0 %}kpi-green{% else %}kpi-red{% endif %}">
+      {{ "%.4f"|format(weighted_ret.val) }}%
+    </div>
+    <div class="kpi-box-sub">Retorno ponderado da carteira</div>
+  </div>
 
-{% elif needs_patrimony %}
-<!-- patrimony onboarding -->
-<div class="onboarding-state" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-    <div class="onboarding-icon">💰</div>
-    <h1 class="onboarding-title">Qual o seu patrimônio<br><span class="gradient-text">atual?</span></h1>
-    <p class="onboarding-text">
-        Seu perfil ({{ profile_type }}) já foi mapeado! Agora informe o valor dos seus investimentos para montarmos a <strong>carteira ideal</strong> com produtos reais.
-    </p>
-    <form action="/update-patrimony" method="post" style="max-width: 400px; width: 100%; display: flex; flex-direction: column; gap: 1rem;">
-        <div style="text-align: left;">
-            <label style="color: #888; font-size: 0.85rem; margin-bottom: 0.5rem; display: block;">Valor Total Investido (R$)</label>
-            <input type="number" name="patrimony" placeholder="Ex: 50000" required min="1" step="0.01" style="width: 100%; padding: 1rem; background: #060608; border: 1px solid #222; border-radius: 6px; color: #fff; font-size: 1.1rem; font-family: monospace;">
+  <div class="kpi-box kpi-meta">
+    <div class="kpi-box-label">Meta Atuarial</div>
+    <div class="kpi-box-val kpi-cyan">{{ institute.actuarial_target_index }} + {{ "%.2f"|format(meta_rate) }}% a.a.</div>
+    <div class="kpi-box-sub">Resolução CMN 5.272</div>
+  </div>
+
+  <div class="kpi-box kpi-status">
+    <div class="kpi-box-label">Enquadramento CMN</div>
+    <div class="kpi-box-val kpi-green" style="font-size:1.1rem;">✓ Enquadrado</div>
+    <div class="kpi-box-sub">{{ positions|length }} ativos mapeados</div>
+  </div>
+
+  <div class="kpi-box kpi-pro">
+    <div class="kpi-box-label">Pró-Gestão</div>
+    <div class="kpi-box-val" style="color:#888; font-size:1rem;">
+      {% if institute.pro_gestao_level and institute.pro_gestao_level > 0 %}Nível {{ institute.pro_gestao_level }}{% else %}Sem certificação{% endif %}
+    </div>
+    <div class="kpi-box-sub">Status IPCA</div>
+  </div>
+
+</div><!-- /kpi-row -->
+
+{% if positions %}
+
+<!-- ═══ ATIVOS TABLE ═══════════════════════════════════════ -->
+<div class="d-card" style="margin-bottom:1.5rem;">
+  <div class="d-card-head">
+    <div>
+      <span class="d-card-title">Ativos e Contas</span>
+      <span class="d-card-sub">{{ positions|length }} fundos &nbsp;·&nbsp; {{ total_value }}</span>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+      <span class="d-tab active">Consolidada</span>
+      <span class="d-tab">Previdenciária</span>
+    </div>
+  </div>
+
+  <div style="overflow-x:auto; scrollbar-width: none; -ms-overflow-style: none;" class="hide-scroll">
+    <style>.hide-scroll::-webkit-scrollbar { display: none; }</style>
+    <table class="d-table">
+      <thead>
+        <tr>
+          <th style="min-width:240px;">Ativo / Benchmark</th>
+          <th class="r">Saldo (R$)</th>
+          <th class="c">Particip.</th>
+          <th class="c">Dispon.</th>
+          <th class="c">Art. CMN</th>
+          <th class="r">Rent. Mês</th>
+          <th class="r">Tx. Adm.</th>
+          <th class="c">Tipo</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in positions | sort(attribute='current_balance', reverse=True) %}
+        <tr class="{% if p.is_legacy %}row-legacy{% endif %}">
+
+          <td class="td-fund">
+            <div class="fund-name">{{ p.name_fund }}</div>
+            <div class="fund-sub">
+              {% if p.cnpj_fund %}<span>{{ p.cnpj_fund }}</span>{% endif %}
+              {% if p.benchmark %}<span class="bench-pill">{{ p.benchmark }}</span>{% endif %}
+            </div>
+          </td>
+
+          <td class="r td-saldo">
+            {{ "{:,.2f}".format(p.current_balance | float).replace(",","X").replace(".",",").replace("X",".") }}
+          </td>
+
+          <td class="c">
+            <span class="pct-label">{{ "%.2f"|format(p.weight_pct | float) }}%</span>
+          </td>
+
+          <td class="c">
+            <span class="liq-badge liq-d{{ p.liquidity_days | int }}">D+{{ p.liquidity_days | int }}</span>
+          </td>
+
+          <td class="c">
+            <span class="art-badge">Art. {{ p.regulatory_article }}</span>
+          </td>
+
+          <td class="r {% if p.monthly_return_pct is not none and p.monthly_return_pct | float >= 0 %}td-up{% else %}td-dn{% endif %}">
+            {% if p.monthly_return_pct is not none %}{{ "%.2f"|format(p.monthly_return_pct | float) }}%{% else %}—{% endif %}
+          </td>
+
+          <td class="r td-fee">
+            {% if p.admin_fee_pct is not none %}{{ "%.2f"|format(p.admin_fee_pct | float) }}%{% else %}—{% endif %}
+          </td>
+
+          <td class="c">
+            {% if p.is_legacy %}
+              <span class="type-badge type-legacy">Legado</span>
+            {% else %}
+              <span class="type-badge type-new">CMN 5.272</span>
+            {% endif %}
+          </td>
+
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr class="d-tfoot">
+          <td><strong>Total</strong></td>
+          <td class="r"><strong>{{ "{:,.2f}".format(positions | sum(attribute='current_balance') | float).replace(",","X").replace(".",",").replace("X",".") }}</strong></td>
+          <td class="c">100,00%</td>
+          <td colspan="5"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div><!-- /d-card assets -->
+
+<!-- ═══ SEGMENT BREAKDOWN + CHART PLACEHOLDER ══════════════ -->
+<div class="d-two-col">
+
+  <div class="d-card d-card-half">
+    <div class="d-card-head" style="margin-bottom:1.25rem;">
+      <span class="d-card-title">Alocação por Segmento</span>
+      <span class="d-card-sub">Limites CMN 5.272</span>
+    </div>
+    {% if seg_total > 0 %}
+    <div class="seg-wrap">
+      {% for label, val, limit, css_class in [
+        ('Renda Fixa — Art. 7',        seg.rf,  100, 'rf'),
+        ('Renda Variável — Art. 8',    seg.rv,   30, 'rv'),
+        ('Estruturados — Art. 10',     seg.est,  20, 'est'),
+        ('Fundos Imob. — Art. 11',     seg.fi,   20, 'fi')
+      ] %}
+      {% set pct = (val / seg_total * 100) if seg_total > 0 else 0 %}
+      <div class="seg-item">
+        <div class="seg-row-top">
+          <span class="seg-dot seg-dot-{{ css_class }}"></span>
+          <span class="seg-label">{{ label }}</span>
+          <span class="seg-pct">{{ "%.1f"|format(pct) }}%</span>
+          <span class="seg-limit">lim. {{ limit }}%</span>
         </div>
-        <button type="submit" class="btn btn-primary" style="padding: 1.1rem; border-radius: 6px; font-size: 1rem;">Montar Minha Carteira</button>
-    </form>
-</div>
+        <div class="seg-bar-bg">
+          <div class="seg-bar-fill seg-bar-{{ css_class }}" style="width:{{ [pct, 100]|min }}%;"></div>
+          {% if pct > limit %}<div class="seg-over-line"></div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
 
-{% elif error_message is defined and error_message %}
-<!-- error state -->
-<div class="onboarding-state" style="min-height: calc(100vh - 120px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-    <div class="onboarding-icon">⚠️</div>
-    <h1 class="onboarding-title">Ops!</h1>
-    <p class="onboarding-text">{{ error_message }}</p>
-    <a href="/dashboard" class="btn btn-primary">Tentar Novamente</a>
-</div>
+  <div class="d-card d-card-half">
+    <div class="d-card-head" style="margin-bottom:1rem;">
+      <span class="d-card-title">Evolução do Patrimônio</span>
+    </div>
+    <div class="chart-placeholder">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem;">📈</div>
+      <p>Gráfico disponível após sincronização com CVM</p>
+      <a href="#" class="d-btn-ghost" style="margin-top:1rem;">Sincronizar agora</a>
+    </div>
+  </div>
+
+</div><!-- /d-two-col -->
 
 {% else %}
-<!-- ══════════════════════════════════════════════
-     FULL DASHBOARD — Real Portfolio
-     ══════════════════════════════════════════════ -->
-
-<header class="dash-header">
-    <div>
-        <span class="user-badge">{{ user_name }} — Perfil {{ profile_type }}</span>
-        <h1 class="dash-title">Sua Carteira Recomendada</h1>
-    </div>
-    <div class="total-value-box">
-        <span class="total-label">Patrimônio Investido</span>
-        <div class="total-value">{{ total_value }}</div>
-    </div>
-</header>
-
-<!-- ──── Headline KPIs ──── -->
-<div class="kpi-grid">
-    <div class="kpi-card kpi-highlight">
-        <div class="kpi-label">Renda Mensal Líquida</div>
-        <div class="kpi-value val-up">{{ net_monthly_income_display }}</div>
-        <div class="kpi-sub">Após IR e custódia B3</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Retorno Líquido Anual</div>
-        <div class="kpi-value val-up">{{ "%.2f"|format(net_annual_return * 100) }}%</div>
-        <div class="kpi-sub">Bruto: {{ "%.2f"|format(gross_annual_return * 100) }}%</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Reserva de Emergência</div>
-        {% if reserve_months_actual > 999 %}
-            <div class="kpi-value" style="color: var(--cyan); font-size: 1.2rem;">Sobra Coberta</div>
-        {% else %}
-            <div class="kpi-value" style="color: var(--cyan);">{{ "%.0f"|format(reserve_months_actual) }} meses</div>
-        {% endif %}
-        <div class="kpi-sub">{{ "%.1f"|format(liquid_pct * 100) }}% em ativos líquidos</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Risco da Carteira</div>
-        <div class="kpi-value">{{ risk_category|capitalize }}</div>
-        <div class="kpi-sub">Vol: {{ "%.2f"|format(volatility * 100) }}% a.a.</div>
-    </div>
+<div class="d-empty">
+  <div style="font-size:3rem;margin-bottom:1rem;">💼</div>
+  <h2>Nenhum fundo cadastrado</h2>
+  <p>Adicione os fundos investidos pelo {{ institute.name }} para iniciar o monitoramento da Resolução CMN 5.272.</p>
+  <a href="/portfolio/add" class="d-btn-primary" style="margin-top:1.5rem;display:inline-block;">+ Adicionar Fundos</a>
 </div>
+{% endif %}
 
-<!-- ──── Allocation Table (Real Products) ──── -->
-<div class="risk-table-container">
-    <div class="table-header">
-        <span class="table-title">Composição da Carteira — Produtos Reais</span>
-    </div>
-    <div style="overflow-x: auto;">
-        <table class="risk-table" id="allocation-table">
-            <thead>
-                <tr>
-                    <th>Produto</th>
-                    <th style="text-align: right;">%</th>
-                    <th style="text-align: right;">Valor</th>
-                    <th style="text-align: right;">Rend. Bruto</th>
-                    <th style="text-align: right;">Rend. Líquido</th>
-                    <th style="text-align: right;">Renda/Mês</th>
-                    <th style="text-align: center;">IR</th>
-                    <th style="text-align: center;">Liquidez</th>
-                    <th style="text-align: center;">Risco</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for a in allocations %}
-                <tr>
-                    <td class="col-label">
-                        {{ a.asset_name }}
-                        {% if a.has_fgc %}<span class="badge-fgc" title="Protegido pelo FGC até R$250k">FGC</span>{% endif %}
-                    </td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.percentage_display }}</td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.value_display }}</td>
-                    <td style="text-align: right; font-family: monospace;">{{ a.gross_return_display }}</td>
-                    <td style="text-align: right; font-family: monospace; color: var(--green);">{{ a.net_return_display }}</td>
-                    <td style="text-align: right; font-family: monospace; color: var(--cyan);">{{ a.net_income_display }}</td>
-                    <td style="text-align: center;">
-                        {% if a.is_tax_exempt %}
-                            <span class="badge-exempt">Isento</span>
-                        {% else %}
-                            <span class="badge-ir">IR</span>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center;">{{ a.liquidity }}</td>
-                    <td style="text-align: center;">
-                        <span class="badge-risk badge-risk-{{ a.risk|lower|replace(' ', '-') }}">{{ a.risk }}</span>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- ──── Charts ──── -->
-<div class="charts-grid">
-    <div class="chart-card">
-        <div class="chart-title">Alocação por Classe de Ativo</div>
-        <div style="height: 260px; display: flex; align-items: center; justify-content: center;">
-            <canvas id="allocationChart"></canvas>
-        </div>
-    </div>
-    <div class="chart-card">
-        <div class="chart-title">Projeção de Patrimônio (5 Anos)</div>
-        <div style="height: 260px;">
-            <canvas id="projectionChart"></canvas>
-        </div>
-    </div>
-</div>
-
-<!-- ──── Protection Badges ──── -->
-<div class="kpi-grid" style="margin-top: 1rem;">
-    <div class="kpi-card">
-        <div class="kpi-label">Protegido pelo FGC</div>
-        <div class="kpi-value" style="color: var(--green); font-size: 1.2rem;">R$ {{ "{:,.2f}".format(fgc_protected).replace(",", "X").replace(".", ",").replace("X", ".") }}</div>
-        <div class="kpi-sub">Até R$ 250k por instituição</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Isento de IR</div>
-        <div class="kpi-value" style="color: var(--green); font-size: 1.2rem;">{{ "%.1f"|format(tax_exempt_pct * 100) }}%</div>
-        <div class="kpi-sub">LCI/LCA, Debêntures, FIIs</div>
-    </div>
-    <div class="kpi-card">
-        <div class="kpi-label">Renda Variável</div>
-        <div class="kpi-value" style="font-size: 1.2rem;">{{ "%.1f"|format(variable_income_pct * 100) }}%</div>
-        <div class="kpi-sub">Limite por perfil {{ profile_type }}</div>
-    </div>
-</div>
-
-<!-- ──── AI Parecer ──── -->
-<div class="narration-box animate-fade-in delay-2">
-    <div class="narration-title">📋 Parecer sobre sua Carteira</div>
-    <div class="narration-text">
-        {{ narration | safe }}
-    </div>
-</div>
-
-<!-- ──── Product Explanations ──── -->
-<div class="narration-box" style="margin-top: 1rem;">
-    <div class="narration-title">📚 O que cada produto faz</div>
-    <div class="narration-text">
-        {% for a in allocations %}
-        <div style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #111;">
-            <strong>{{ a.asset_name }}</strong> ({{ a.percentage_display }})
-            <p style="margin: 0.3rem 0 0; color: #888; font-size: 0.82rem; line-height: 1.5;">{{ a.description }}</p>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-
+<!-- ═══ LOCAL STYLES ══════════════════════════════════════= -->
 <style>
-.kpi-highlight { border: 1px solid rgba(16, 185, 129, 0.3); }
-.badge-fgc { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.6rem; padding: 1px 4px; border-radius: 3px; margin-left: 4px; vertical-align: middle; font-weight: 700; }
-.badge-exempt { display: inline-block; background: rgba(16, 185, 129, 0.15); color: #10b981; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-ir { display: inline-block; background: rgba(244, 63, 94, 0.15); color: #f43f5e; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-risk { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 600; }
-.badge-risk-muito-baixo { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.badge-risk-baixo { background: rgba(0, 212, 255, 0.15); color: #00d4ff; }
-.badge-risk-moderado { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.badge-risk-alto { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
-.badge-risk-muito-alto { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+/* ── Page Header ── */
+.d-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem;}
+.d-welcome{font-size:0.8rem;color:#777;margin:0 0 0.35rem;}
+.d-welcome strong{color:#aaa;}
+.d-title{font-size:1.25rem;font-weight:700;color:#e8e8e8;margin:0;line-height:1.3;max-width:600px;}
+.d-header-right{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+.d-ref-badge{font-size:0.78rem;color:#666;white-space:nowrap;}
+.d-btn-primary{background:#00d4ff;color:#000;font-size:0.8rem;font-weight:700;padding:0.55rem 1.25rem;border-radius:5px;text-decoration:none;white-space:nowrap;}
+.d-btn-primary:hover{opacity:0.88;}
+.d-btn-ghost{font-size:0.78rem;color:#555;border:1px solid #222;padding:0.45rem 1rem;border-radius:5px;text-decoration:none;}
+.d-btn-ghost:hover{color:#aaa;border-color:#444;}
+
+/* ── KPI Row ── */
+.kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0.875rem;margin-bottom:1.5rem;}
+@media(max-width:1200px){.kpi-row{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.kpi-row{grid-template-columns:1fr 1fr;}}
+.kpi-box{background:#07070a;border:1px solid #161618;border-radius:8px;padding:1.1rem 1.25rem;position:relative;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:transform 0.2s ease, border-color 0.2s ease;}
+.kpi-box:hover{transform:translateY(-2px);border-color:#2a2a35;}
+.kpi-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#333;}
+.kpi-patrimony::before{background:linear-gradient(90deg, #3b82f6, #60a5fa);}
+.kpi-return-pos::before{background:linear-gradient(90deg, #10b981, #34d399);}
+.kpi-return-neg::before{background:linear-gradient(90deg, #f43f5e, #fb7185);}
+.kpi-meta::before{background:linear-gradient(90deg, #00d4ff, #67e8f9);}
+.kpi-status::before{background:linear-gradient(90deg, #8b5cf6, #a78bfa);}
+.kpi-pro::before{background:linear-gradient(90deg, #f59e0b, #fbbf24);}
+.kpi-box-label{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:0.5rem;}
+.kpi-box-val{font-size:clamp(1.05rem, 1.8vw, 1.4rem);font-weight:800;color:#f8fafc;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi-box-sub{font-size:0.7rem;color:#555;margin-top:0.4rem;}
+.kpi-green{color:#10b981!important;}
+.kpi-red{color:#f43f5e!important;}
+.kpi-cyan{color:#00d4ff!important;font-size:0.95rem!important;}
+
+/* ── Card ── */
+.d-card{background:#07070a;border:1px solid #161618;border-radius:8px;overflow:hidden;}
+.d-card-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #111;flex-wrap:wrap;gap:0.5rem;}
+.d-card-title{font-size:0.95rem;font-weight:700;color:#d0d0d0;}
+.d-card-sub{font-size:0.75rem;color:#555;margin-left:0.75rem;}
+.d-tab{font-size:0.75rem;padding:0.3rem 0.85rem;border-radius:4px;cursor:pointer;color:#555;}
+.d-tab.active{background:#131317;color:#ccc;border:1px solid #222;}
+
+/* ── Table ── */
+.d-table{width:100%;border-collapse:collapse;font-size:0.8rem;}
+.d-table thead th{padding:0.75rem 0.5rem;font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#555;border-bottom:1px solid #131317;white-space:nowrap;}
+.d-table tbody tr{border-bottom:1px solid #0e0e11;transition:background 0.1s;}
+.d-table tbody tr:hover{background:#0c0c0f;}
+.d-table tbody tr:last-child{border-bottom:none;}
+.row-legacy{opacity:0.6;}
+.r{text-align:right;padding:0.75rem 0.5rem;}
+.c{text-align:center;padding:0.75rem 0.5rem;}
+
+/* ── Fund cell ── */
+.td-fund{padding:0.75rem 0.5rem;max-width:260px;}
+.fund-name{font-weight:600;color:#d0d0d0;font-size:0.8rem;margin-bottom:0.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fund-sub{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;}
+.fund-sub span{font-size:0.68rem;color:#4a4a4a;font-family:monospace;}
+.bench-pill{font-size:0.65rem;color:#555;background:#101013;padding:0.1rem 0.45rem;border-radius:3px;font-family:sans-serif!important;}
+
+/* ── Data cells ── */
+.td-saldo{font-weight:700;color:#c8c8c8;font-family:monospace;font-size:0.875rem;}
+.td-up{color:#10b981;font-weight:600;}
+.td-dn{color:#f43f5e;font-weight:600;}
+.td-fee{color:#666;}
+.pct-label{font-size:0.82rem;color:#888;font-weight:600;}
+
+/* ── Badges ── */
+.liq-badge{font-size:0.7rem;font-weight:700;padding:0.25rem 0.6rem;border-radius:4px;display:inline-block;white-space:nowrap;}
+.liq-d0{background:rgba(16,185,129,0.12);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+.liq-d1{background:rgba(0,212,255,0.1);color:#00d4ff;border:1px solid rgba(0,212,255,0.2);}
+.liq-d3{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+.art-badge{font-size:0.68rem;color:#666;background:#0d0d10;padding:0.2rem 0.5rem;border-radius:4px;font-family:monospace;border:1px solid #1a1a1f;white-space:nowrap;}
+.type-badge{font-size:0.65rem;font-weight:700;padding:0.2rem 0.55rem;border-radius:4px;display:inline-block;white-space:nowrap;}
+.type-legacy{background:rgba(245,158,11,0.1);color:#f59e0b;}
+.type-new{background:rgba(0,212,255,0.08);color:#00aacc;}
+
+/* ── Table footer ── */
+.d-tfoot td{padding:0.75rem 0.5rem;border-top:1px solid #222;background:rgba(0,212,255,0.05);color:#e0e0e0;font-size:0.9rem;}
+.d-tfoot td strong{color:#fff;font-weight:800;letter-spacing:0.03em;}
+.d-tfoot .r strong{color:#00d4ff;font-size:1.05rem;}
+
+/* ── Two-col layout ── */
+.d-two-col{display:flex;gap:1.25rem;flex-wrap:wrap;}
+.d-card-half{flex:1;min-width:300px;}
+
+/* ── Segment breakdown ── */
+.seg-wrap{display:flex;flex-direction:column;gap:1.25rem;padding:0.5rem 1.5rem 1.5rem;}
+.seg-item{}
+.seg-row-top{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.45rem;}
+.seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.seg-label{font-size:0.8rem;color:#aaa;flex:1;}
+.seg-pct{font-size:0.85rem;font-weight:700;color:#e0e0e0;}
+.seg-limit{font-size:0.68rem;color:#555;margin-left:0.25rem;}
+.seg-bar-bg{position:relative;height:7px;background:#111;border-radius:99px;overflow:hidden;}
+.seg-bar-fill{height:100%;border-radius:99px;transition:width 0.6s ease;}
+.seg-dot-rf{background:#00d4ff;box-shadow:0 0 8px rgba(0,212,255,0.4);}
+.seg-bar-rf{background:linear-gradient(90deg, #00d4ff, #3b82f6);box-shadow:0 0 12px rgba(0,212,255,0.25);}
+.seg-dot-rv{background:#f59e0b;box-shadow:0 0 8px rgba(245,158,11,0.4);}
+.seg-bar-rv{background:linear-gradient(90deg, #f59e0b, #fbbf24);box-shadow:0 0 12px rgba(245,158,11,0.25);}
+.seg-dot-est{background:#a855f7;box-shadow:0 0 8px rgba(168,85,247,0.4);}
+.seg-bar-est{background:linear-gradient(90deg, #a855f7, #d8b4fe);box-shadow:0 0 12px rgba(168,85,247,0.25);}
+.seg-dot-fi{background:#10b981;box-shadow:0 0 8px rgba(16,185,129,0.4);}
+.seg-bar-fi{background:linear-gradient(90deg, #10b981, #34d399);box-shadow:0 0 12px rgba(16,185,129,0.25);}
+.seg-over-line{position:absolute;right:0;top:-3px;width:2px;height:13px;background:#f43f5e;}
+
+/* ── Chart placeholder ── */
+.chart-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;height:200px;border:1px dashed #1c1c20;border-radius:6px;margin:0.5rem 1.5rem 1.5rem;color:#3a3a3a;}
+.chart-placeholder p{font-size:0.8rem;color:#555;margin:0;}
+
+/* ── Empty state ── */
+.d-empty{text-align:center;padding:5rem 2rem;border:1px dashed #1a1a22;border-radius:8px;}
+.d-empty h2{font-size:1.2rem;color:#ccc;margin-bottom:0.5rem;}
+.d-empty p{color:#555;font-size:0.875rem;max-width:400px;margin:0 auto;}
 </style>
 
-<script>
-// pending quiz sync
-document.addEventListener('DOMContentLoaded', async () => {
-    const pendingAnswers = sessionStorage.getItem('pending_quiz_answers');
-    if (pendingAnswers) {
-        try {
-            const response = await fetch('/api/quiz/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: pendingAnswers });
-            if (response.ok) { sessionStorage.removeItem('pending_quiz_answers'); window.location.reload(); }
-        } catch (e) { console.error("Failed to sync pending quiz:", e); }
-    }
-});
-</script>
-{% endif %}
-{% endblock %}
-
-{% block scripts %}
-{% if has_profile and not needs_patrimony and allocations is defined %}
-<script>
-    // 1. allocation pie chart (by class)
-    const classBreakdown = {{ class_breakdown_json | safe }};
-    const classLabels = {
-        'renda_fixa': 'Renda Fixa',
-        'fii': 'FIIs',
-        'renda_variavel': 'Renda Variável',
-        'internacional': 'Internacional',
-        'previdencia': 'Previdência',
-        'alternativo': 'Alternativo',
-    };
-    const chartColors = ['#00d4ff', '#10b981', '#7c3aed', '#f59e0b', '#f43f5e', '#a855f7', '#6366f1'];
-
-    new Chart(document.getElementById('allocationChart'), {
-        type: 'doughnut',
-        data: {
-            labels: Object.keys(classBreakdown).map(k => classLabels[k] || k),
-            datasets: [{
-                data: Object.values(classBreakdown).map(v => (v * 100).toFixed(1)),
-                backgroundColor: chartColors.slice(0, Object.keys(classBreakdown).length),
-                borderWidth: 0,
-                hoverOffset: 10
-            }]
-        },
-        options: {
-            plugins: {
-                legend: {
-                    position: window.innerWidth < 768 ? 'bottom' : 'right',
-                    labels: { color: '#666', font: { family: 'Plus Jakarta Sans', size: 11 }, padding: 12 }
-                },
-                tooltip: {
-                    callbacks: { label: (ctx) => `${ctx.label}: ${ctx.parsed}%` }
-                }
-            },
-            cutout: '70%',
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-
-    // 2. projection chart (5 years)
-    const projections = {{ projections_json | safe }};
-    const projLabels = projections.map(p => `Ano ${p.year}`);
-    const projValues = projections.map(p => p.projected_value);
-    const projIncome = projections.map(p => p.projected_monthly_income);
-
-    new Chart(document.getElementById('projectionChart'), {
-        type: 'bar',
-        data: {
-            labels: projLabels,
-            datasets: [{
-                label: 'Patrimônio Projetado (R$)',
-                data: projValues,
-                backgroundColor: 'rgba(0, 212, 255, 0.3)',
-                borderColor: '#00d4ff',
-                borderWidth: 1.5,
-                borderRadius: 4,
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    grid: { color: '#111' },
-                    ticks: {
-                        color: '#444', font: { size: 10 },
-                        callback: (v) => `R$ ${(v/1000).toFixed(0)}k`
-                    }
-                },
-                x: { grid: { display: false }, ticks: { color: '#444', font: { size: 10 } } }
-            },
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => {
-                            const val = ctx.parsed.y;
-                            const income = projIncome[ctx.dataIndex];
-                            return [
-                                `Patrimônio: R$ ${val.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`,
-                                `Renda/mês: R$ ${income.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`
-                            ];
-                        }
-                    }
-                }
-            }
-        }
-    });
-</script>
-{% endif %}
 {% endblock %}

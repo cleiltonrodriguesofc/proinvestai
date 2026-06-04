@@ -411,9 +411,9 @@ def simulate_solvency(
         "min_return": round(float(all_returns.min()) * 100, 2),
         "mean_return": round(float(all_returns.mean()) * 100, 2),
         "max_return": round(float(all_returns.max()) * 100, 2),
-        "pct_solvent": round((funding_ratios >= 1).mean() * 100, 2),
-        "mean_funding_ratio": round(float(np.median(funding_ratios)), 4),
-        "quantile_5_funding_ratio": round(float(np.quantile(funding_ratios, 0.05)), 4),
+        "pct_solvent": round(float((funding_ratios[:, -1] >= 1).mean() * 100), 2),
+        "mean_funding_ratio": round(float(np.median(funding_ratios[:, -1])), 4),
+        "quantile_5_funding_ratio": round(float(np.quantile(funding_ratios[:, -1], 0.05)), 4),
         "yearly_median_patrimony": median_patrimony,
         "yearly_median_funding_ratio": median_fr,
     }
@@ -427,17 +427,119 @@ class ALMEngine:
     """main alm engine that orchestrates the full study."""
 
     def __init__(self, config_path: str | Path):
-        self.config = load_alm_config(config_path)
+        self.config_path = Path(config_path).resolve()
+        self.config = load_alm_config(self.config_path)
+        # config_dir is the directory containing the JSON config file;
+        # used to resolve relative paths (e.g. cashflow_csv_path) consistently
+        # regardless of the process current working directory.
+        self.config_dir = self.config_path.parent
         self.portfolio = build_portfolio_from_config(self.config)
         self.indices = build_indices_from_config(self.config)
         self.cashflows: list[CashFlowYear] = []
         self.metadata: dict = {}
 
     def load_cashflows(self, csv_path: str | Path | None = None) -> None:
-        """load actuarial flow from cadprev csv."""
+        """
+        Load actuarial flow from a CadPrev CSV file.
+        Falls back to a synthetic flow built from JSON actuarial data if
+        the CSV file is not present (allows demo mode without the real file).
+        """
+        import logging
+        _logger = logging.getLogger(__name__)
+
         if csv_path is None:
             csv_path = self.config.get("cashflow_csv_path", "")
-        self.cashflows, self.metadata = parse_cadprev_csv(csv_path)
+            
+        # The cashflow_csv_path in config is relative to the project root.
+        # Config file lives at: <project_root>/app/alm/config/<file>.json
+        # So project_root = config_dir.parent.parent.parent
+        project_root = self.config_dir.parent.parent.parent
+        full_csv_path = (project_root / csv_path).resolve()
+        _logger.info(f"Attempting to load cashflows from: {full_csv_path}")
+
+        try:
+            self.cashflows, self.metadata = parse_cadprev_csv(full_csv_path)
+        except (FileNotFoundError, ValueError) as e:
+            _logger.warning(
+                f"CadPrev CSV not found or invalid ({full_csv_path}). "
+                "Generating synthetic cashflows from JSON actuarial data."
+            )
+            self.cashflows, self.metadata = self._build_synthetic_cashflows()
+
+    def _build_synthetic_cashflows(self) -> tuple[list[CashFlowYear], dict]:
+        """
+        Build a synthetic 75-year actuarial cashflow from JSON actuarial_data.
+
+        Replicates a realistic RPPS demographic trajectory:
+        - Revenues: contributions from active members (declining over time)
+        - Expenditures: benefits to retirees + pensioners (growing over time)
+        """
+        import math
+
+        data = self.config.get("actuarial_data", {})
+        actuarial_rate = self.config["actuarial_rate"] / 100.0  # e.g. 0.0569
+        base_year = int(self.config.get("reference_date", "2026-01-01")[:4])
+
+        # Key actuarial inputs
+        active_members = data.get("active_members", 1798)
+        retirees = data.get("retirees", 193)
+        pensioners = data.get("pensioners", 56)
+        payroll_monthly = data.get("active_payroll_monthly", 4_610_668.13)
+        avg_benefit_retirees = data.get("avg_benefit_retirees", 6_040.35)
+        avg_benefit_pensioners = data.get("avg_benefit_pensioners", 2_174.30)
+        salary_growth = data.get("salary_growth_real", 1.0) / 100.0
+        admin_expenses_pct = data.get("admin_expenses_pct", 3.0) / 100.0
+
+        # Contribution rate assumption (20% of payroll is a typical RPPS rate)
+        contribution_rate = 0.20
+        annual_contribution = payroll_monthly * 12 * contribution_rate
+
+        # Annual benefit payments
+        annual_retiree_benefits = avg_benefit_retirees * retirees * 13  # 13th salary
+        annual_pensioner_benefits = avg_benefit_pensioners * pensioners * 13
+
+        cashflows: list[CashFlowYear] = []
+
+        # Demographic decay: active members decline ~1.5%/yr, retirees grow ~2%/yr
+        for i in range(75):
+            year = base_year + i + 1
+            decay = math.exp(-0.015 * i)
+            growth = math.exp(0.020 * i)
+
+            # revenues: contributions + admin scaling
+            revenues = annual_contribution * decay * (1 + salary_growth) ** i
+
+            # expenditures: benefits grow as more retire
+            exp_retirees = annual_retiree_benefits * growth
+            exp_pensioners = annual_pensioner_benefits * growth
+            admin = (exp_retirees + exp_pensioners) * admin_expenses_pct
+            expenditures = exp_retirees + exp_pensioners + admin
+
+            # discount factor for NPV
+            discount_factor = 1.0 / ((1 + actuarial_rate) ** (i + 1))
+
+            cf = CashFlowYear(
+                instant=i + 1,
+                year=year,
+                discount_rate=actuarial_rate * 100,
+                discount_factor=discount_factor,
+                contribution_base=payroll_monthly * 12 * decay,
+                total_revenues=revenues,
+                total_expenditures=expenditures,
+                financial_result=revenues - expenditures,
+                accumulated_balance_pv=0.0,
+                expected_return_pct=actuarial_rate * 100,
+                asset_return=0.0,
+                guaranteed_resources=0.0,
+            )
+            cashflows.append(cf)
+
+        metadata = {
+            "initial_patrimony": self.config["patrimony"],
+            "actuarial_rate": actuarial_rate * 100,
+        }
+        return cashflows, metadata
+
 
     def run(self, n_scenarios: int = 1000, horizon_years: int = 30) -> ALMResult:
         """
@@ -562,12 +664,25 @@ class ALMEngine:
         # step 6: gap analysis (current vs recommended)
         gap_table: dict[str, dict[str, float]] = {}
         
-        all_benchmarks = set(benchmark_weights.keys())
+        # map current portfolio benchmarks to align with ALM indices
+        mapped_current_weights = {}
+        for h in self.portfolio.holdings:
+            bench = h.benchmark
+            if bench not in index_map:
+                if "IPCA" in bench or "IMA-B" in bench:
+                    bench = "IMA-B 5"
+                elif "IRF-M" in bench:
+                    bench = "IRF-M 1"
+                elif "CDI" in bench or "DI" in bench:
+                    bench = "CDI"
+            mapped_current_weights[bench] = mapped_current_weights.get(bench, 0.0) + h.balance
+
+        all_benchmarks = set(mapped_current_weights.keys())
         if recommended:
             all_benchmarks.update(recommended.weights.keys())
             
         for bench in all_benchmarks:
-            balance = benchmark_weights.get(bench, 0.0)
+            balance = mapped_current_weights.get(bench, 0.0)
             current_pct = (balance / total_inv * 100) if total_inv > 0 else 0
             recommended_pct = 0.0
             if recommended:

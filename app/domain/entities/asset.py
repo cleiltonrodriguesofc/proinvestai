@@ -47,6 +47,7 @@ class AssetType(Enum):
     CRIPTO_BTC = "cripto_btc"
 
 
+
 class AssetClass(str, Enum):
     """high-level asset class grouping."""
 

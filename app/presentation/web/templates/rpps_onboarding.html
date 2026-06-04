@@ -1,0 +1,74 @@
+{% extends "base_app.html" %}
+{% block title %}Cadastro do Instituto — ProInvestAI{% endblock %}
+
+{% block content %}
+<div class="onboarding-state">
+    <div class="onboarding-icon">🏛️</div>
+    <h1 class="onboarding-title">Configure seu<br><span class="gradient-text">Instituto (RPPS).</span></h1>
+    <p class="onboarding-text">
+        Bem-vindo! Para iniciar o monitoramento da sua carteira e o controle de enquadramento da Resolução CMN 5.272, informe os dados básicos do seu instituto.
+    </p>
+
+    <form class="rpps-form" method="POST" action="/onboarding/rpps">
+        <div class="form-grid">
+            <div class="form-field">
+                <label>CNPJ do Instituto</label>
+                <input type="text" name="cnpj" placeholder="00.000.000/0001-00" required>
+            </div>
+            <div class="form-field">
+                <label>Nome do Instituto</label>
+                <input type="text" name="name" placeholder="Ex: PREV-MUNICÍPIO" required>
+            </div>
+            <div class="form-field">
+                <label>Município</label>
+                <input type="text" name="municipality" required>
+            </div>
+            <div class="form-field">
+                <label>Estado (UF)</label>
+                <input type="text" name="state" maxlength="2" required placeholder="Ex: SP">
+            </div>
+            <div class="form-field">
+                <label>Patrimônio Líquido (R$)</label>
+                <input type="number" step="0.01" name="total_assets" required placeholder="Ex: 50000000.00">
+            </div>
+            <div class="form-field">
+                <label>Meta Atuarial (Índice + Taxa %)</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select name="actuarial_target_index" style="width: 40%; padding: 0.75rem; background: #060608; border: 1px solid #222; color: #fff; border-radius: 4px;">
+                        <option value="IPCA">IPCA</option>
+                        <option value="INPC">INPC</option>
+                    </select>
+                    <span style="display: flex; align-items: center; color: #555;">+</span>
+                    <input type="number" step="0.01" name="actuarial_target_rate" placeholder="Ex: 4.5" required style="width: 50%;">
+                </div>
+            </div>
+            <div class="form-field" style="grid-column: 1 / -1;">
+                <label>Nível Pró-Gestão</label>
+                <select name="pro_gestao_level" style="width: 100%; padding: 0.75rem; background: #060608; border: 1px solid #222; color: #fff; border-radius: 4px;">
+                    <option value="0">Sem certificação</option>
+                    <option value="1">Nível I</option>
+                    <option value="2">Nível II</option>
+                    <option value="3">Nível III</option>
+                    <option value="4">Nível IV</option>
+                </select>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1.25rem; font-size: 1.1rem; margin-top: 1rem;">Concluir Cadastro do RPPS</button>
+    </form>
+</div>
+
+<style>
+.onboarding-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: calc(100vh - 120px); padding: 2rem 1rem; }
+.onboarding-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+.onboarding-title { font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 1rem; }
+.onboarding-text { color: #888; font-size: 0.95rem; max-width: 600px; line-height: 1.6; margin-bottom: 2.5rem; }
+
+.rpps-form { max-width: 600px; width: 100%; text-align: left; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+.form-field { display: flex; flex-direction: column; gap: 0.5rem; }
+.form-field label { font-size: 0.8rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: 0.05em; }
+.form-field input { padding: 0.75rem; background: #060608; border: 1px solid #222; border-radius: 4px; color: #fff; font-family: inherit; font-size: 0.95rem; }
+.form-field input:focus { outline: none; border-color: var(--cyan); }
+@media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}

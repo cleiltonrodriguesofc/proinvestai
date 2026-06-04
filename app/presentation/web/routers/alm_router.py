@@ -347,8 +347,8 @@ async def alm_dashboard(
 ):
     """main alm dashboard — runs full study and renders results."""
     ctx = _build_alm_context(request, config, scenarios, horizon)
-    if "error" in ctx and ctx["error"]:
-        return templates.TemplateResponse("alm_dashboard.html", ctx)
+    if not isinstance(ctx, dict):
+        return ctx  # already a TemplateResponse with error
     return templates.TemplateResponse("alm_dashboard.html", ctx)
 
 
@@ -361,8 +361,8 @@ async def alm_report(
 ):
     """printable slide-style pdf report of the alm study."""
     ctx = _build_alm_context(request, config, scenarios, horizon)
-    if "error" in ctx and ctx["error"]:
-        return templates.TemplateResponse("alm_dashboard.html", ctx)
+    if not isinstance(ctx, dict):
+        return ctx  # already a TemplateResponse with error
     return templates.TemplateResponse("alm_report.html", ctx)
 
 
