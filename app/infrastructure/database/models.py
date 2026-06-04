@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Boolean, Numeric, JSON, ForeignKey, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -21,6 +21,7 @@ class User(Base):
     profiles = relationship("InvestorProfile", back_populates="user")
     assets = relationship("UserAsset", back_populates="user")
     simulations = relationship("Simulation", back_populates="user")
+    rpps_institutes = relationship("RppsInstitute", back_populates="user")
 
 class InvestorProfile(Base):
     __tablename__ = "investor_profiles"
@@ -66,3 +67,70 @@ class Simulation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="simulations")
+
+class RppsInstitute(Base):
+    __tablename__ = "rpps_institutes"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    cnpj = Column(String, unique=True, index=True, nullable=False)
+    name = Column(String, nullable=False)
+    municipality = Column(String, nullable=False)
+    state = Column(String, nullable=False)
+    type_regime = Column(String, default="capitalization", nullable=False)
+    total_assets = Column(Numeric, default=0.0)
+    actuarial_target_index = Column(String, default="IPCA")
+    actuarial_target_rate = Column(Numeric, default=0.0)
+    pro_gestao_level = Column(Numeric, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship("User", back_populates="rpps_institutes")
+    positions = relationship("FundPosition", back_populates="institute")
+    snapshots = relationship("PortfolioSnapshot", back_populates="institute")
+
+class FundPosition(Base):
+    __tablename__ = "fund_positions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rpps_id = Column(UUID(as_uuid=True), ForeignKey("rpps_institutes.id"), nullable=False)
+    cnpj_fund = Column(String, index=True, nullable=False)
+    name_fund = Column(String, nullable=False)
+    segment_cmn = Column(String, nullable=False)
+    regulatory_article = Column(String, nullable=True)  # e.g. "7, I"
+    benchmark = Column(String, nullable=True)            # e.g. "IMA-B"
+    current_balance = Column(Numeric, default=0.0)
+    weight_pct = Column(Numeric, default=0.0)            # participation %
+    liquidity_days = Column(Numeric, default=0)          # D+0, D+1, D+3
+    monthly_return_pct = Column(Numeric, nullable=True)  # latest month return %
+    admin_fee_pct = Column(Numeric, nullable=True)       # taxa de administração %
+    is_legacy = Column(Boolean, default=False)           # fundos legados
+    maturity_date = Column(Date, nullable=True)          # vencimento (se aplicável)
+    date_entry = Column(Date, nullable=True)
+    manager_name = Column(String, nullable=True)
+    admin_name = Column(String, nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    institute = relationship("RppsInstitute", back_populates="positions")
+    
+class FundQuote(Base):
+    __tablename__ = "fund_quotes"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    cnpj_fund = Column(String, index=True, nullable=False)
+    quote_date = Column(Date, nullable=False)
+    nav_per_share = Column(Numeric, nullable=False)
+    total_assets = Column(Numeric, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class PortfolioSnapshot(Base):
+    __tablename__ = "portfolio_snapshots"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rpps_id = Column(UUID(as_uuid=True), ForeignKey("rpps_institutes.id"), nullable=False)
+    snapshot_date = Column(Date, default=lambda: datetime.now(timezone.utc).date())
+    total_value = Column(Numeric, default=0.0)
+    compliance_status = Column(String, default="OK")
+    positions_json = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    institute = relationship("RppsInstitute", back_populates="snapshots")

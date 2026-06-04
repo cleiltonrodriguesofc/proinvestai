@@ -1,0 +1,33 @@
+{% extends "base_app.html" %}
+
+{% block title %}Adicionar Fundo — {{ institute.name }}{% endblock %}
+
+{% block content %}
+<div class="dash-header">
+  <div>
+    <span class="user-badge">Ativos e Contas</span>
+    <h1 class="dash-title">Adicionar Fundo</h1>
+  </div>
+</div>
+
+<div class="d-card" style="max-width: 600px; margin: 0 auto; padding: 2rem;">
+  <div style="text-align:center; padding: 2rem 0;">
+    <div style="font-size:3rem; margin-bottom:1rem;">🔗</div>
+    <h2 style="color:#e0e0e0; margin-bottom:1rem;">Integração CVM / CADPREV</h2>
+    <p style="color:#aaa; line-height:1.6; margin-bottom:1.5rem;">
+      O cadastro manual de ativos está sendo substituído pela sincronização automática com a CVM e CADPREV. 
+      Em breve, bastará informar o CNPJ do fundo para que o ProInvestAI carregue todo o histórico, enquadramento (Artigos CMN 5.272), e risco automaticamente.
+    </p>
+    <a href="/dashboard" class="d-btn-secondary">Voltar ao Dashboard</a>
+    <a href="#" class="d-btn-primary" style="margin-left:1rem;">Sincronizar Carteira (Beta)</a>
+  </div>
+</div>
+
+<style>
+.d-card { background:#07070a; border:1px solid #161618; border-radius:8px; overflow:hidden; }
+.d-btn-primary { background:#00d4ff; color:#000; font-size:0.8rem; font-weight:700; padding:0.55rem 1.25rem; border-radius:5px; text-decoration:none; }
+.d-btn-secondary { background:transparent; color:#00d4ff; font-size:0.8rem; font-weight:700; padding:0.55rem 1.25rem; border-radius:5px; text-decoration:none; border:1px solid #00d4ff; }
+.d-btn-primary:hover { opacity:0.88; }
+.d-btn-secondary:hover { background:rgba(0,212,255,0.1); }
+</style>
+{% endblock %}

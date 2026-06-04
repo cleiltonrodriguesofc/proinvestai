@@ -1,0 +1,129 @@
+{% extends "base_app.html" %}
+{% block title %}Enquadramento CMN 5.272 — {{ institute.name }} | ProInvestAI{% endblock %}
+{% block content %}
+
+<div class="d-header">
+  <div>
+    <p class="d-welcome">{{ institute.name }}</p>
+    <h1 class="d-title">Enquadramento — Resolução CMN 5.272</h1>
+  </div>
+</div>
+
+{# Compute segment totals #}
+{% set seg = namespace(rf=0.0, rv=0.0, est=0.0, fi=0.0, ext=0.0) %}
+{% for p in positions %}
+  {% if   p.segment_cmn == 'renda_fixa'         %}{% set seg.rf  = seg.rf  + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'renda_variavel'     %}{% set seg.rv  = seg.rv  + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'estruturados'       %}{% set seg.est = seg.est + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'fundos_imobiliarios'%}{% set seg.fi  = seg.fi  + (p.current_balance | float) %}
+  {% elif p.segment_cmn == 'exterior'           %}{% set seg.ext = seg.ext + (p.current_balance | float) %}
+  {% endif %}
+{% endfor %}
+{% set total = seg.rf + seg.rv + seg.est + seg.fi + seg.ext %}
+
+<div class="d-card" style="margin-bottom:1.5rem;">
+  <div class="d-card-head"><span class="d-card-title">Limites por Segmento</span><span class="d-card-sub">Resolução CMN 5.272/2025</span></div>
+  <div style="padding:1.5rem;">
+    <table class="d-table" style="font-size:0.875rem;">
+      <thead><tr>
+        <th>Segmento</th>
+        <th class="r">Saldo (R$)</th>
+        <th class="c">Alocado</th>
+        <th class="c">Limite CMN</th>
+        <th class="c">Status</th>
+        <th>Barra</th>
+      </tr></thead>
+      <tbody>
+        {% for label, val, limit, color, art in [
+          ('Renda Fixa',       seg.rf,  100, '#00d4ff', 'Art. 7'),
+          ('Renda Variável',   seg.rv,   30, '#f59e0b', 'Art. 8'),
+          ('Estruturados',     seg.est,  20, '#a855f7', 'Art. 10'),
+          ('Fundos Imob.',     seg.fi,   20, '#10b981', 'Art. 11'),
+          ('Exterior',         seg.ext,  10, '#e879f9', 'Art. 9')
+        ] %}
+        {% set pct = (val / total * 100) if total > 0 else 0 %}
+        {% set ok = pct <= limit %}
+        <tr>
+          <td style="padding:1rem;">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:{{ color }};margin-right:0.5rem;"></span>
+            <strong style="color:#ccc;">{{ label }}</strong>
+            <span style="font-size:0.68rem;color:#555;margin-left:0.5rem;">{{ art }}</span>
+          </td>
+          <td class="r" style="padding:1rem;font-family:monospace;color:#bbb;">
+            {{ "{:,.2f}".format(val).replace(",","X").replace(".",",").replace("X",".") }}
+          </td>
+          <td class="c" style="padding:1rem;font-weight:700;color:#e0e0e0;">{{ "%.2f"|format(pct) }}%</td>
+          <td class="c" style="padding:1rem;color:#666;">{{ limit }}%</td>
+          <td class="c" style="padding:1rem;">
+            {% if ok %}
+              <span style="color:#10b981;font-weight:700;font-size:0.8rem;">✓ OK</span>
+            {% else %}
+              <span style="color:#f43f5e;font-weight:700;font-size:0.8rem;">✗ Excedido</span>
+            {% endif %}
+          </td>
+          <td style="padding:1rem;min-width:180px;">
+            <div style="position:relative;height:8px;background:#111;border-radius:99px;overflow:visible;">
+              <div style="height:100%;width:{{ [pct, 100]|min }}%;background:{{ color if ok else '#f43f5e' }};border-radius:99px;"></div>
+              {% if limit < 100 %}
+              <div style="position:absolute;left:{{ limit }}%;top:-4px;width:2px;height:16px;background:#333;"></div>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="d-card">
+  <div class="d-card-head"><span class="d-card-title">Ativos por Artigo CMN</span></div>
+  <div style="overflow-x:auto;">
+    <table class="d-table">
+      <thead><tr>
+        <th style="min-width:240px;">Ativo</th>
+        <th class="c">Artigo</th>
+        <th class="c">Segmento</th>
+        <th class="r">Saldo (R$)</th>
+        <th class="c">Particip.</th>
+        <th class="c">Status</th>
+      </tr></thead>
+      <tbody>
+        {% for p in positions | sort(attribute='regulatory_article') %}
+        <tr>
+          <td class="td-fund">
+            <div class="fund-name">{{ p.name_fund }}</div>
+          </td>
+          <td class="c"><span class="art-badge">Art. {{ p.regulatory_article }}</span></td>
+          <td class="c" style="font-size:0.78rem;color:#888;">{{ p.segment_cmn | replace('_',' ') | title }}</td>
+          <td class="r td-saldo">{{ "{:,.2f}".format(p.current_balance | float).replace(",","X").replace(".",",").replace("X",".") }}</td>
+          <td class="c"><span class="pct-label">{{ "%.2f"|format(p.weight_pct | float) }}%</span></td>
+          <td class="c"><span style="color:#10b981;font-weight:700;font-size:0.78rem;">✓ Enquadrado</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.d-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem;}
+.d-welcome{font-size:0.8rem;color:#777;margin:0 0 0.35rem;}
+.d-title{font-size:1.25rem;font-weight:700;color:#e8e8e8;margin:0;}
+.d-card{background:#07070a;border:1px solid #161618;border-radius:8px;overflow:hidden;margin-bottom:1.5rem;}
+.d-card-head{display:flex;justify-content:space-between;align-items:center;padding:1rem 1.5rem;border-bottom:1px solid #111;flex-wrap:wrap;gap:0.5rem;}
+.d-card-title{font-size:0.95rem;font-weight:700;color:#d0d0d0;}
+.d-card-sub{font-size:0.75rem;color:#555;}
+.d-table{width:100%;border-collapse:collapse;font-size:0.875rem;}
+.d-table thead th{padding:0.75rem 1rem;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#555;border-bottom:1px solid #131317;white-space:nowrap;}
+.d-table tbody tr{border-bottom:1px solid #0e0e11;transition:background 0.1s;}
+.d-table tbody tr:hover{background:#0c0c0f;}
+.r{text-align:right;padding:0.875rem 1rem;}
+.c{text-align:center;padding:0.875rem 1rem;}
+.td-fund{padding:0.875rem 1rem;min-width:240px;}
+.fund-name{font-weight:600;color:#d0d0d0;font-size:0.85rem;}
+.td-saldo{font-weight:700;color:#c8c8c8;font-family:monospace;}
+.pct-label{font-size:0.82rem;color:#888;font-weight:600;}
+.art-badge{font-size:0.68rem;color:#666;background:#0d0d10;padding:0.2rem 0.5rem;border-radius:4px;font-family:monospace;border:1px solid #1a1a1f;}
+</style>
+{% endblock %}

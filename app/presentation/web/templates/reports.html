@@ -1,0 +1,64 @@
+{% extends "base_app.html" %}
+{% block title %}Relatórios — {{ institute.name }} | ProInvestAI{% endblock %}
+{% block content %}
+
+<div class="d-header">
+  <div>
+    <p class="d-welcome">{{ institute.name }}</p>
+    <h1 class="d-title">Relatórios — DAIR / DPIN</h1>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;margin-bottom:2rem;">
+
+  <div class="report-card">
+    <div class="report-icon">📊</div>
+    <div class="report-title">DAIR — Demonstrativo</div>
+    <div class="report-sub">Demonstrativo das Aplicações e Investimentos dos Recursos do RPPS</div>
+    <div class="report-actions">
+      <span class="report-badge-soon">Em breve</span>
+    </div>
+  </div>
+
+  <div class="report-card">
+    <div class="report-icon">📋</div>
+    <div class="report-title">DPIN — Declaração</div>
+    <div class="report-sub">Declaração de Política de Investimentos do RPPS</div>
+    <div class="report-actions">
+      <span class="report-badge-soon">Em breve</span>
+    </div>
+  </div>
+
+  <div class="report-card">
+    <div class="report-icon">📈</div>
+    <div class="report-title">Parecer de Investimentos</div>
+    <div class="report-sub">Análise qualitativa e quantitativa da carteira com recomendações</div>
+    <div class="report-actions">
+      <a href="/alm" class="d-btn-primary">Acessar Estudo ALM</a>
+    </div>
+  </div>
+
+  <div class="report-card">
+    <div class="report-icon">⚖️</div>
+    <div class="report-title">Relatório de Enquadramento</div>
+    <div class="report-sub">Verificação de limites e restrições da Resolução CMN 5.272</div>
+    <div class="report-actions">
+      <a href="/compliance" class="d-btn-primary">Ver Enquadramento</a>
+    </div>
+  </div>
+
+</div>
+
+<style>
+.d-header{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.75rem;}
+.d-welcome{font-size:0.8rem;color:#777;margin:0 0 0.35rem;}
+.d-title{font-size:1.25rem;font-weight:700;color:#e8e8e8;margin:0;}
+.d-btn-primary{background:#00d4ff;color:#000;font-size:0.78rem;font-weight:700;padding:0.45rem 1rem;border-radius:5px;text-decoration:none;display:inline-block;}
+.report-card{background:#07070a;border:1px solid #161618;border-radius:8px;padding:1.5rem;display:flex;flex-direction:column;gap:0.75rem;}
+.report-icon{font-size:2rem;}
+.report-title{font-size:1rem;font-weight:700;color:#d0d0d0;}
+.report-sub{font-size:0.8rem;color:#555;line-height:1.5;flex:1;}
+.report-actions{margin-top:0.5rem;}
+.report-badge-soon{display:inline-block;font-size:0.68rem;font-weight:700;color:#666;background:#111;padding:0.3rem 0.75rem;border-radius:4px;border:1px solid #222;}
+</style>
+{% endblock %}

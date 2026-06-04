@@ -1,28 +1,21 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ALM — IPSEMB</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% extends "base_app.html" %}
+{% block title %}Estudo ALM — {{ rpps_name | default('RPPS') }} | ProInvestAI{% endblock %}
+
+{% block head %}
     <style>
         :root {
-            --bg: #0a0e17; --surface: #111827; --surface-2: #1a2332;
-            --border: #1e293b; --text: #e2e8f0; --text-muted: #94a3b8;
-            --accent: #3b82f6; --accent-glow: rgba(59,130,246,0.15);
-            --green: #10b981; --red: #ef4444; --amber: #f59e0b;
+            --bg: #060608; --surface: #0a0a0c; --surface-2: #161618;
+            --border: #1a1a22; --text: #e0e0e0; --text-muted: #888;
+            --accent: #00d4ff; --accent-glow: rgba(0,212,255,0.15);
+            --green: #10b981; --red: #f43f5e; --amber: #f59e0b;
             --purple: #8b5cf6; --cyan: #06b6d4;
             --font: 'Plus Jakarta Sans', system-ui, sans-serif;
         }
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:var(--font); background:var(--bg); color:var(--text); min-height:100vh; }
 
         /* header */
-        .alm-header { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem; }
-        .alm-header h1 { font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-        .alm-header p { color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; }
+        .alm-header { background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-bottom:1px solid var(--border); padding:1.5rem 2rem; border-radius: 8px 8px 0 0; }
+        .alm-header h1 { font-size:1.5rem; font-weight:700; background:linear-gradient(135deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin:0; }
+        .alm-header p { color:var(--text-muted); font-size:0.85rem; margin-top:0.25rem; margin-bottom: 0; }
         .alm-header-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
         .alm-badge { background:var(--surface-2); border:1px solid var(--border); border-radius:6px; padding:0.3rem 0.8rem; font-size:0.75rem; color:var(--text-muted); }
 
@@ -30,22 +23,22 @@
         .alm-main { max-width:1400px; margin:0 auto; padding:1.5rem; }
 
         /* cards */
-        .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-        .metric-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.25rem; position:relative; overflow:hidden; }
+        .metric-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.25rem; margin-bottom:1.5rem; }
+        .metric-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1.25rem; position:relative; overflow:hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .metric-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); }
         .metric-card.green::before { background:var(--green); }
         .metric-card.red::before { background:var(--red); }
         .metric-card.amber::before { background:var(--amber); }
         .metric-card.purple::before { background:var(--purple); }
         .metric-card.cyan::before { background:var(--cyan); }
-        .metric-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.5rem; }
-        .metric-value { font-size:1.6rem; font-weight:800; }
+        .metric-label { font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.5rem; }
+        .metric-value { font-size:clamp(1.1rem, 2vw, 1.5rem); font-weight:800; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; line-height:1.2; }
         .metric-sub { font-size:0.75rem; color:var(--text-muted); margin-top:0.25rem; }
 
         /* sections */
         .section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:1.5rem; overflow:hidden; }
         .section-header { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:0.75rem; }
-        .section-header h2 { font-size:1rem; font-weight:700; }
+        .section-header h2 { font-size:1rem; font-weight:700; margin:0; color:var(--text); }
         .section-num { background:var(--accent); color:#fff; width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:800; flex-shrink:0; }
         .section-body { padding:1.25rem; }
 
@@ -55,9 +48,9 @@
         @media(max-width:768px) { .chart-row { grid-template-columns:1fr; } }
 
         /* tables */
-        .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+        .data-table { width:100%; border-collapse:collapse; font-size:0.8rem; color:var(--text); }
         .data-table th { text-align:left; padding:0.6rem 0.75rem; background:var(--surface-2); color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.05em; font-size:0.7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
-        .data-table td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); }
+        .data-table td { padding:0.5rem 0.75rem; border-bottom:1px solid var(--border); white-space:nowrap; }
         .data-table tr:hover td { background:var(--accent-glow); }
         .data-table .positive { color:var(--green); }
         .data-table .negative { color:var(--red); }
@@ -71,14 +64,16 @@
         @media(max-width:768px) { .solvency-grid { grid-template-columns:1fr; } }
 
         /* scroll */
-        .table-scroll { overflow-x:auto; }
+        .table-scroll { overflow-x:auto; scrollbar-width:none; -ms-overflow-style:none; }
+        .table-scroll::-webkit-scrollbar { display:none; }
 
         /* back link */
         .back-link { display:inline-flex; align-items:center; gap:0.5rem; color:var(--text-muted); text-decoration:none; font-size:0.85rem; margin-bottom:1rem; transition:color 0.2s; }
         .back-link:hover { color:var(--accent); }
     </style>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
 
 <div class="alm-header">
     <div class="alm-header-row">
@@ -130,7 +125,7 @@
     </div>
     <div class="metric-card red">
         <div class="metric-label">VPL Déficit</div>
-        <div class="metric-value" style="font-size:1.2rem;">{{ npv_deficit }}</div>
+        <div class="metric-value">{{ npv_deficit }}</div>
         <div class="metric-sub">Valor presente dos fluxos</div>
     </div>
     <div class="metric-card {% if solvency.pct_solvent > 70 %}green{% elif solvency.pct_solvent > 50 %}amber{% else %}red{% endif %}">
@@ -362,7 +357,9 @@
 
 {% endif %}
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 const cfData = {{ cf_chart_json | safe }};
 const projData = {{ projection_chart_json | safe }};
@@ -468,5 +465,4 @@ new Chart(document.getElementById('solvFRChart'), {
     }
 });
 </script>
-</body>
-</html>
+{% endblock %}
