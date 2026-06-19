@@ -386,3 +386,5 @@ async def alm_lema_2025_report(request: Request):
     if "error" in ctx and ctx["error"]:
         return HTMLResponse(content=f"<h3>Erro: {ctx['error']}</h3>", status_code=500)
     return templates.TemplateResponse("alm_report_lema.html", ctx)
+
+
