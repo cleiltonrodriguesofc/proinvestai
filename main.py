@@ -40,7 +40,13 @@ app.include_router(auth_router)
 app.include_router(billing_router)
 app.include_router(alm_router)
 
-@app.get("/health")
+@app.head("/", include_in_schema=False)
+def root_head():
+    """Respond to HEAD requests for uptime monitors."""
+    return {"status": "ok"}
+
+@app.get("/health", include_in_schema=False)
+@app.head("/health", include_in_schema=False)
 async def health_check():
     return {"status": "healthy", "app": settings.APP_NAME}
 
